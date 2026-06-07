@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Plano">
 <link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://accounts.google.com/gsi/client" async defer onload="gdriveInit()"></script>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -381,6 +382,41 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 .skip-undo{margin-top:8px;font-size:11px;color:var(--faint);
   text-decoration:underline;cursor:pointer;display:block;text-align:center}
 
+/* WEIGHT CHART */
+.wt-card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.wt-input-row{display:flex;align-items:center;gap:8px}
+.wt-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;flex:1}
+.wt-today-val{font-family:'Anton';font-size:22px;color:var(--teal);line-height:1}
+.wt-input{background:var(--surf);border:1.5px solid var(--bdr);border-radius:8px;color:var(--txt);
+  font-family:'DM Sans';font-size:16px;font-weight:500;padding:7px 10px;
+  width:88px;text-align:right;-moz-appearance:textfield}
+.wt-input:focus{outline:none;border-color:var(--teal)}
+.wt-input::-webkit-inner-spin-button,.wt-input::-webkit-outer-spin-button{-webkit-appearance:none}
+.wt-save{padding:7px 14px;background:var(--teal-d);border:1.5px solid rgba(61,191,140,.4);
+  border-radius:8px;color:var(--teal);font-family:'DM Sans';font-size:12px;font-weight:600;cursor:pointer}
+.wt-chart-wrap{margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr)}
+.wt-chart-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--faint);margin-top:4px}
+.hcard-weight{font-size:10px;font-weight:600;color:var(--teal);background:var(--teal-d);
+  padding:2px 8px;border-radius:20px;margin-left:6px;white-space:nowrap}
+
+/* DRIVE SYNC */
+.drive-card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.drive-row{display:flex;align-items:center;gap:10px}
+.drive-ico{font-size:20px;flex-shrink:0}
+.drive-status{flex:1;font-size:11.5px;color:var(--muted);line-height:1.4}
+.drive-status b{color:var(--txt)}
+.drive-status small{color:var(--faint);font-size:10px}
+.drive-btn{padding:7px 14px;border-radius:8px;font-family:'DM Sans';font-size:12px;font-weight:600;
+  cursor:pointer;border:1.5px solid;white-space:nowrap;transition:opacity .15s}
+.drive-btn:active{opacity:.7}
+.drive-btn.connect{background:var(--blue-d);border-color:rgba(74,140,247,.4);color:var(--blue)}
+.drive-btn.sync{background:var(--teal-d);border-color:rgba(61,191,140,.4);color:var(--teal)}
+.drive-btn.disc{background:var(--surf);border-color:var(--bdr);color:var(--faint);
+  font-size:10px;padding:4px 10px}
+.drive-setup{font-size:11px;color:var(--faint);line-height:1.55;margin-top:8px;
+  padding-top:8px;border-top:1px solid var(--bdr)}
+.drive-setup code{background:var(--surf);padding:1px 5px;border-radius:4px;font-size:10.5px}
+
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 </style>
 </head>
@@ -427,6 +463,13 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 </div>
 
 <script>
+// ── Google Drive Client ID ───────────────────────
+// Para ativar sync: cole seu OAuth 2.0 Client ID abaixo.
+// console.cloud.google.com → Criar projeto → Ativar Drive API
+// → Credenciais → OAuth 2.0 (Aplicativo web)
+// → Origem autorizada: https://deivydgarcez.github.io
+const GOOGLE_CLIENT_ID = '';
+
 // ── Week key (resets every Monday) ──────────────
 function getWeekKey(){
   const now=new Date();
@@ -1119,6 +1162,212 @@ function renderRules(){
   return h;
 }
 
+// ── Weight tracking ──────────────────────────────────
+const WEIGHT_KEY='plano_weight_v1';
+
+function loadWeights(){
+  try{return JSON.parse(localStorage.getItem(WEIGHT_KEY)||'{}')}catch(e){return{}}
+}
+
+window.saveWeight=function(){
+  const inp=document.getElementById('wtInput');
+  const val=parseFloat(inp.value);
+  if(!val||val<30||val>250){showToast('❌ Peso inválido');return;}
+  const w=loadWeights();
+  w[todayStr()]=val;
+  localStorage.setItem(WEIGHT_KEY,JSON.stringify(w));
+  showToast(`✅ Peso ${val} kg registrado`);
+  gdriveSyncDebounced();
+  if(sec==='hist') document.getElementById('main').innerHTML=renderHistorico();
+};
+
+function renderWeightCard(){
+  const w=loadWeights();
+  const today=todayStr();
+  const todayVal=w[today];
+  const entries=Object.entries(w).sort((a,b)=>a[0].localeCompare(b[0])).slice(-30);
+
+  const inputHtml=`<div class="wt-input-row">
+    <span class="wt-label">⚖️ Peso hoje</span>
+    ${todayVal?`<span class="wt-today-val">${todayVal}<small style="font-size:12px;font-family:'DM Sans';color:var(--muted)"> kg</small></span>`:''}
+    <input class="wt-input" id="wtInput" type="number" step="0.1" min="30" max="250"
+      placeholder="${todayVal||'82.0'}" value="${todayVal||''}">
+    <button class="wt-save" onclick="saveWeight()">Salvar</button>
+  </div>`;
+
+  if(entries.length<2) return `<div class="wt-card">${inputHtml}</div>`;
+
+  const vals=entries.map(e=>e[1]);
+  const minV=Math.min(...vals),maxV=Math.max(...vals);
+  const range=maxV-minV||0.5;
+  const W=320,H=72,pad=10;
+
+  const pts=entries.map((e,i)=>{
+    const x=pad+(i/(entries.length-1))*(W-pad*2);
+    const y=H-pad-((e[1]-minV)/range)*(H-pad*2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+
+  const last=entries[entries.length-1];
+  const lastX=(pad+(1)*(W-pad*2)).toFixed(1);
+  const lastY=(H-pad-((last[1]-minV)/range)*(H-pad*2)).toFixed(1);
+  const trend=(last[1]-entries[0][1]).toFixed(1);
+  const trendColor=trend>0?'var(--ember)':trend<0?'var(--teal)':'var(--muted)';
+  const trendSign=trend>0?'+':'';
+
+  return `<div class="wt-card">
+    ${inputHtml}
+    <div class="wt-chart-wrap">
+      <svg width="100%" viewBox="0 0 ${W} ${H}" style="overflow:visible;display:block">
+        <polyline points="${pts}" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="${lastX}" cy="${lastY}" r="4" fill="var(--ember)" stroke="var(--bg)" stroke-width="2"/>
+      </svg>
+      <div class="wt-chart-labels">
+        <span>${entries[0][0].slice(5).replace('-','/')}</span>
+        <span style="color:${trendColor};font-weight:600">${trendSign}${trend} kg no período</span>
+        <span>${last[0].slice(5).replace('-','/')}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Google Drive Sync ────────────────────────────────
+let gToken=null,gTokenClient=null,gdriveSyncTimer=null;
+
+function gdriveSyncDebounced(){
+  clearTimeout(gdriveSyncTimer);
+  gdriveSyncTimer=setTimeout(gdriveSave,2500);
+}
+
+function gdriveInit(){
+  if(!GOOGLE_CLIENT_ID||typeof google==='undefined') return;
+  gTokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:GOOGLE_CLIENT_ID,
+    scope:'https://www.googleapis.com/auth/drive.appdata',
+    callback:(resp)=>{
+      if(resp.error){
+        if(resp.error!=='interaction_required'&&resp.error!=='access_denied')
+          showToast('Drive: '+resp.error);
+        gToken=null;
+        if(sec==='hist') document.getElementById('main').innerHTML=renderHistorico();
+        return;
+      }
+      gToken=resp.access_token;
+      localStorage.setItem('plano_gdrive_connected','1');
+      gdriveLoad().then(()=>{
+        if(sec==='hist') document.getElementById('main').innerHTML=renderHistorico();
+      });
+    }
+  });
+  if(localStorage.getItem('plano_gdrive_connected'))
+    gTokenClient.requestAccessToken({prompt:''});
+}
+
+window.gdriveConnect=function(){
+  if(!GOOGLE_CLIENT_ID){showToast('❌ GOOGLE_CLIENT_ID não configurado');return;}
+  if(!gTokenClient){showToast('❌ SDK Google não carregado');return;}
+  gTokenClient.requestAccessToken({prompt:'consent'});
+};
+
+window.gdriveDisconnect=function(){
+  if(gToken) try{google.accounts.oauth2.revoke(gToken,()=>{});}catch(e){}
+  gToken=null;
+  localStorage.removeItem('plano_gdrive_connected');
+  localStorage.removeItem('plano_gdrive_synced');
+  showToast('Desconectado do Google Drive');
+  if(sec==='hist') document.getElementById('main').innerHTML=renderHistorico();
+};
+
+window.gdriveSave=async function(){
+  if(!gToken) return;
+  const backup={version:2,savedAt:new Date().toISOString(),
+    history:loadHistory(),weights:loadWeights()};
+  try{
+    const q=encodeURIComponent("name='plano_nutricao.json'");
+    const lr=await fetch(
+      `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${q}&fields=files(id)`,
+      {headers:{Authorization:`Bearer ${gToken}`}});
+    if(lr.status===401){gToken=null;return;}
+    const list=await lr.json();
+    const fid=list.files?.[0]?.id;
+    const meta=fid?{name:'plano_nutricao.json'}:{name:'plano_nutricao.json',parents:['appDataFolder']};
+    const form=new FormData();
+    form.append('metadata',new Blob([JSON.stringify(meta)],{type:'application/json'}));
+    form.append('file',new Blob([JSON.stringify(backup)],{type:'application/json'}));
+    const url=fid
+      ?`https://www.googleapis.com/upload/drive/v3/files/${fid}?uploadType=multipart`
+      :'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+    await fetch(url,{method:fid?'PATCH':'POST',headers:{Authorization:`Bearer ${gToken}`},body:form});
+    const ts=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    localStorage.setItem('plano_gdrive_synced',ts);
+    const el=document.getElementById('driveStatus');
+    if(el) el.innerHTML=`<b>Google Drive</b> · conectado<br><small>Último sync: ${ts}</small>`;
+  }catch(e){}
+};
+
+async function gdriveLoad(){
+  if(!gToken) return;
+  try{
+    const q=encodeURIComponent("name='plano_nutricao.json'");
+    const lr=await fetch(
+      `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${q}&fields=files(id)`,
+      {headers:{Authorization:`Bearer ${gToken}`}});
+    if(lr.status===401){gToken=null;return;}
+    const list=await lr.json();
+    const fid=list.files?.[0]?.id;
+    if(!fid){gdriveSave();return;}
+    const fr=await fetch(`https://www.googleapis.com/drive/v3/files/${fid}?alt=media`,
+      {headers:{Authorization:`Bearer ${gToken}`}});
+    const data=await fr.json();
+    if(data.history){
+      const local=loadHistory(),today=todayStr();
+      const merged={...local,...data.history};
+      if(local[today]) merged[today]=local[today];
+      localStorage.setItem(HIST_KEY,JSON.stringify(merged));
+    }
+    if(data.weights){
+      const lw=loadWeights();
+      localStorage.setItem(WEIGHT_KEY,JSON.stringify({...data.weights,...lw}));
+    }
+    showToast('☁️ Sincronizado com Drive');
+  }catch(e){gToken=null;}
+}
+
+function renderDriveCard(){
+  const connected=gToken!==null;
+  const lastSync=localStorage.getItem('plano_gdrive_synced')||'';
+  if(!GOOGLE_CLIENT_ID){
+    return `<div class="drive-card">
+      <div class="drive-row">
+        <span class="drive-ico">☁️</span>
+        <div class="drive-status"><b>Sync Google Drive</b><br><small>Não configurado</small></div>
+      </div>
+      <div class="drive-setup">
+        Para ativar: crie um projeto em <b>console.cloud.google.com</b> → Ative a <b>Drive API</b>
+        → Credenciais → <b>OAuth 2.0 (Aplicativo web)</b>. Adicione
+        <code>https://deivydgarcez.github.io</code> como origem autorizada.
+        Cole o Client ID na constante <code>GOOGLE_CLIENT_ID</code> no topo do script e faça deploy.
+      </div>
+    </div>`;
+  }
+  return `<div class="drive-card">
+    <div class="drive-row">
+      <span class="drive-ico">☁️</span>
+      <div class="drive-status" id="driveStatus">
+        ${connected
+          ?`<b>Google Drive</b> · conectado<br><small>Último sync: ${lastSync||'—'}</small>`
+          :`<b>Google Drive</b><br><small>Não conectado</small>`}
+      </div>
+      ${connected
+        ?`<button class="drive-btn sync" onclick="gdriveSave().then(()=>showToast('✅ Sync OK'))">Sync ↑</button>`
+        :`<button class="drive-btn connect" onclick="gdriveConnect()">Conectar</button>`}
+    </div>
+    ${connected?`<div style="text-align:right;margin-top:6px">
+      <button class="drive-btn disc" onclick="gdriveDisconnect()">Desconectar</button>
+    </div>`:''}
+  </div>`;
+}
+
 // ── History ──────────────────────────────────────────
 const HIST_KEY='plano_hist_v1';
 let histView='day'; // day | week | month
@@ -1168,6 +1417,7 @@ function saveToHistory(){
     ts:new Date().toISOString()
   };
   localStorage.setItem(HIST_KEY,JSON.stringify(hist));
+  gdriveSyncDebounced();
 }
 
 function getDayLabel(dt){
@@ -1194,16 +1444,18 @@ function renderHistDay(hist){
     <span class="hempty-icon">📋</span>
     Nenhum registro ainda.<br>Marque as refeições do dia e o histórico aparece aqui automaticamente.
   </div>`;
+  const weights=loadWeights();
   return entries.map(([date,e])=>{
     const pct=Math.min(100,Math.round((e.protein/e.goal)*100));
     const full=pct>=95;
     const chips=(e.meals||[]).map(m=>
       `<span class="hmeal-chip ${m.done?'done':''} ${m.skip?'skip':''}">${m.name}</span>`
     ).join('');
+    const wt=weights[date];
     return `<div class="hcard">
       <div class="hcard-top">
         <div>
-          <div class="hcard-date">${getDOW(date)} ${fmtDate(date)}</div>
+          <div class="hcard-date">${getDOW(date)} ${fmtDate(date)}${wt?`<span class="hcard-weight">${wt} kg</span>`:''}</div>
           <div class="hcard-dow">${date===todayStr()?'Hoje':''}</div>
         </div>
         <span class="hcard-badge ${getDayClass(e.dayType)}">${getDayLabel(e.dayType)}</span>
@@ -1353,6 +1605,8 @@ function renderHistorico(){
   const hist=loadHistory();
   const views={day:renderHistDay,week:renderHistWeek,month:renderHistMonth};
   return `<p class="sec-title">Histórico</p>
+  ${renderDriveCard()}
+  ${renderWeightCard()}
   <div class="backup-row">
     <button class="backup-btn export" onclick="exportHistory()">
       <span class="bb-ic">💾</span>Exportar backup
