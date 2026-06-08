@@ -417,6 +417,66 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
   padding-top:8px;border-top:1px solid var(--bdr)}
 .drive-setup code{background:var(--surf);padding:1px 5px;border-radius:4px;font-size:10.5px}
 
+/* WATER COUNTER */
+.water{cursor:pointer;user-select:none}
+.water-bar{height:3px;background:rgba(74,140,247,.18);border-radius:3px;overflow:hidden;margin-top:5px}
+.water-fill{height:100%;border-radius:3px;transition:width .4s}
+.water-reset{font-size:11px;color:var(--faint);cursor:pointer;margin-left:4px;padding:2px 4px}
+
+/* ENERGY RATING */
+.energy-card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;
+  padding:12px 14px;margin-top:8px}
+.energy-title{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.07em;margin-bottom:10px}
+.energy-stars{display:flex;gap:6px}
+.energy-btn{flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--bdr);
+  background:var(--surf);font-size:19px;cursor:pointer;transition:all .18s;
+  display:flex;flex-direction:column;align-items:center;gap:3px}
+.energy-btn span{font-size:9px;color:var(--faint);letter-spacing:.02em}
+.energy-btn.on{border-color:var(--ember);background:var(--ember-d)}
+.energy-saved{font-size:11px;color:var(--teal);text-align:center;
+  margin-top:8px;padding-top:8px;border-top:1px solid var(--bdr)}
+
+/* STREAK */
+.streak-row{display:flex;gap:8px;margin-bottom:12px}
+.streak-card{flex:1;background:var(--card);border:1px solid var(--bdr);border-radius:12px;
+  padding:12px;text-align:center}
+.streak-card.hi{background:var(--ember-d);border-color:rgba(242,104,44,.3)}
+.streak-val{font-family:'Anton';font-size:26px;color:var(--teal);line-height:1;display:block}
+.streak-card.hi .streak-val{color:var(--ember-s)}
+.streak-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.05em;margin-top:3px;display:block}
+
+/* SHOP CHECKBOX */
+.mcard-check{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--bdr);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:transparent;background:var(--surf);transition:all .18s;
+  cursor:pointer;margin-left:6px}
+.mcard-check.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.mcard.checked .mcard-top{opacity:.4}
+.shop-clear-btn{width:100%;padding:9px;background:var(--surf);border:1px dashed var(--bdr);
+  border-radius:10px;color:var(--faint);font-family:'DM Sans';font-size:11.5px;
+  cursor:pointer;margin-bottom:10px;transition:all .18s}
+.shop-clear-btn:hover{border-color:var(--ember);color:var(--ember)}
+
+/* NOTIF TOGGLE */
+.notif-row{display:flex;align-items:center;gap:10px;margin-top:8px;
+  padding-top:8px;border-top:1px solid var(--bdr)}
+.notif-lbl{font-size:11.5px;color:var(--muted);flex:1}
+.ntoggle{position:relative;width:38px;height:21px;cursor:pointer;flex-shrink:0}
+.ntoggle input{opacity:0;width:0;height:0}
+.nslider{position:absolute;inset:0;background:var(--bdr);border-radius:21px;transition:.2s}
+.nslider::before{content:'';position:absolute;width:15px;height:15px;left:3px;top:3px;
+  background:#fff;border-radius:50%;transition:.2s}
+.ntoggle input:checked+.nslider{background:var(--teal)}
+.ntoggle input:checked+.nslider::before{transform:translateX(17px)}
+
+/* WEIGHT GOAL */
+.wt-goal-row{display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:8px;
+  border-top:1px solid var(--bdr)}
+.wt-goal-lbl{font-size:11px;color:var(--muted);flex:1}
+.wt-goal-diff{font-size:11.5px;font-weight:600}
+
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 </style>
 </head>
@@ -441,7 +501,7 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
     </div>
     <div class="ptrack"><div class="pfill" id="pfill"></div></div>
   </div>
-  <div class="water">💧 <span><b>3–4 L de água/dia</b> · obrigatório com creatina e proteína alta</span></div>
+  <div class="water" id="waterDiv" onclick="tapWater()">💧 <span><b>3–4 L de água/dia</b> · toque para registrar 250 ml</span></div>
   <div class="reset-banner" id="resetBanner">
     <span>🔄 <b>Nova semana detectada.</b> Progresso resetado automaticamente.</span>
     <button class="reset-btn" id="dismissReset">Ok</button>
@@ -995,6 +1055,7 @@ function renderMeals(){
     <span class="total-val">${d.tot} g</span></div>`;
   if(day!=='fds')
     h+=`<div class="ibox">🐟 Tilápia entra 2x por mês em qualquer jantar no lugar do atum, sardinha ou frango.</div>`;
+  if(day!=='fds') h+=renderEnergyWidget();
   return h;
 }
 
@@ -1117,23 +1178,36 @@ const MONTHLY=[
 ];
 
 function renderShop(){
+  const checks=loadShopChecks();
+  const total=MONTHLY.reduce((a,c)=>a+c.items.length,0);
+  const done=Object.values(checks).filter(Boolean).length;
+  const pct=total?Math.round(done/total*100):0;
   let h=`<p class="sec-title">Compras do Mês</p>
-  <div class="ibox" style="margin-bottom:14px;font-size:11.5px;line-height:1.6;">
-    📊 Calculado <b>só para você</b> com base no plano semanal (4,3 semanas/mês).<br>
-    Toque em qualquer item para ver o valor nutricional por porção.
+  <div class="ibox" style="margin-bottom:6px;font-size:11.5px;line-height:1.6;">
+    📊 Calculado <b>só para você</b> (4,3 semanas/mês). Toque no item para macros · ✓ para marcar como comprado.
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+    <div style="flex:1;height:5px;background:var(--bdr);border-radius:3px;overflow:hidden">
+      <div style="height:100%;width:${pct}%;background:var(--teal);border-radius:3px;transition:width .3s"></div>
+    </div>
+    <span style="font-size:11px;color:var(--teal);white-space:nowrap">${done}/${total}</span>
+    ${done>0?`<button class="shop-clear-btn" style="width:auto;padding:4px 10px;margin:0;font-size:10px" onclick="clearShopChecks()">Limpar</button>`:''}
   </div>`;
 
   MONTHLY.forEach(cat=>{
     h+=`<div class="shop-cat">${cat.cat}</div>`;
     cat.items.forEach(item=>{
-      h+=`<div class="mcard" onclick="this.classList.toggle('open')">
-        <div class="mcard-top">
+      const k=encodeURIComponent(item.n);
+      const checked=!!checks[k];
+      h+=`<div class="mcard${checked?' checked':''}" id="mc-${k}">
+        <div class="mcard-top" onclick="this.closest('.mcard').classList.toggle('open')">
           <span class="mcard-e">${item.e}</span>
           <div class="mcard-info">
             <div class="mcard-name">${item.n}</div>
             <div class="mcard-tip">${item.tip}</div>
           </div>
           <div class="mcard-qty">${item.qty}</div>
+          <div class="mcard-check${checked?' on':''}" id="sc-${k}" onclick="event.stopPropagation();toggleShopItem('${k}')">${checked?'✓':''}</div>
         </div>
         <div class="mcard-macros">
           <div class="mcard-por">Por ${item.por}</div>
@@ -1169,6 +1243,15 @@ function loadWeights(){
   try{return JSON.parse(localStorage.getItem(WEIGHT_KEY)||'{}')}catch(e){return{}}
 }
 
+window.saveWeightGoal=function(){
+  const inp=document.getElementById('wtGoal');
+  const val=parseFloat(inp.value);
+  if(!val||val<30||val>250){showToast('❌ Meta inválida');return;}
+  localStorage.setItem('plano_wt_goal',val);
+  showToast(`🎯 Meta: ${val} kg salva`);
+  if(sec==='hist') document.getElementById('main').innerHTML=renderHistorico();
+};
+
 window.saveWeight=function(){
   const inp=document.getElementById('wtInput');
   const val=parseFloat(inp.value);
@@ -1187,12 +1270,23 @@ function renderWeightCard(){
   const todayVal=w[today];
   const entries=Object.entries(w).sort((a,b)=>a[0].localeCompare(b[0])).slice(-30);
 
+  const goal=parseFloat(localStorage.getItem('plano_wt_goal')||'0');
+  const diff=todayVal&&goal?(todayVal-goal).toFixed(1):null;
+  const diffCol=diff>0?'var(--ember)':diff<0?'var(--teal)':'var(--muted)';
+
   const inputHtml=`<div class="wt-input-row">
     <span class="wt-label">⚖️ Peso hoje</span>
     ${todayVal?`<span class="wt-today-val">${todayVal}<small style="font-size:12px;font-family:'DM Sans';color:var(--muted)"> kg</small></span>`:''}
     <input class="wt-input" id="wtInput" type="number" step="0.1" min="30" max="250"
       placeholder="${todayVal||'82.0'}" value="${todayVal||''}">
     <button class="wt-save" onclick="saveWeight()">Salvar</button>
+  </div>
+  <div class="wt-goal-row">
+    <span class="wt-goal-lbl">🎯 Meta</span>
+    <input class="wt-input" id="wtGoal" type="number" step="0.1" min="30" max="250"
+      placeholder="79.0" value="${goal||''}" style="width:75px">
+    <button class="wt-save" onclick="saveWeightGoal()">OK</button>
+    ${diff!==null?`<span style="font-size:11.5px;font-weight:600;color:${diffCol}">${diff>0?'+':''}${diff} kg da meta</span>`:''}
   </div>`;
 
   if(entries.length<2) return `<div class="wt-card">${inputHtml}</div>`;
@@ -1280,8 +1374,9 @@ window.gdriveDisconnect=function(){
 
 window.gdriveSave=async function(){
   if(!gToken) return;
-  const backup={version:2,savedAt:new Date().toISOString(),
-    history:loadHistory(),weights:loadWeights()};
+  const backup={version:3,savedAt:new Date().toISOString(),
+    history:loadHistory(),weights:loadWeights(),
+    water:loadWater(),energy:loadEnergies()};
   try{
     const q=encodeURIComponent("name='plano_nutricao.json'");
     const lr=await fetch(
@@ -1329,9 +1424,204 @@ async function gdriveLoad(){
       const lw=loadWeights();
       localStorage.setItem(WEIGHT_KEY,JSON.stringify({...data.weights,...lw}));
     }
+    if(data.water){
+      const lw=loadWater();
+      localStorage.setItem(WATER_KEY,JSON.stringify({...data.water,...lw}));
+    }
+    if(data.energy){
+      const le=loadEnergies();
+      localStorage.setItem(ENERGY_KEY,JSON.stringify({...data.energy,...le}));
+    }
     showToast('☁️ Sincronizado com Drive');
   }catch(e){gToken=null;}
 }
+
+// ── Water counter ────────────────────────────────────
+const WATER_KEY='plano_water_v1';
+const WATER_ML=250,WATER_GOAL=3500;
+
+function loadWater(){try{return JSON.parse(localStorage.getItem(WATER_KEY)||'{}')}catch(e){return{}}}
+
+window.tapWater=function(){
+  const w=loadWater(),t=todayStr();
+  w[t]=((w[t]||0)+WATER_ML);
+  if(w[t]>WATER_GOAL+2000) w[t]=0;
+  localStorage.setItem(WATER_KEY,JSON.stringify(w));
+  renderWaterDiv();
+};
+
+window.resetWater=function(e){
+  e.stopPropagation();
+  const w=loadWater();w[todayStr()]=0;
+  localStorage.setItem(WATER_KEY,JSON.stringify(w));
+  renderWaterDiv();
+};
+
+function renderWaterDiv(){
+  const ml=loadWater()[todayStr()]||0;
+  const pct=Math.min(100,(ml/WATER_GOAL)*100);
+  const L=(ml/1000).toFixed(1);
+  const done=ml>=WATER_GOAL;
+  const col=done?'var(--teal)':'var(--blue)';
+  const el=document.getElementById('waterDiv');
+  if(!el)return;
+  el.innerHTML=`💧 <span style="flex:1"><b style="color:${col}">${L} L</b> / 3,5 L · toque +250 ml${
+    ml>0?` <span class="water-reset" onclick="resetWater(event)">↺</span>`:''
+  }</span><span style="font-size:11px;font-weight:600;color:${col}">${Math.round(pct)}%</span>
+  <div class="water-bar" style="position:absolute;bottom:0;left:0;right:0;border-radius:0 0 8px 8px">
+    <div class="water-fill" style="width:${pct}%;background:${col}"></div>
+  </div>`;
+  el.style.position='relative';
+  el.style.paddingBottom='9px';
+}
+
+// ── Energy tracking ───────────────────────────────────
+const ENERGY_KEY='plano_energy_v1';
+const ENERGY_E=['😴','😕','😐','💪','🔥'];
+const ENERGY_N=['Cansado','Fraco','Normal','Bem','Máximo'];
+
+function loadEnergies(){try{return JSON.parse(localStorage.getItem(ENERGY_KEY)||'{}')}catch(e){return{}}}
+
+window.saveEnergy=function(n){
+  const e=loadEnergies();e[todayStr()]=n;
+  localStorage.setItem(ENERGY_KEY,JSON.stringify(e));
+  gdriveSyncDebounced();
+  if(sec==='meals') render();
+};
+
+function renderEnergyWidget(){
+  const today=todayStr(),saved=loadEnergies()[today];
+  const btns=ENERGY_E.map((e,i)=>
+    `<button class="energy-btn${saved===i+1?' on':''}" onclick="saveEnergy(${i+1})">
+      ${e}<span>${ENERGY_N[i]}</span>
+    </button>`).join('');
+  return `<div class="energy-card">
+    <div class="energy-title">⚡ Energia no treino de hoje</div>
+    <div class="energy-stars">${btns}</div>
+    ${saved?`<div class="energy-saved">✓ ${ENERGY_E[saved-1]} ${ENERGY_N[saved-1]}</div>`:''}
+  </div>`;
+}
+
+function getCurrentDayType(){
+  const d=new Date().getDay();
+  if(d===1||d===3)return'mt';
+  if(d===2||d===5)return'tf';
+  if(d===4)return'qui';
+  return'fds';
+}
+
+// ── Streak ───────────────────────────────────────────
+function calcStreak(hist){
+  let streak=0;
+  const d=new Date();
+  const today=todayStr();
+  for(let i=0;i<365;i++){
+    const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const e=hist[ds];
+    if(!e||!e.total){
+      if(ds===today){d.setDate(d.getDate()-1);continue;}
+      break;
+    }
+    if(e.done/e.total>=0.8) streak++;
+    else break;
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
+
+function calcBestStreak(hist){
+  const dates=Object.keys(hist).sort();
+  let best=0,cur=0,prev=null;
+  dates.forEach(ds=>{
+    const e=hist[ds];
+    if(!e||!e.total){cur=0;prev=null;return;}
+    if(e.done/e.total>=0.8){
+      if(prev){
+        const d1=new Date(prev+'T12:00'),d2=new Date(ds+'T12:00');
+        if((d2-d1)/(86400000)===1) cur++;
+        else cur=1;
+      } else cur=1;
+      if(cur>best) best=cur;
+      prev=ds;
+    } else{cur=0;prev=null;}
+  });
+  return best;
+}
+
+// ── Notifications ────────────────────────────────────
+const NOTIF_PREF='plano_notif_v1';
+let _notifTimers=[];
+
+function clearNotifTimers(){_notifTimers.forEach(t=>clearTimeout(t));_notifTimers=[];}
+
+window.toggleNotifications=async function(){
+  const on=localStorage.getItem(NOTIF_PREF)==='1';
+  if(!on){
+    if(!('Notification' in window)){showToast('❌ Não suportado neste browser');return;}
+    const p=await Notification.requestPermission();
+    if(p!=='granted'){showToast('❌ Permissão negada');return;}
+    localStorage.setItem(NOTIF_PREF,'1');
+    scheduleNotifications();
+    showToast('🔔 Lembretes ativados');
+  } else{
+    clearNotifTimers();
+    localStorage.removeItem(NOTIF_PREF);
+    showToast('🔕 Lembretes desativados');
+  }
+  if(sec==='hist') document.getElementById('main').innerHTML=renderHistorico();
+};
+
+function scheduleNotifications(){
+  clearNotifTimers();
+  if(Notification.permission!=='granted') return;
+  if(localStorage.getItem(NOTIF_PREF)!=='1') return;
+  const now=new Date(),dt=getCurrentDayType();
+  DAYS[dt].meals.forEach(meal=>{
+    if(!meal.t||meal.type==='train') return;
+    const m=meal.t.match(/(\d{1,2})h(\d{2})/);
+    if(!m) return;
+    const target=new Date();
+    target.setHours(parseInt(m[1]),parseInt(m[2]),0,0);
+    const diff=target-now;
+    if(diff>0&&diff<14*3600000){
+      _notifTimers.push(setTimeout(()=>{
+        new Notification(`🍽 ${meal.n}`,{
+          body:meal.sum||'',icon:'./icon-192.png',
+          tag:`meal-${meal.t}`,silent:false
+        });
+      },diff));
+    }
+  });
+}
+
+// ── Shop checks ──────────────────────────────────────
+const SHOP_CHK_KEY='plano_shop_chk_v1';
+const SHOP_MTH_KEY='plano_shop_mth';
+
+function loadShopChecks(){
+  const cur=todayStr().slice(0,7);
+  if(localStorage.getItem(SHOP_MTH_KEY)!==cur){
+    localStorage.removeItem(SHOP_CHK_KEY);
+    localStorage.setItem(SHOP_MTH_KEY,cur);
+  }
+  try{return JSON.parse(localStorage.getItem(SHOP_CHK_KEY)||'{}')}catch(e){return{}}
+}
+
+window.toggleShopItem=function(k){
+  const c=loadShopChecks();c[k]=!c[k];
+  localStorage.setItem(SHOP_CHK_KEY,JSON.stringify(c));
+  const el=document.getElementById('sc-'+k);
+  if(el){
+    el.classList.toggle('on',c[k]);
+    el.textContent=c[k]?'✓':'';
+    el.closest('.mcard').classList.toggle('checked',c[k]);
+  }
+};
+
+window.clearShopChecks=function(){
+  localStorage.removeItem(SHOP_CHK_KEY);
+  if(sec==='shop') render();
+};
 
 function renderDriveCard(){
   const connected=gToken!==null;
@@ -1350,6 +1640,7 @@ function renderDriveCard(){
       </div>
     </div>`;
   }
+  const notifOn=localStorage.getItem(NOTIF_PREF)==='1';
   return `<div class="drive-card">
     <div class="drive-row">
       <span class="drive-ico">☁️</span>
@@ -1365,6 +1656,12 @@ function renderDriveCard(){
     ${connected?`<div style="text-align:right;margin-top:6px">
       <button class="drive-btn disc" onclick="gdriveDisconnect()">Desconectar</button>
     </div>`:''}
+    <div class="notif-row">
+      <span class="notif-lbl">🔔 Lembretes de refeição</span>
+      ${'Notification' in window
+        ?`<label class="ntoggle"><input type="checkbox" ${notifOn?'checked':''} onchange="toggleNotifications()"><span class="nslider"></span></label>`
+        :`<span style="font-size:10px;color:var(--faint)">Instale como app</span>`}
+    </div>
   </div>`;
 }
 
@@ -1445,6 +1742,7 @@ function renderHistDay(hist){
     Nenhum registro ainda.<br>Marque as refeições do dia e o histórico aparece aqui automaticamente.
   </div>`;
   const weights=loadWeights();
+  const energies=loadEnergies();
   return entries.map(([date,e])=>{
     const pct=Math.min(100,Math.round((e.protein/e.goal)*100));
     const full=pct>=95;
@@ -1452,11 +1750,12 @@ function renderHistDay(hist){
       `<span class="hmeal-chip ${m.done?'done':''} ${m.skip?'skip':''}">${m.name}</span>`
     ).join('');
     const wt=weights[date];
+    const en=energies[date];
     return `<div class="hcard">
       <div class="hcard-top">
         <div>
           <div class="hcard-date">${getDOW(date)} ${fmtDate(date)}${wt?`<span class="hcard-weight">${wt} kg</span>`:''}</div>
-          <div class="hcard-dow">${date===todayStr()?'Hoje':''}</div>
+          <div class="hcard-dow">${date===todayStr()?'Hoje':''}${en?` ${ENERGY_E[en-1]} ${ENERGY_N[en-1]}`:''}</div>
         </div>
         <span class="hcard-badge ${getDayClass(e.dayType)}">${getDayLabel(e.dayType)}</span>
       </div>
@@ -1502,12 +1801,15 @@ function renderHistWeek(hist){
         <span class="wbar-lbl">${getDOW(d.date)}</span>
       </div>`;
     }).join('');
+    const wkWeights=days.map(d=>loadWeights()[d.date]).filter(Boolean);
+    const avgWt=wkWeights.length?(wkWeights.reduce((a,b)=>a+b,0)/wkWeights.length).toFixed(1):'—';
     return `<div class="wcard">
       <div class="wcard-title">${wk.replace('-W',' · Sem ')}</div>
-      <div class="wcard-stats">
+      <div class="wcard-stats" style="grid-template-columns:repeat(4,1fr)">
         <div class="wstat"><div class="wstat-v">${avg}g</div><div class="wstat-l">Prot. média</div></div>
-        <div class="wstat"><div class="wstat-v">${trainDays}</div><div class="wstat-l">Dias treino</div></div>
+        <div class="wstat"><div class="wstat-v">${trainDays}</div><div class="wstat-l">Treinos</div></div>
         <div class="wstat"><div class="wstat-v">${completion}%</div><div class="wstat-l">Conclusão</div></div>
+        <div class="wstat"><div class="wstat-v">${avgWt}${avgWt!=='—'?' kg':''}</div><div class="wstat-l">Peso médio</div></div>
       </div>
       <div class="wbars">${bars}</div>
     </div>`;
@@ -1534,6 +1836,9 @@ function renderHistMonth(hist){
     const trainDays=days.filter(d=>d.e.dayType!=='fds').length;
     const streak=days.filter(d=>d.e.protein>=130).length;
     const isCur=m===curMonth;
+    const moWeights=days.map(d=>loadWeights()[d.date]).filter(Boolean);
+    const avgMoWt=moWeights.length?(moWeights.reduce((a,b)=>a+b,0)/moWeights.length).toFixed(1):'—';
+    const minMoWt=moWeights.length?Math.min(...moWeights).toFixed(1):'—';
     return `<div class="wcard" style="${isCur?'border-color:var(--ember)':''}">
       <div class="wcard-title" style="${isCur?'color:var(--ember-s)':''}">
         ${mNames[parseInt(mo)]} ${y} ${isCur?'· Atual':''}
@@ -1545,6 +1850,8 @@ function renderHistMonth(hist){
         <div class="mstat"><div class="mstat-v">${trainDays}</div><div class="mstat-l">Dias de treino</div></div>
         <div class="mstat"><div class="mstat-v">${streak}</div><div class="mstat-l">Dias acima de 130g</div></div>
         <div class="mstat"><div class="mstat-v">${Math.round(days.reduce((a,d)=>a+(d.e.done/d.e.total),0)/days.length*100)}%</div><div class="mstat-l">Taxa de conclusão</div></div>
+        <div class="mstat"><div class="mstat-v">${avgMoWt}${avgMoWt!=='—'?' kg':''}</div><div class="mstat-l">Peso médio</div></div>
+        <div class="mstat"><div class="mstat-v">${minMoWt}${minMoWt!=='—'?' kg':''}</div><div class="mstat-l">Menor peso</div></div>
       </div>
     </div>`;
   }).join('');
@@ -1603,9 +1910,27 @@ document.getElementById('fileInput').addEventListener('change',function(e){
 
 function renderHistorico(){
   const hist=loadHistory();
+  const streak=calcStreak(hist);
+  const best=calcBestStreak(hist);
+  const avgProt=Object.keys(hist).length
+    ?Math.round(Object.values(hist).reduce((a,e)=>a+e.protein,0)/Object.keys(hist).length):0;
   const views={day:renderHistDay,week:renderHistWeek,month:renderHistMonth};
   return `<p class="sec-title">Histórico</p>
   ${renderDriveCard()}
+  <div class="streak-row">
+    <div class="streak-card${streak>0?' hi':''}">
+      <span class="streak-val">${streak>0?'🔥 '+streak:streak}</span>
+      <span class="streak-lbl">Sequência atual</span>
+    </div>
+    <div class="streak-card">
+      <span class="streak-val">${best}</span>
+      <span class="streak-lbl">Melhor sequência</span>
+    </div>
+    <div class="streak-card">
+      <span class="streak-val">${avgProt}g</span>
+      <span class="streak-lbl">Média proteína</span>
+    </div>
+  </div>
   ${renderWeightCard()}
   <div class="backup-row">
     <button class="backup-btn export" onclick="exportHistory()">
@@ -1697,6 +2022,8 @@ document.getElementById('main').addEventListener('click',e=>{
 // ── Init ───────────────────────────────────────────
 setColor(DAYS[day].color);
 render();
+renderWaterDiv();
+scheduleNotifications();
 </script>
 <div class="toast" id="toast"></div>
 <script>
