@@ -476,6 +476,47 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
   border-top:1px solid var(--bdr)}
 .wt-goal-lbl{font-size:11px;color:var(--muted);flex:1}
 .wt-goal-diff{font-size:11.5px;font-weight:600}
+.wt-stag{margin-top:8px;padding:8px 10px;border-radius:8px;font-size:11.5px;line-height:1.45;
+  background:var(--gold-d);color:var(--gold);border:1px solid rgba(212,146,42,.25)}
+
+/* MODO OBJETIVO */
+.modo-card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;
+  padding:12px 14px;margin-bottom:10px}
+.modo-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.07em;margin-bottom:8px}
+.modo-btns{display:flex;gap:6px;margin-bottom:8px}
+.modo-btn{flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--bdr);
+  background:var(--surf);font-family:'DM Sans';font-size:11.5px;font-weight:600;
+  cursor:pointer;transition:all .18s;text-align:center}
+.modo-btn.on{border-color:var(--day);background:var(--ember-d);color:var(--ember-s)}
+.modo-btn[data-m="manutencao"].on{background:var(--teal-d);border-color:var(--teal);color:var(--teal)}
+.modo-btn[data-m="ganho"].on{background:var(--blue-d);border-color:var(--blue);color:var(--blue)}
+.modo-note{font-size:11px;color:var(--muted);line-height:1.4}
+.modo-pill{font-size:10px;font-weight:600;padding:3px 9px;border-radius:10px;
+  background:var(--ember-d);color:var(--ember-s);border:1px solid rgba(242,104,44,.3);
+  white-space:nowrap;cursor:pointer}
+.modo-pill.teal{background:var(--teal-d);color:var(--teal);border-color:rgba(61,191,140,.3)}
+.modo-pill.blue{background:var(--blue-d);color:var(--blue);border-color:rgba(74,140,247,.3)}
+.modo-note-meals{margin-top:8px;padding:8px 10px;border-radius:8px;font-size:11.5px;
+  line-height:1.45;background:var(--ember-d);color:var(--ember-s)}
+
+/* RELATÓRIO */
+.report-btn{width:100%;padding:10px;background:var(--surf);
+  border:1px solid var(--bdr);border-radius:10px;color:var(--muted);
+  font-family:'DM Sans';font-size:12px;font-weight:500;cursor:pointer;
+  margin-bottom:10px;transition:all .18s}
+.report-btn:hover{border-color:var(--teal);color:var(--teal)}
+
+/* CORRELAÇÃO */
+.corr-card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;
+  padding:12px 14px;margin-bottom:10px}
+.corr-title{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.07em;margin-bottom:10px}
+.corr-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.corr-item{background:var(--surf);border-radius:8px;padding:9px 10px}
+.corr-lbl{font-size:10px;color:var(--faint);display:block;margin-bottom:4px}
+.corr-val{font-family:'Anton';font-size:18px;color:var(--teal);line-height:1}
+.corr-sub{font-size:10px;color:var(--faint);margin-top:4px}
 
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 </style>
@@ -487,6 +528,7 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
   <div class="hdr-row">
     <span class="hdr-title">Plano Semanal</span>
     <span class="week-badge" id="wbadge">Semana <b id="wnum">—</b></span>
+    <span class="modo-pill" id="modoPill" onclick="showSec('hist')">⚖️ Manutenção</span>
   </div>
   <div class="pills" id="pills">
     <button class="pill on" data-d="mt">SEG · QUA</button>
@@ -1056,6 +1098,9 @@ function renderMeals(){
   if(day!=='fds')
     h+=`<div class="ibox">🐟 Tilápia entra 2x por mês em qualquer jantar no lugar do atum, sardinha ou frango.</div>`;
   if(day!=='fds') h+=renderEnergyWidget();
+  const modo=MODOS[getModo()];
+  if(getModo()!=='manutencao')
+    h+=`<div class="modo-note-meals">${modo.icon} <b>Modo ${modo.label}:</b> ${modo.desc}</div>`;
   return h;
 }
 
@@ -1289,7 +1334,8 @@ function renderWeightCard(){
     ${diff!==null?`<span style="font-size:11.5px;font-weight:600;color:${diffCol}">${diff>0?'+':''}${diff} kg da meta</span>`:''}
   </div>`;
 
-  if(entries.length<2) return `<div class="wt-card">${inputHtml}</div>`;
+  const stag=checkStagnation();
+  if(entries.length<2) return `<div class="wt-card">${inputHtml}${stag?`<div class="wt-stag">${stag}</div>`:''}</div>`;
 
   const vals=entries.map(e=>e[1]);
   const minV=Math.min(...vals),maxV=Math.max(...vals);
@@ -1311,6 +1357,7 @@ function renderWeightCard(){
 
   return `<div class="wt-card">
     ${inputHtml}
+    ${stag?`<div class="wt-stag">${stag}</div>`:''}
     <div class="wt-chart-wrap">
       <svg width="100%" viewBox="0 0 ${W} ${H}" style="overflow:visible;display:block">
         <polyline points="${pts}" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linejoin="round"/>
@@ -1321,6 +1368,167 @@ function renderWeightCard(){
         <span style="color:${trendColor};font-weight:600">${trendSign}${trend} kg no período</span>
         <span>${last[0].slice(5).replace('-','/')}</span>
       </div>
+    </div>
+  </div>`;
+}
+
+// ── Modo objetivo ────────────────────────────────────
+const MODO_KEY='plano_modo_v1';
+const MODOS={
+  corte:{label:'Corte',icon:'🔥',pill:'ember',
+    desc:'Déficit ~300 kcal/dia. Reduzir carbo no jantar e aumentar proteína.',
+    protBonus:10},
+  manutencao:{label:'Manutenção',icon:'⚖️',pill:'teal',
+    desc:'Manter peso atual. Macros como planejados.',
+    protBonus:0},
+  ganho:{label:'Ganho',icon:'💪',pill:'blue',
+    desc:'Superávit leve. Aumentar porção de arroz no almoço e lanche.',
+    protBonus:0}
+};
+
+function getModo(){return localStorage.getItem(MODO_KEY)||'manutencao';}
+
+window.setModo=function(m){
+  localStorage.setItem(MODO_KEY,m);
+  showToast(`✅ Modo ${MODOS[m].label} ativado`);
+  render();
+  renderModoPill();
+};
+
+function renderModoPill(){
+  const m=MODOS[getModo()];
+  const el=document.getElementById('modoPill');
+  if(!el)return;
+  el.textContent=`${m.icon} ${m.label}`;
+  el.className=`modo-pill${m.pill==='teal'?' teal':m.pill==='blue'?' blue':''}`;
+}
+
+function renderModoCard(){
+  const cur=getModo();
+  const btns=Object.entries(MODOS).map(([k,m])=>
+    `<button class="modo-btn${cur===k?' on':''}" data-m="${k}" onclick="setModo('${k}')">${m.icon} ${m.label}</button>`
+  ).join('');
+  return `<div class="modo-card">
+    <div class="modo-label">🎯 Objetivo atual</div>
+    <div class="modo-btns">${btns}</div>
+    <div class="modo-note">${MODOS[cur].desc}</div>
+  </div>`;
+}
+
+// ── Relatório semanal ────────────────────────────────
+function generateReport(){
+  const hist=loadHistory(),weights=loadWeights(),energies=loadEnergies();
+  const wk=getWeekKey();
+
+  function getWkKey(date){
+    const d=new Date(date+'T12:00');
+    const day=d.getUTCDay()||7;
+    const tmp=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+    tmp.setUTCDate(tmp.getUTCDate()+4-day);
+    const y=new Date(Date.UTC(tmp.getUTCFullYear(),0,1));
+    const w=Math.ceil((((tmp-y)/86400000)+1)/7);
+    return `plano-${tmp.getUTCFullYear()}-W${String(w).padStart(2,'0')}`;
+  }
+
+  const week=Object.entries(hist).filter(([date])=>getWkKey(date)===wk);
+  if(!week.length){showToast('❌ Sem dados esta semana');return;}
+
+  const avgProt=Math.round(week.reduce((a,[,e])=>a+e.protein,0)/week.length);
+  const trainDays=week.filter(([,e])=>e.dayType!=='fds').length;
+  const completion=Math.round(week.reduce((a,[,e])=>a+(e.done/e.total),0)/week.length*100);
+  const streak=calcStreak(hist);
+
+  const wkW=week.map(([d])=>weights[d]).filter(Boolean);
+  const wtLine=wkW.length
+    ?`⚖️ Peso: ${Math.min(...wkW).toFixed(1)}–${Math.max(...wkW).toFixed(1)} kg`
+    :'⚖️ Peso: não registrado';
+
+  const enVals=week.map(([d,e])=>e.dayType!=='fds'?energies[d]:null).filter(Boolean);
+  const avgEn=enVals.length?(enVals.reduce((a,b)=>a+b,0)/enVals.length).toFixed(1):'—';
+  const enIcon=avgEn!=='—'?ENERGY_E[Math.round(avgEn)-1]:'';
+
+  const modo=MODOS[getModo()];
+  const txt=
+`📊 RELATÓRIO SEMANAL — ${wk.replace('plano-','')}
+━━━━━━━━━━━━━━━━━━━━━━
+🍽 Proteína média: ${avgProt} g/dia
+✅ Conclusão: ${completion}%
+🏋 Dias de treino: ${trainDays}
+⚡ Energia média: ${avgEn} ${enIcon}
+${wtLine}
+🔥 Sequência atual: ${streak} dias
+🎯 Objetivo: ${modo.icon} ${modo.label}
+━━━━━━━━━━━━━━━━━━━━━━
+Gerado em ${new Date().toLocaleDateString('pt-BR')} pelo Plano Semanal`;
+
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(txt)
+      .then(()=>showToast('📋 Relatório copiado!'))
+      .catch(()=>{showReportModal(txt);});
+  } else showReportModal(txt);
+}
+
+function showReportModal(txt){
+  const old=document.getElementById('reportModal');
+  if(old) old.remove();
+  const d=document.createElement('div');
+  d.id='reportModal';
+  d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:300;display:flex;align-items:flex-end;padding:20px';
+  d.innerHTML=`<div style="background:var(--card);border-radius:16px;padding:16px;width:100%;max-width:460px;margin:0 auto">
+    <pre style="font-family:monospace;font-size:12px;white-space:pre-wrap;color:var(--txt);margin-bottom:12px">${txt}</pre>
+    <button onclick="document.getElementById('reportModal').remove()" style="width:100%;padding:10px;background:var(--surf);border:1px solid var(--bdr);border-radius:8px;color:var(--muted);font-family:'DM Sans';cursor:pointer">Fechar</button>
+  </div>`;
+  document.body.appendChild(d);
+}
+window.generateReport=generateReport;
+
+// ── Estagnação de peso ───────────────────────────────
+function checkStagnation(){
+  const weights=loadWeights();
+  const goal=parseFloat(localStorage.getItem('plano_wt_goal')||'0');
+  if(!goal) return null;
+  const last=Object.entries(weights).sort((a,b)=>a[0].localeCompare(b[0])).slice(-14).map(([,v])=>v);
+  if(last.length<7) return null;
+  const range=Math.max(...last)-Math.min(...last);
+  if(range>=0.8) return null;
+  const avg=last.reduce((a,b)=>a+b,0)/last.length;
+  const dir=avg>goal?'perder peso':'ganhar músculo';
+  return `⚠️ Peso estagnado por ${last.length} dias (variação ${range.toFixed(1)} kg). Para ${dir}: revise as calorias ou aumente a intensidade dos treinos.`;
+}
+
+// ── Correlação energia × proteína ───────────────────
+function renderCorrelation(){
+  const hist=loadHistory(),energies=loadEnergies();
+  const data=Object.entries(hist)
+    .filter(([date,e])=>e.dayType!=='fds'&&energies[date]&&e.total>0)
+    .map(([date,e])=>({prot:e.protein,energy:energies[date],pct:e.done/e.total}));
+  if(data.length<5) return '';
+
+  const hi=data.filter(d=>d.prot>=150);
+  const lo=data.filter(d=>d.prot<150);
+  if(!hi.length||!lo.length) return '';
+
+  const avgHi=(hi.reduce((a,d)=>a+d.energy,0)/hi.length).toFixed(1);
+  const avgLo=(lo.reduce((a,d)=>a+d.energy,0)/lo.length).toFixed(1);
+  const diff=(avgHi-avgLo).toFixed(1);
+  if(Math.abs(diff)<0.3) return '';
+
+  return `<div class="corr-card">
+    <div class="corr-title">🔬 Correlação: proteína × energia no treino</div>
+    <div class="corr-row">
+      <div class="corr-item">
+        <span class="corr-lbl">Prot. ≥150g (${hi.length} dias)</span>
+        <span class="corr-val">${avgHi} ${ENERGY_E[Math.min(4,Math.round(avgHi)-1)]}</span>
+        <div class="corr-sub">energia média</div>
+      </div>
+      <div class="corr-item" style="opacity:.7">
+        <span class="corr-lbl">Prot. <150g (${lo.length} dias)</span>
+        <span class="corr-val" style="color:var(--muted)">${avgLo} ${ENERGY_E[Math.min(4,Math.max(0,Math.round(avgLo)-1))]}</span>
+        <div class="corr-sub">energia média</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--teal)">
+      💡 Com proteína alta você treina <b>+${diff} pontos de energia</b> em média.
     </div>
   </div>`;
 }
@@ -1917,6 +2125,7 @@ function renderHistorico(){
   const views={day:renderHistDay,week:renderHistWeek,month:renderHistMonth};
   return `<p class="sec-title">Histórico</p>
   ${renderDriveCard()}
+  ${renderModoCard()}
   <div class="streak-row">
     <div class="streak-card${streak>0?' hi':''}">
       <span class="streak-val">${streak>0?'🔥 '+streak:streak}</span>
@@ -1932,6 +2141,7 @@ function renderHistorico(){
     </div>
   </div>
   ${renderWeightCard()}
+  <button class="report-btn" onclick="generateReport()">📊 Gerar relatório semanal · copiar para área de transferência</button>
   <div class="backup-row">
     <button class="backup-btn export" onclick="exportHistory()">
       <span class="bb-ic">💾</span>Exportar backup
@@ -1940,6 +2150,7 @@ function renderHistorico(){
       <span class="bb-ic">📂</span>Importar backup
     </button>
   </div>
+  ${renderCorrelation()}
   <div class="htabs">
     <button class="htab ${histView==='day'?'on':''}" onclick="setHistView('day')">Diário</button>
     <button class="htab ${histView==='week'?'on':''}" onclick="setHistView('week')">Semanal</button>
@@ -2019,10 +2230,20 @@ document.getElementById('main').addEventListener('click',e=>{
   if(mc) mc.classList.toggle('open');
 });
 
+// ── showSec (used by modo pill) ─────────────────────
+function showSec(s){
+  sec=s;
+  document.querySelectorAll('.nb').forEach(x=>x.classList.remove('on'));
+  const nb=document.querySelector(`.nb[data-s="${s}"]`);
+  if(nb) nb.classList.add('on');
+  render();
+}
+
 // ── Init ───────────────────────────────────────────
 setColor(DAYS[day].color);
 render();
 renderWaterDiv();
+renderModoPill();
 scheduleNotifications();
 </script>
 <div class="toast" id="toast"></div>
