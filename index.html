@@ -2239,6 +2239,14 @@ function showSec(s){
   render();
 }
 
+// ── Visibilidade: corrige água e notificações ao reabrir ──
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden){
+    renderWaterDiv();       // água mostra data de hoje
+    scheduleNotifications(); // reagenda para o dia atual
+  }
+});
+
 // ── Init ───────────────────────────────────────────
 setColor(DAYS[day].color);
 render();
