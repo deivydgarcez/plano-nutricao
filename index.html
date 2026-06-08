@@ -507,6 +507,20 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
   margin-bottom:10px;transition:all .18s}
 .report-btn:hover{border-color:var(--teal);color:var(--teal)}
 
+/* CHARTS */
+.chart-card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;
+  padding:14px;margin-bottom:12px}
+.chart-hed{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.chart-title{font-family:'Anton';font-size:15px;text-transform:uppercase;letter-spacing:.03em}
+.chart-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.chart-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.cstat{background:var(--surf);border-radius:8px;padding:8px 6px;text-align:center}
+.cstat-v{font-family:'Anton';font-size:16px;color:var(--teal);line-height:1}
+.cstat-v.em{color:var(--ember-s)}
+.cstat-v.bl{color:var(--blue)}
+.cstat-l{font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;margin-top:3px}
+.chart-empty{text-align:center;padding:32px 16px;color:var(--faint);font-size:13px;line-height:1.6}
+
 /* CORRELAÇÃO */
 .corr-card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;
   padding:12px 14px;margin-bottom:10px}
@@ -1496,6 +1510,177 @@ function checkStagnation(){
   return `⚠️ Peso estagnado por ${last.length} dias (variação ${range.toFixed(1)} kg). Para ${dir}: revise as calorias ou aumente a intensidade dos treinos.`;
 }
 
+// ── SVG Charts ───────────────────────────────────────
+function svgLine(entries,{color='var(--teal)',goalVal=null,W=336,H=96}={}){
+  if(entries.length<2) return '';
+  const vals=entries.map(e=>e.y);
+  let minV=Math.min(...vals),maxV=Math.max(...vals);
+  if(goalVal!=null){minV=Math.min(minV,goalVal);maxV=Math.max(maxV,goalVal);}
+  const pad=1.5;minV=Math.max(0,minV-pad);maxV+=pad;
+  const range=maxV-minV||1;
+  const pl=34,pr=14,pt=8,pb=22;
+  const cW=W-pl-pr,cH=H-pt-pb;
+  const tx=i=>pl+(i/(entries.length-1))*cW;
+  const ty=v=>pt+(1-(v-minV)/range)*cH;
+  const pts=entries.map((e,i)=>`${tx(i).toFixed(1)},${ty(e.y).toFixed(1)}`).join(' ');
+  const fX=tx(0).toFixed(1),lX=tx(entries.length-1).toFixed(1);
+  const bY=(pt+cH).toFixed(1);
+  // linear regression
+  const n=entries.length,sx=n*(n-1)/2,sy=vals.reduce((a,b)=>a+b,0);
+  const sxy=vals.reduce((a,v,i)=>a+i*v,0),sx2=n*(n-1)*(2*n-1)/6;
+  const den=n*sx2-sx*sx;
+  const slope=den?((n*sxy-sx*sy)/den):0;
+  const intercept=(sy-slope*sx)/n;
+  // y-axis ticks
+  const ticks=[minV+range*.1,minV+range*.5,minV+range*.9];
+  const yAxis=ticks.map(v=>`
+    <text x="${pl-4}" y="${(ty(v)+3.5).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--faint)">${v.toFixed(1)}</text>
+    <line x1="${pl}" y1="${ty(v).toFixed(1)}" x2="${pl+cW}" y2="${ty(v).toFixed(1)}" stroke="var(--bdr)" stroke-width=".5" opacity=".4"/>`).join('');
+  // x labels
+  const xi=[0,Math.floor((n-1)/2),n-1];
+  const xAxis=xi.map(i=>`<text x="${tx(i).toFixed(1)}" y="${H-4}" text-anchor="middle" font-size="9" fill="var(--faint)">${entries[i].x}</text>`).join('');
+  // goal line
+  const gLine=goalVal!=null?`<line x1="${pl}" y1="${ty(goalVal).toFixed(1)}" x2="${pl+cW}" y2="${ty(goalVal).toFixed(1)}" stroke="var(--gold)" stroke-width="1.5" stroke-dasharray="4,3" opacity=".8"/>
+    <text x="${(pl+cW+3).toFixed(1)}" y="${(ty(goalVal)+4).toFixed(1)}" font-size="9" fill="var(--gold)">${goalVal}</text>`:'';
+  // dots
+  const dotI=new Set([0,n-3,n-2,n-1].filter(i=>i>=0));
+  const dots=[...dotI].map(i=>{const last=i===n-1;return`<circle cx="${tx(i).toFixed(1)}" cy="${ty(entries[i].y).toFixed(1)}" r="${last?4:2.5}" fill="${last?'var(--ember)':color}" stroke="var(--bg)" stroke-width="${last?2:1.5}"/>`;}).join('');
+  const aid=`ag${Math.random().toString(36).slice(2,6)}`;
+  return `<svg width="100%" viewBox="0 0 ${W} ${H}" style="overflow:visible;display:block">
+    <defs><linearGradient id="${aid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${color}" stop-opacity=".2"/>
+      <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${yAxis}${gLine}
+    <polygon points="${pts} ${lX},${bY} ${fX},${bY}" fill="url(#${aid})"/>
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <line x1="${fX}" y1="${ty(intercept).toFixed(1)}" x2="${lX}" y2="${ty(intercept+slope*(n-1)).toFixed(1)}" stroke="${color}" stroke-width="1" stroke-dasharray="3,3" opacity=".35"/>
+    ${dots}${xAxis}
+  </svg>`;
+}
+
+function svgBars(entries,{color='var(--teal)',goalVal=null,fixedMax=null,colorFn=null,W=336,H=80}={}){
+  if(!entries.length) return '';
+  const vals=entries.map(e=>e.y);
+  const topV=fixedMax||Math.max(...vals,goalVal||0)*1.12||1;
+  const pl=0,pr=0,pt=16,pb=20;
+  const cW=W-pl-pr,cH=H-pt-pb;
+  const gap=cW/entries.length;
+  const bw=Math.max(8,gap*.62);
+  const tx=i=>pl+i*gap+gap/2;
+  const bh=v=>Math.max(2,(v/topV)*cH);
+  const bars=entries.map((e,i)=>{
+    const h=bh(e.y),x=(tx(i)-bw/2).toFixed(1),y=(pt+cH-h).toFixed(1);
+    const isLast=i===entries.length-1;
+    const fill=colorFn?colorFn(e.y):(isLast?'var(--ember)':color);
+    return `<rect x="${x}" y="${y}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${fill}" opacity="${isLast?1:.72}"/>
+      <text x="${tx(i).toFixed(1)}" y="${(pt+cH-h-4).toFixed(1)}" text-anchor="middle" font-size="9" fill="var(--muted)">${e.y}</text>
+      <text x="${tx(i).toFixed(1)}" y="${H-4}" text-anchor="middle" font-size="9" fill="var(--faint)">${e.x}</text>`;
+  }).join('');
+  const gLine=goalVal!=null?(()=>{const y=(pt+cH-bh(goalVal)).toFixed(1);
+    return`<line x1="0" y1="${y}" x2="${cW}" y2="${y}" stroke="var(--gold)" stroke-width="1.5" stroke-dasharray="4,3" opacity=".8"/>`;})():'';
+  return `<svg width="100%" viewBox="0 0 ${W} ${H}" style="overflow:visible;display:block">
+    ${gLine}${bars}
+  </svg>`;
+}
+
+function renderCharts(){
+  const hist=loadHistory(),weights=loadWeights(),energies=loadEnergies(),water=loadWater();
+  const hArr=Object.entries(hist).sort((a,b)=>a[0].localeCompare(b[0]));
+  const wtGoal=parseFloat(localStorage.getItem('plano_wt_goal')||'0');
+  let out='';
+
+  // ── Peso ──
+  const wtArr=Object.entries(weights).sort((a,b)=>a[0].localeCompare(b[0])).slice(-30);
+  if(wtArr.length>=2){
+    const vals=wtArr.map(e=>e[1]);
+    const avg=(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);
+    const trend=(vals[vals.length-1]-vals[0]).toFixed(1);
+    const tc=trend>0?'em':trend<0?'':'';
+    out+=`<div class="chart-card">
+      <div class="chart-hed">
+        <div><div class="chart-title">⚖️ Peso</div>
+        <div class="chart-sub">Últimos ${wtArr.length} registros · kg</div></div>
+        ${wtGoal?`<span style="font-size:10px;color:var(--gold)">🎯 ${wtGoal} kg</span>`:''}
+      </div>
+      ${svgLine(wtArr.map(([d,v])=>({x:d.slice(5).replace('-','/'),y:v})),{goalVal:wtGoal||null})}
+      <div class="chart-stats">
+        <div class="cstat"><div class="cstat-v">${Math.min(...vals).toFixed(1)}</div><div class="cstat-l">Mínimo</div></div>
+        <div class="cstat"><div class="cstat-v">${avg}</div><div class="cstat-l">Média</div></div>
+        <div class="cstat"><div class="cstat-v ${tc}">${trend>0?'+':''}${trend} kg</div><div class="cstat-l">Variação</div></div>
+      </div></div>`;
+  }
+
+  // ── Proteína ──
+  const protArr=hArr.slice(-21).map(([d,e])=>({x:d.slice(8),y:e.protein}));
+  if(protArr.length>=3){
+    const vals=protArr.map(e=>e.y);
+    const avg=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+    out+=`<div class="chart-card">
+      <div class="chart-hed"><div><div class="chart-title">🥩 Proteína diária</div>
+        <div class="chart-sub">Últimos ${protArr.length} dias · g</div></div></div>
+      ${svgBars(protArr,{color:'var(--teal)',goalVal:150,colorFn:v=>v>=150?'var(--teal)':v>=120?'var(--gold)':'var(--ember)'})}
+      <div class="chart-stats">
+        <div class="cstat"><div class="cstat-v">${avg}g</div><div class="cstat-l">Média</div></div>
+        <div class="cstat"><div class="cstat-v">${Math.max(...vals)}g</div><div class="cstat-l">Melhor</div></div>
+        <div class="cstat"><div class="cstat-v">${vals.filter(v=>v>=150).length}</div><div class="cstat-l">Dias ≥150g</div></div>
+      </div></div>`;
+  }
+
+  // ── Conclusão ──
+  const concArr=hArr.slice(-14).map(([d,e])=>({x:getDOW(d).slice(0,3),y:Math.round(e.done/e.total*100)||0}));
+  if(concArr.length>=3){
+    const vals=concArr.map(e=>e.y);
+    const avg=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+    out+=`<div class="chart-card">
+      <div class="chart-hed"><div><div class="chart-title">✅ Conclusão</div>
+        <div class="chart-sub">Últimos ${concArr.length} dias · %</div></div></div>
+      ${svgBars(concArr,{fixedMax:100,goalVal:80,colorFn:v=>v>=80?'var(--teal)':v>=60?'var(--gold)':'var(--ember)'})}
+      <div class="chart-stats">
+        <div class="cstat"><div class="cstat-v">${avg}%</div><div class="cstat-l">Média</div></div>
+        <div class="cstat"><div class="cstat-v">${Math.max(...vals)}%</div><div class="cstat-l">Melhor</div></div>
+        <div class="cstat"><div class="cstat-v">${vals.filter(v=>v>=80).length}</div><div class="cstat-l">Dias ≥80%</div></div>
+      </div></div>`;
+  }
+
+  // ── Energia ──
+  const enArr=hArr.filter(([d,e])=>e.dayType!=='fds'&&energies[d]).slice(-14)
+    .map(([d])=>({x:getDOW(d).slice(0,3),y:energies[d]}));
+  if(enArr.length>=3){
+    const vals=enArr.map(e=>e.y);
+    const avg=(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);
+    out+=`<div class="chart-card">
+      <div class="chart-hed"><div><div class="chart-title">⚡ Energia no treino</div>
+        <div class="chart-sub">${enArr.length} treinos · escala 1–5</div></div></div>
+      ${svgBars(enArr,{color:'var(--ember)',fixedMax:5,colorFn:v=>v>=4?'var(--teal)':v>=3?'var(--ember)':'var(--gold)'})}
+      <div class="chart-stats">
+        <div class="cstat"><div class="cstat-v">${avg}</div><div class="cstat-l">Média</div></div>
+        <div class="cstat"><div class="cstat-v">${ENERGY_E[Math.min(4,Math.round(parseFloat(avg))-1)]}</div><div class="cstat-l">Nível</div></div>
+        <div class="cstat"><div class="cstat-v">${vals.filter(v=>v>=4).length}</div><div class="cstat-l">Dias ≥💪</div></div>
+      </div></div>`;
+  }
+
+  // ── Água ──
+  const waterArr=Object.entries(water).sort((a,b)=>a[0].localeCompare(b[0])).slice(-10)
+    .map(([d,v])=>({x:getDOW(d).slice(0,3),y:parseFloat((v/1000).toFixed(1))}));
+  if(waterArr.length>=3){
+    const vals=waterArr.map(e=>e.y);
+    const avg=(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);
+    out+=`<div class="chart-card">
+      <div class="chart-hed"><div><div class="chart-title">💧 Hidratação</div>
+        <div class="chart-sub">Últimos ${waterArr.length} dias · litros</div></div></div>
+      ${svgBars(waterArr,{color:'var(--blue)',goalVal:3.5,fixedMax:5,colorFn:v=>v>=3.5?'var(--teal)':v>=2.5?'var(--blue)':'var(--ember)'})}
+      <div class="chart-stats">
+        <div class="cstat"><div class="cstat-v bl">${avg}L</div><div class="cstat-l">Média</div></div>
+        <div class="cstat"><div class="cstat-v bl">${Math.max(...vals)}L</div><div class="cstat-l">Melhor</div></div>
+        <div class="cstat"><div class="cstat-v">${vals.filter(v=>v>=3.5).length}</div><div class="cstat-l">Dias ≥3.5L</div></div>
+      </div></div>`;
+  }
+
+  if(!out) return `<div class="chart-empty">📈<br>Use o app por alguns dias para ver os gráficos aqui.</div>`;
+  return out;
+}
+
 // ── Correlação energia × proteína ───────────────────
 function renderCorrelation(){
   const hist=loadHistory(),energies=loadEnergies();
@@ -2122,7 +2307,7 @@ function renderHistorico(){
   const best=calcBestStreak(hist);
   const avgProt=Object.keys(hist).length
     ?Math.round(Object.values(hist).reduce((a,e)=>a+e.protein,0)/Object.keys(hist).length):0;
-  const views={day:renderHistDay,week:renderHistWeek,month:renderHistMonth};
+  const views={day:renderHistDay,week:renderHistWeek,month:renderHistMonth,charts:renderCharts};
   return `<p class="sec-title">Histórico</p>
   ${renderDriveCard()}
   ${renderModoCard()}
@@ -2155,6 +2340,7 @@ function renderHistorico(){
     <button class="htab ${histView==='day'?'on':''}" onclick="setHistView('day')">Diário</button>
     <button class="htab ${histView==='week'?'on':''}" onclick="setHistView('week')">Semanal</button>
     <button class="htab ${histView==='month'?'on':''}" onclick="setHistView('month')">Mensal</button>
+    <button class="htab ${histView==='charts'?'on':''}" onclick="setHistView('charts')">📈</button>
   </div>
   ${views[histView](hist)}`;
 }
