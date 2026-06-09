@@ -1837,8 +1837,7 @@ function loadWater(){try{return JSON.parse(localStorage.getItem(WATER_KEY)||'{}'
 
 window.tapWater=function(){
   const w=loadWater(),t=todayStr();
-  w[t]=((w[t]||0)+WATER_ML);
-  if(w[t]>WATER_GOAL+2000) w[t]=0;
+  w[t]=Math.min((w[t]||0)+WATER_ML, WATER_GOAL+1000);
   localStorage.setItem(WATER_KEY,JSON.stringify(w));
   renderWaterDiv();
 };
@@ -2428,8 +2427,16 @@ function showSec(s){
 // ── Visibilidade: corrige água e notificações ao reabrir ──
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden){
-    renderWaterDiv();       // água mostra data de hoje
-    scheduleNotifications(); // reagenda para o dia atual
+    renderWaterDiv();
+    scheduleNotifications();
+    // atualiza o dia da semana se mudou (ex: app aberto passando da meia-noite)
+    const newDay=getCurrentDayType();
+    if(newDay!==day){
+      day=newDay;
+      document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.dataset.d===day));
+      setColor(DAYS[day].color);
+      if(sec==='meals') render();
+    }
   }
 });
 
