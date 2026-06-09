@@ -1010,7 +1010,7 @@ function renderNutri(){
 }
 
 // ── State ──────────────────────────────────────────
-let day='mt', sec='meals';
+let day=getCurrentDayType(), sec='meals';
 let chk=loadState();
 
 // ── Week badge ──────────────────────────────────────
@@ -2435,6 +2435,7 @@ document.addEventListener('visibilitychange',()=>{
 
 // ── Init ───────────────────────────────────────────
 setColor(DAYS[day].color);
+document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.dataset.d===day));
 render();
 renderWaterDiv();
 renderModoPill();
