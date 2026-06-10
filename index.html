@@ -1031,14 +1031,14 @@ function updProt(){
   let base=0;
   d.meals.forEach((m,i)=>{
     if(!m.p)return;
-    const isSkip=m.skipable&&skipped[`${todayStr()}-skip-${i}`];
+    const isSkip=m.skipable&&skipped[`${dateForDay(day)}-skip-${i}`];
     if(isSkip){base+=m.skipProt;}
-    else if(chk[`${todayStr()}-${i}`]){base+=m.p;}
+    else if(chk[`${dateForDay(day)}-${i}`]){base+=m.p;}
   });
   // show total possible for this day config
   const tot=d.meals.reduce((a,m,i)=>{
     if(!m.p)return a;
-    return a+(m.skipable&&skipped[`${todayStr()}-skip-${i}`]?m.skipProt:m.p);
+    return a+(m.skipable&&skipped[`${dateForDay(day)}-skip-${i}`]?m.skipProt:m.p);
   },0);
   const pct=Math.min(100,(base/tot)*100);
   document.getElementById('pval').innerHTML=
@@ -1058,8 +1058,8 @@ function renderMeals(){
         <div class="tn-name">${m.n}</div>
         <div class="tn-desc">${m.d}</div></div></div>`;
     } else {
-      const done=chk[`${todayStr()}-${i}`]?'done':'';
-      const isSkipped=m.skipable&&skipped[`${todayStr()}-skip-${i}`];
+      const done=chk[`${dateForDay(day)}-${i}`]?'done':'';
+      const isSkipped=m.skipable&&skipped[`${dateForDay(day)}-skip-${i}`];
       // calc missing prot if skipped
       let skipCalc='';
       if(m.skipable&&isSkipped){
@@ -1083,7 +1083,7 @@ function renderMeals(){
           <span class="mc-time">${m.t}</span>
           <span class="mc-name">${m.n}</span>
           <span class="mc-prot">${isSkipped?`+${m.skipProt}g whey`:`+${m.p} g`}</span>
-          <div class="mc-chk">${chk[`${todayStr()}-${i}`]?'✓':''}</div>
+          <div class="mc-chk">${chk[`${dateForDay(day)}-${i}`]?'✓':''}</div>
         </div>
         ${m.sum?`<div class="mc-sum">${isSkipped?'<s>'+m.sum+'</s>':m.sum}</div>`:''}
         ${isSkipped?`
@@ -1898,8 +1898,17 @@ function renderEnergyWidget(){
 }
 
 const DAY_MAP={seg:'mt',ter:'tf',qua:'mt',qui:'qui',sex:'tf',sab:'fds',dom:'fds'};
+const DAY_DOW={dom:0,seg:1,ter:2,qua:3,qui:4,sex:5,sab:6};
 function getCurrentDay(){
   return['dom','seg','ter','qua','qui','sex','sab'][new Date().getDay()];
+}
+// returns the YYYY-MM-DD of the given day code within the current week
+function dateForDay(d){
+  const today=new Date();
+  const diff=DAY_DOW[d]-today.getDay();
+  const t=new Date(today);
+  t.setDate(today.getDate()+diff);
+  return t.toISOString().slice(0,10);
 }
 // kept for backwards compat (notifications)
 function getCurrentDayType(){return DAY_MAP[getCurrentDay()]||'fds';}
@@ -2079,21 +2088,21 @@ function saveToHistory(){
   const meals=d.meals.filter(m=>m.p);
   const earned=meals.reduce((a,m,i)=>{
     const ri=d.meals.indexOf(m);
-    const isSkip=m.skipable&&skipped[`${todayStr()}-skip-${ri}`];
-    return a+(isSkip?m.skipProt:(chk[`${todayStr()}-${ri}`]?m.p:0));
+    const isSkip=m.skipable&&skipped[`${dateForDay(day)}-skip-${ri}`];
+    return a+(isSkip?m.skipProt:(chk[`${dateForDay(day)}-${ri}`]?m.p:0));
   },0);
   const goal=meals.reduce((a,m,i)=>{
     const ri=d.meals.indexOf(m);
-    return a+(m.skipable&&skipped[`${todayStr()}-skip-${ri}`]?m.skipProt:m.p);
+    return a+(m.skipable&&skipped[`${dateForDay(day)}-skip-${ri}`]?m.skipProt:m.p);
   },0);
   const doneCount=meals.filter((m,i)=>{
     const ri=d.meals.indexOf(m);
-    return chk[`${todayStr()}-${ri}`]||(m.skipable&&skipped[`${todayStr()}-skip-${ri}`]);
+    return chk[`${dateForDay(day)}-${ri}`]||(m.skipable&&skipped[`${dateForDay(day)}-skip-${ri}`]);
   }).length;
   const mealNames=d.meals.filter(m=>m.p).map((m,i)=>{
     const ri=d.meals.indexOf(m);
-    const isDone=chk[`${todayStr()}-${ri}`];
-    const isSkip=m.skipable&&skipped[`${todayStr()}-skip-${ri}`];
+    const isDone=chk[`${dateForDay(day)}-${ri}`];
+    const isSkip=m.skipable&&skipped[`${dateForDay(day)}-skip-${ri}`];
     return{name:m.n.replace(' · leve','').replace(' · alcatra 🥩',''),
            done:isDone,skip:isSkip};
   });
@@ -2356,14 +2365,14 @@ let skipped={};
 
 window.skipMeal=function(idx,e){
   e.stopPropagation();
-  const k=`${todayStr()}-skip-${idx}`;
+  const k=`${dateForDay(day)}-skip-${idx}`;
   skipped[k]=true;
   saveState();saveToHistory();
   render();
 };
 window.unskipMeal=function(idx,e){
   e.stopPropagation();
-  const k=`${todayStr()}-skip-${idx}`;
+  const k=`${dateForDay(day)}-skip-${idx}`;
   delete skipped[k];
   saveState();saveToHistory();
   render();
@@ -2403,7 +2412,7 @@ document.getElementById('main').addEventListener('click',e=>{
   const chkBtn=e.target.closest('.mc-chk');
   if(chkBtn){
     const mc=chkBtn.closest('.mc');
-    const i=mc.dataset.i,k=`${todayStr()}-${i}`;
+    const i=mc.dataset.i,k=`${dateForDay(day)}-${i}`;
     chk[k]=!chk[k];
     mc.classList.toggle('done',!!chk[k]);
     chkBtn.textContent=chk[k]?'✓':'';
