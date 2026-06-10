@@ -545,10 +545,13 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
     <span class="modo-pill" id="modoPill" onclick="showSec('hist')">⚖️ Manutenção</span>
   </div>
   <div class="pills" id="pills">
-    <button class="pill on" data-d="mt">SEG · QUA</button>
-    <button class="pill" data-d="tf">TER · SEX</button>
-    <button class="pill" data-d="qui">QUINTA</button>
-    <button class="pill" data-d="fds">FIM DE SEM</button>
+    <button class="pill on" data-d="seg">SEG</button>
+    <button class="pill" data-d="ter">TER</button>
+    <button class="pill" data-d="qua">QUA</button>
+    <button class="pill" data-d="qui">QUI</button>
+    <button class="pill" data-d="sex">SEX</button>
+    <button class="pill" data-d="sab">SAB</button>
+    <button class="pill" data-d="dom">DOM</button>
   </div>
   <div class="pbar-wrap">
     <div class="pbar-top">
@@ -1010,7 +1013,7 @@ function renderNutri(){
 }
 
 // ── State ──────────────────────────────────────────
-let day=getCurrentDayType(), sec='meals';
+let day=getCurrentDay(), sec='meals';
 let chk=loadState();
 
 // ── Week badge ──────────────────────────────────────
@@ -1024,7 +1027,7 @@ function setColor(c){
 }
 
 function updProt(){
-  const d=DAYS[day];
+  const d=DAYS[DAY_MAP[day]];
   let base=0;
   d.meals.forEach((m,i)=>{
     if(!m.p)return;
@@ -1045,7 +1048,7 @@ function updProt(){
 
 // ── Render sections ────────────────────────────────
 function renderMeals(){
-  const d=DAYS[day];
+  const d=DAYS[DAY_MAP[day]];
   let h='<div class="tl">';
   d.meals.forEach((m,i)=>{
     if(m.type==='train'){
@@ -1060,13 +1063,13 @@ function renderMeals(){
       // calc missing prot if skipped
       let skipCalc='';
       if(m.skipable&&isSkipped){
-        const eaten=DAYS[day].meals.reduce((acc,mx,ix)=>{
+        const eaten=DAYS[DAY_MAP[day]].meals.reduce((acc,mx,ix)=>{
           if(!mx.p)return acc;
           if(ix===i)return acc;
           return acc+(chk[`${day}-${ix}`]?mx.p:mx.p);
         },0)-m.p;
-        const goal=DAYS[day].tot;
-        const have=DAYS[day].meals.reduce((a,mx)=>a+(mx.p&&mx!==m?mx.p:0),0);
+        const goal=DAYS[DAY_MAP[day]].tot;
+        const have=DAYS[DAY_MAP[day]].meals.reduce((a,mx)=>a+(mx.p&&mx!==m?mx.p:0),0);
         const missing=goal-have;
         skipCalc=`
           <div class="skip-calc">
@@ -1894,13 +1897,12 @@ function renderEnergyWidget(){
   </div>`;
 }
 
-function getCurrentDayType(){
-  const d=new Date().getDay();
-  if(d===1||d===3)return'mt';
-  if(d===2||d===5)return'tf';
-  if(d===4)return'qui';
-  return'fds';
+const DAY_MAP={seg:'mt',ter:'tf',qua:'mt',qui:'qui',sex:'tf',sab:'fds',dom:'fds'};
+function getCurrentDay(){
+  return['dom','seg','ter','qua','qui','sex','sab'][new Date().getDay()];
 }
+// kept for backwards compat (notifications)
+function getCurrentDayType(){return DAY_MAP[getCurrentDay()]||'fds';}
 
 // ── Streak ───────────────────────────────────────────
 function calcStreak(hist){
@@ -2073,7 +2075,7 @@ function loadHistory(){
 function saveToHistory(){
   const hist=loadHistory();
   const today=todayStr();
-  const d=DAYS[day];
+  const d=DAYS[DAY_MAP[day]];
   const meals=d.meals.filter(m=>m.p);
   const earned=meals.reduce((a,m,i)=>{
     const ri=d.meals.indexOf(m);
@@ -2381,7 +2383,7 @@ document.getElementById('pills').addEventListener('click',e=>{
   day=p.dataset.d;
   document.querySelectorAll('.pill').forEach(x=>x.classList.remove('on'));
   p.classList.add('on');
-  setColor(DAYS[day].color);
+  setColor(DAYS[DAY_MAP[day]].color);
   sec='meals';
   document.querySelectorAll('.nb').forEach(x=>x.classList.remove('on'));
   document.querySelector('.nb[data-s="meals"]').classList.add('on');
@@ -2430,18 +2432,18 @@ document.addEventListener('visibilitychange',()=>{
     renderWaterDiv();
     scheduleNotifications();
     // atualiza o dia da semana se mudou (ex: app aberto passando da meia-noite)
-    const newDay=getCurrentDayType();
+    const newDay=getCurrentDay();
     if(newDay!==day){
       day=newDay;
       document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.dataset.d===day));
-      setColor(DAYS[day].color);
+      setColor(DAYS[DAY_MAP[day]].color);
       if(sec==='meals') render();
     }
   }
 });
 
 // ── Init ───────────────────────────────────────────
-setColor(DAYS[day].color);
+setColor(DAYS[DAY_MAP[day]||'mt'].color);
 document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.dataset.d===day));
 render();
 renderWaterDiv();
