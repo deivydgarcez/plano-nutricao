@@ -1908,7 +1908,7 @@ function dateForDay(d){
   const diff=DAY_DOW[d]-today.getDay();
   const t=new Date(today);
   t.setDate(today.getDate()+diff);
-  return t.toISOString().slice(0,10);
+  return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
 }
 // kept for backwards compat (notifications)
 function getCurrentDayType(){return DAY_MAP[getCurrentDay()]||'fds';}
