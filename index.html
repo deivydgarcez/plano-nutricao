@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Plano Semanal · Muay Thai + Força</title>
+<title>Plano Nutricional · Recomposição Corporal</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#F2682C">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -563,7 +563,7 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
   }
   /* branding no topo da sidebar */
   .nav::before{
-    content:'PLANO\A SEMANAL';
+    content:'PLANO\A NUTRI';
     white-space:pre;
     display:block;
     font-family:'Anton',sans-serif;
@@ -603,6 +603,39 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
   .ibox{padding:14px 16px}
   .mc{padding:12px 14px}
 }
+
+/* ── Option pills (lanche/jantar) ── */
+.opt-pills{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.opt-pill{font-size:10px;font-weight:600;padding:4px 10px;border-radius:12px;
+  border:1.5px solid var(--bdr);background:var(--surf);color:var(--muted);
+  cursor:pointer;white-space:nowrap;font-family:'DM Sans'}
+.opt-pill.on{background:var(--ember-d);border-color:var(--ember);color:var(--ember)}
+
+/* ── Meal items with inline substitutions ── */
+.mc-items{margin:4px 0 8px}
+.mc-item{margin-bottom:2px}
+.mc-item-main{display:flex;align-items:baseline;gap:6px;font-size:12.5px;
+  padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.mc-item.has-subs .mc-item-main{cursor:pointer}
+.mc-item-name{color:var(--muted);flex:1;line-height:1.3}
+.mc-item-qty{font-size:11px;color:var(--faint);white-space:nowrap;flex-shrink:0}
+.mc-item-chevron{color:var(--ember);font-size:10px;margin-left:4px;
+  display:inline-block;transition:transform .18s;flex-shrink:0;opacity:.7}
+.mc-item.open .mc-item-chevron{transform:rotate(90deg)}
+.mc-item-subs{display:none;padding:5px 0 3px 10px;border-bottom:1px solid rgba(255,255,255,.05)}
+.mc-item.open .mc-item-subs{display:block}
+.mc-sub-opt{font-size:11px;color:var(--faint);line-height:1.7;padding:1px 0}
+.mc-sub-opt::before{content:'↔ ';color:var(--teal);opacity:.8}
+
+/* ── Water quick-add buttons ── */
+.water-btns{display:flex;gap:6px;margin-top:7px}
+.water-add-btn{flex:1;padding:5px 3px;border-radius:6px;border:1px solid rgba(74,140,247,.3);
+  background:rgba(74,140,247,.08);color:var(--blue);font-family:'DM Sans';font-size:10.5px;
+  font-weight:600;cursor:pointer;text-align:center;transition:background .15s}
+.water-add-btn:active{background:rgba(74,140,247,.2)}
+.water-reset-btn{padding:5px 8px;border-radius:6px;border:1px solid var(--bdr);
+  background:transparent;color:var(--faint);font-family:'DM Sans';font-size:10.5px;
+  cursor:pointer}
 </style>
 </head>
 <body>
@@ -610,7 +643,7 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 <input type="file" id="fileInput" accept=".json">
 <div class="hdr">
   <div class="hdr-row">
-    <span class="hdr-title">Plano Semanal</span>
+    <span class="hdr-title">Recomposição</span>
     <span class="week-badge" id="wbadge">Semana <b id="wnum">—</b></span>
     <span class="modo-pill" id="modoPill" onclick="showSec('hist')">⚖️ Manutenção</span>
   </div>
@@ -626,11 +659,11 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
   <div class="pbar-wrap">
     <div class="pbar-top">
       <span class="pbar-lbl">Proteína marcada hoje</span>
-      <span class="pbar-val" id="pval">0 g <small>/ <span id="ptot">169</span> g</small></span>
+      <span class="pbar-val" id="pval">0 g <small>/ <span id="ptot">123</span> g</small></span>
     </div>
     <div class="ptrack"><div class="pfill" id="pfill"></div></div>
   </div>
-  <div class="water" id="waterDiv" onclick="tapWater()">💧 <span><b>3–4 L de água/dia</b> · toque para registrar 250 ml</span></div>
+  <div class="water" id="waterDiv">💧 <span><b>2,8 L de água/dia</b> · meta do plano</span></div>
   <div class="reset-banner" id="resetBanner">
     <span>🔄 <b>Nova semana detectada.</b> Progresso resetado automaticamente.</span>
     <button class="reset-btn" id="dismissReset">Ok</button>
@@ -707,134 +740,120 @@ function saveState(){
 }
 
 // ── Data ──────────────────────────────────────────
-const ESO='Dias que toma esomeprazol: tomar às ~9h em jejum e esperar 30–60 min antes de comer.';
-const G60='Gastrite: respeitar 60 min fixos antes do treino. Esforço com estômago cheio faz o ácido subir.';
+// Plano Nutricionista Priscila Garcia · CRN-31670 · 13/09/2026
+// Meta: ~1600 kcal/dia · 123g proteína/dia · 2,8L água/dia
 
-const DAYS={
-  mt:{label:'Segunda · Quarta',sub:'Muay Thai · 19h30',color:'#F2682C',tot:169,
-    meals:[
-      {t:'~10h00',n:'Café da manhã',p:22,
-       f:'Tapioca com muçarela fatiada (30–40 g na balança) + 3 ovos inteiros. Se preferir: pão francês tostado na chapa.',
-       s:'Creatina 3–5 g junto do café · 1–2 xícaras no máximo',g:ESO,
-       sum:'Tapioca + muçarela + 3 ovos  ·  creatina'},
-      {t:'~13h00',n:'Almoço',p:58,
-       f:'250 g peito de frango grelhado + arroz + feijão + legumes Petrofolhas (couve, cenoura, beterraba) + fio de azeite EV.',
-       s:'Multivitamínico junto da refeição',
-       sum:'Frango 250g + arroz + feijão + legumes  ·  multivitamínico'},
-      {t:'~16h30',n:'Lanche da tarde',p:38,
-       f:'Omelete: 2 ovos + 80 g de frango desfiado + 1 fatia muçarela (25 g). Frango já pronto na geladeira.',
-       s:'Frango cozido na panela comum no domingo. Dura 4–5 dias.',
-       sum:'Omelete: 2 ovos + 80g frango desfiado + muçarela'},
-      {t:'~18h30',n:'Pré-treino',p:12,
-       f:'100–150 g de fruta picada (banana prata ou banana + maçã) + 20–30 g farelo de aveia + 1 pote iogurte Danone Mais Proteínas zero lactose (160 g).',
-       w:'Zero cafeína ou energético daqui em diante.',g:G60,
-       sum:'Fruta + aveia + iogurte zero lactose  ·  sem cafeína'},
-      {type:'train',t:'19h30',n:'MUAY THAI',d:'Aula com professor · academia · outros alunos'},
-      {t:'~21h00',n:'Pós-treino',p:20,
-       f:'1 scoop Soldiers Elite Whey batido só com água. Tomar imediatamente ao terminar.',
-       s:'Sem nada misturado — absorção rápida',
-       sum:'Whey Soldiers Elite + água  ·  imediato'},
-      {t:'~21h15',n:'Jantar · leve',p:22,
-       f:'Atum ou sardinha em lata + tapioca + legumes. Refeição leve — repõe glicogênio sem deitar pesado.',
-       g:'Evitar refrigerante, frituras e gordura pesada à noite.',
-       sum:'Atum ou sardinha + tapioca + legumes'},
-    ]},
-  tf:{label:'Terça · Sexta',sub:'Força · 20h00',color:'#4A8CF7',tot:169,
-    meals:[
-      {t:'~10h00',n:'Café da manhã',p:22,
-       f:'Tapioca com muçarela fatiada (30–40 g na balança) + 3 ovos inteiros. Ou pão francês tostado.',
-       s:'Creatina 3–5 g junto do café',g:ESO,
-       sum:'Tapioca + muçarela + 3 ovos  ·  creatina'},
-      {t:'~13h00',n:'Almoço',p:58,
-       f:'250 g peito de frango grelhado + arroz + feijão + legumes Petrofolhas + fio de azeite EV.',
-       s:'Multivitamínico junto da refeição',
-       sum:'Frango 250g + arroz + feijão + legumes  ·  multivitamínico'},
-      {t:'~16h30',n:'Lanche da tarde',p:38,
-       f:'Omelete: 2 ovos + 80 g de frango desfiado + 1 fatia muçarela (25 g). Frango já pronto na geladeira.',
-       s:'Frango cozido no domingo. Dura 4–5 dias.',
-       sum:'Omelete: 2 ovos + 80g frango desfiado + muçarela'},
-      {t:'~19h00',n:'Pré-treino',p:12,
-       f:'100–150 g de fruta picada + 20–30 g farelo de aveia + 1 pote iogurte Danone zero lactose. 60 min antes.',
-       w:'Zero cafeína ou energético daqui em diante.',g:G60,
-       sum:'Fruta + aveia + iogurte zero lactose  ·  60 min antes'},
-      {type:'train',t:'20h00',n:'FORÇA',d:'Em casa · halteres · kettlebell · varanda'},
-      {t:'~21h30',n:'Pós-treino',p:20,
-       f:'1 scoop Soldiers Elite Whey batido só com água. Imediato ao terminar.',
-       sum:'Whey Soldiers Elite + água  ·  imediato'},
-      {t:'~21h45',n:'Jantar · leve',p:22,
-       f:'Frango desfiado (já na geladeira) na tapioca + legumes. Ou pão tostado com frango/atum.',
-       g:'Pão só tostado. Pão cru fermenta e piora gases com gastrite.',
-       sum:'Frango desfiado + tapioca + legumes'},
-    ]},
-  qui:{label:'Quinta',sub:'Força · 20h00 · Alcatra',color:'#4A8CF7',tot:171,
-    meals:[
-      {t:'~10h00',n:'Café da manhã',p:22,
-       f:'Tapioca com muçarela (30–40 g) + 3 ovos. Ou pão francês tostado.',
-       s:'Creatina 3–5 g junto do café',g:ESO,
-       sum:'Tapioca + muçarela + 3 ovos  ·  creatina'},
-      {t:'~13h00',n:'Almoço · alcatra 🥩',p:60,
-       f:'Alcatra grelhada (200–250 g) + palmito + arroz + feijão + azeite EV.',
-       s:'Multivitamínico junto da refeição',
-       sum:'Alcatra 200–250g + palmito + arroz + feijão  ·  multivitamínico'},
-      {t:'~16h30',n:'Lanche da tarde',p:38,
-       f:'Omelete: 2 ovos + 80 g de frango desfiado + 1 fatia muçarela (25 g).',
-       sum:'Omelete: 2 ovos + 80g frango desfiado + muçarela'},
-      {t:'~19h00',n:'Pré-treino',p:12,
-       f:'100–150 g de fruta picada + 20–30 g farelo de aveia + 1 pote iogurte Danone zero lactose.',
-       w:'Zero cafeína ou energético daqui em diante.',g:G60,
-       sum:'Fruta + aveia + iogurte zero lactose  ·  60 min antes'},
-      {type:'train',t:'20h00',n:'FORÇA',d:'Em casa · halteres · kettlebell · varanda'},
-      {t:'~21h30',n:'Pós-treino',p:20,
-       f:'1 scoop Soldiers Elite Whey batido só com água. Imediato ao terminar.',
-       sum:'Whey Soldiers Elite + água  ·  imediato'},
-      {t:'~21h45',n:'Jantar · leve',p:22,
-       f:'Frango desfiado na tapioca + legumes. Já pronto na geladeira.',
-       g:'Pão só tostado se preferir substituir a tapioca.',
-       sum:'Frango desfiado + tapioca + legumes'},
-    ]},
-  fds:{label:'Sábado · Domingo',sub:'Descanso · sem treino',color:'#4DAA73',tot:140,
-    meals:[
-      {t:'~10h00',n:'Café da manhã',p:22,
-       f:'Tapioca com muçarela (30–40 g) + 3 ovos. Ou pão francês tostado.',
-       s:'Creatina 3–5 g · Café liberado (com moderação)',g:ESO,
-       sum:'Tapioca + muçarela + 3 ovos  ·  creatina'},
-      {t:'~14h00',n:'Almoço',p:55,
-       f:'Frango (250 g) ou alcatra + arroz + legumes + azeite EV. Sem feijão.',
-       s:'Multivitamínico junto da refeição',
-       sum:'Frango/alcatra + arroz + legumes (sem feijão)  ·  multivitamínico'},
-      {t:'~17h00',n:'Lanche da tarde',p:35,
-       f:'Omelete: 2 ovos + 80 g de frango desfiado + 1 fatia muçarela. Pode ser mais farto.',
-       sum:'Omelete: 2 ovos + 80g frango desfiado + muçarela'},
-      {t:'~20h00',n:'Jantar',p:28,
-       f:'Frango ou atum/sardinha + arroz ou tapioca + legumes. Porção normal.',
-       s:'Whey opcional se a proteína do dia não fechou',
-       g:'Evitar refrigerante, frituras e gordura saturada.',
-       sum:'Frango ou atum/sardinha + arroz/tapioca + legumes',
-       skipable:true,
-       skipProt:30,
-       skipScoops:'1,5 scoops (37g de pó)'},
-    ]},
-};
+const MEALS=[
+  {id:'cafe',t:'~10h00',n:'Café da manhã',p:20,
+   sum:'Pão francês + ovo + queijo muçarela + banana + café',
+   s:'Creatina 5g — tome com água, afastado do café (esperar ~30 min após o café)',
+   g:'Esomeprazol nos dias de uso: em jejum, 30–60 min antes de comer.',
+   items:[
+     {n:'Pão francês',qty:'1 un (50g)',
+      subs:['Pão de forma - 2 fatias (50g)','Pão de queijo assado - 2 un (40g)','Torrada - 4 un (40g)','Tapioca - 3,5 col sopa (59,5g)','Pão integral - 2 fatias (50g)','Cuscuz - 4 col sopa rasa (40g)']},
+     {n:'Ovo de galinha',qty:'1 un (50g)',
+      subs:['Queijo muçarela - 1 fatia (20g)','Requeijão light - 1 col sopa (30g)','Queijo minas frescal - 1 fatia (30g)','Creme de ricota - 1,5 col sopa (30g)','Ricota - 1,5 fatia (52,5g)']},
+     {n:'Queijo muçarela',qty:'1 fatia (20g)',
+      subs:['Requeijão light - 1 col sopa (30g)','Queijo minas frescal - 1 fatia (30g)','Creme de ricota - 1,5 col sopa (30g)','Ricota - 1,5 fatia (52,5g)','Ovo de galinha - 1 un (50g)']},
+     {n:'Banana',qty:'1 un média (65g)',
+      subs:['Pera - 1 un (110g)','Laranja - 1 un peq. (90g)','Melão - 2 fatias (230g)','Ameixa - 2 un (84g)','Pêssego - 1 un (110g)','Mexerica - 1 un (125g)','Abacaxi - 1,5 fatia (112,5g)','Uva - 8 un (96g)','Morango - 9 un (180g)','Kiwi - 1 un (75g)','Mamão - 1 fatia (100g)','Goiaba - 1 un (130g)','Manga - 85g','Melancia - 1 fatia (200g)','Maçã - 1 un peq. (80g)']},
+     {n:'Café puro ou com sucralose',qty:'1 xícara (50ml)'},
+   ]},
+  {id:'almoco',t:'~13h00',n:'Almoço',p:45,
+   sum:'Arroz + carne magra + feijão + legumes + salada + laranja',
+   s:'Multivitamínico junto da refeição',
+   w:'Evitar batata inglesa, mandioca e batata doce junto com arroz — dobra a carga de carboidratos.',
+   items:[
+     {n:'Arroz branco',qty:'5 col sopa (100g)',
+      subs:['Arroz integral - 6 col (120g)','Batata baroa - 4 un (280g)','Batata doce - 4,5 col sopa (108g)','Batata inglesa - 6,5 col (260g)','Macarrão integral - 2 col servir (100g)']},
+     {n:'Carne magra (alcatra, contrafilé, coxão mole, patinho)',qty:'1 filé (135g)',
+      subs:['Filé de peixe - 1 filé (155g)','Filé de frango - 1,5 bife (112,5g)']},
+     {n:'Feijão',qty:'1 concha rasa (80g)'},
+     {n:'Legumes',qty:'À vontade'},
+     {n:'Salada',qty:'À vontade'},
+     {n:'Laranja',qty:'1 un média (180g)',
+      subs:['Pera - 1 un (110g)','Melão - 2 fatias (230g)','Ameixa - 2 un (84g)','Pêssego - 1 un (110g)','Mexerica - 1 un (125g)','Abacaxi - 1,5 fatia (112,5g)','Uva - 8 un (96g)','Morango - 9 un (180g)','Kiwi - 1 un (75g)','Mamão - 1 fatia (100g)','Goiaba - 1 un (130g)','Manga - 85g','Melancia - 1 fatia (200g)','Banana - 1 un (100g)','Maçã - 1 un (130g)']},
+   ]},
+  {id:'lanche',t:'~16h30',n:'Lanche da tarde',hasOptions:true,
+   options:[
+     {key:'op1',label:'Op 1 · Iogurte',p:22,
+      sum:'Iogurte natural + uva + granola + whey 15g',
+      items:[
+        {n:'Iogurte natural',qty:'1 un (170g)'},
+        {n:'Uva',qty:'10 un médias (80g)',
+         subs:['Pera - 1 un (110g)','Laranja - 1 un peq. (90g)','Melão - 2 fatias (230g)','Ameixa - 2 un (84g)','Pêssego - 1 un (110g)','Mexerica - 1 un (125g)','Abacaxi - 1,5 fatia (112,5g)','Morango - 9 un (180g)','Kiwi - 1 un (75g)','Mamão - 1 fatia (100g)','Goiaba - 1 un (130g)','Manga - 85g','Melancia - 1 fatia (200g)','Banana - 1 un (100g)','Maçã - 1 un (130g)']},
+        {n:'Granola',qty:'3 col sopa (30g)'},
+        {n:'Whey Concentrado',qty:'1 dosador (15g)'},
+      ]},
+     {key:'op2',label:'Op 2 · Pão',p:19,
+      sum:'Pão francês + queijo minas frescal + maçã + whey 10g',
+      items:[
+        {n:'Pão francês',qty:'1 un (50g)',
+         subs:['Pão de forma - 2 fatias (50g)','Pão de queijo assado - 2 un (40g)','Torrada - 4 un (40g)','Tapioca - 3,5 col sopa (59,5g)','Pão integral - 2 fatias (50g)','Cuscuz - 4 col sopa (40g)']},
+        {n:'Queijo minas frescal',qty:'2 fatias (60g)',
+         subs:['Ovo de galinha - 2 un (100g)','Requeijão light - 2 col sopa (60g)','Queijo muçarela - 2 fatias (40g)','Creme de ricota - 3 col sopa (60g)','Ricota - 3 fatias (105g)']},
+        {n:'Maçã',qty:'1 un pequena (80g)',
+         subs:['Pera - 1 un (110g)','Laranja - 1 un peq. (90g)','Melão - 2 fatias (230g)','Ameixa - 2 un (84g)','Pêssego - 1 un (110g)','Mexerica - 1 un (125g)','Abacaxi - 1,5 fatia (112,5g)','Uva - 8 un (96g)','Morango - 9 un (180g)','Kiwi - 1 un (75g)','Mamão - 1 fatia (100g)','Goiaba - 1 un (130g)','Manga - 85g','Melancia - 1 fatia (200g)','Banana - 1 un média (65g)']},
+        {n:'Whey Concentrado com água',qty:'10g'},
+      ]},
+   ]},
+  {id:'jantar',t:'~20h00',n:'Jantar',hasOptions:true,
+   options:[
+     {key:'op1',label:'Op 1 · Sanduíche',p:28,
+      sum:'Pão francês + frango desfiado + requeijão light + alface',
+      items:[
+        {n:'Pão francês',qty:'1 un (50g)',
+         subs:['Rap 10 - 1 un (40g)','Pão de forma - 2 fatias (50g)','Pão integral - 2 fatias (50g)','Cuscuz - 4 col sopa (40g)','Tapioca - 3,5 col sopa (59,5g)']},
+        {n:'Frango desfiado',qty:'4 col sopa (80g)',
+         subs:['Carne moída magra refogada - 2 col sopa (50g)','Atum sólido ao natural - 5 col sopa (100g)']},
+        {n:'Requeijão light',qty:'2 col sopa (60g)',
+         subs:['Creme de ricota - 2,5 col sopa (50g)','Queijo muçarela - 2 fatias (40g)','Queijo minas frescal - 1,5 fatia (45g)']},
+        {n:'Alface',qty:'À vontade'},
+      ]},
+     {key:'op2',label:'Op 2 · Hambúrguer',p:26,
+      sum:'Pão de hambúrguer + carne magra + queijo muçarela + alface',
+      obs:'Hambúrguer caseiro com carne magra (alcatra, patinho), sem gordura.',
+      items:[
+        {n:'Pão de hambúrguer',qty:'1 un (50g)'},
+        {n:'Carne magra hambúrguer',qty:'1 bife (90g)'},
+        {n:'Queijo muçarela',qty:'1 fatia (20g)'},
+        {n:'Alface',qty:'À vontade'},
+      ]},
+     {key:'op3',label:'Op 3 · Prato',p:42,
+      sum:'Arroz + filé de frango + feijão + legumes + salada',
+      items:[
+        {n:'Arroz branco',qty:'5 col sopa (100g)',
+         subs:['Arroz integral - 6 col (120g)','Batata baroa - 4 un (280g)','Batata doce - 4,5 col sopa (108g)','Batata inglesa - 6,5 col (260g)','Macarrão integral - 2 col servir (100g)']},
+        {n:'Filé de frango',qty:'1,5 bife médio (112,5g)',
+         subs:['Filé de peixe - 1 filé (155g)','Carne magra - 1 filé (135g)']},
+        {n:'Feijão',qty:'1 concha rasa (80g)'},
+        {n:'Legumes',qty:'À vontade'},
+        {n:'Salada',qty:'À vontade'},
+      ]},
+   ]},
+];
 
 const SUPPS=[
   {when:'~9h · jejum',name:'Esomeprazol 20 mg',dose:'a cada\n3 dias',
-   note:'Em jejum, 30–60 min antes do café. Só nos dias do protocolo.',gc:true},
-  {when:'Manhã · café',name:'Creatina monohidratada',dose:'3–5 g',
-   note:'Todo dia, treinando ou não. Junto do café.'},
+   note:'Em jejum, 30–60 min antes do café. Uso intermitente — só nos dias do protocolo.',gc:true},
+  {when:'Manhã · após café',name:'Creatina monohidratada',dose:'5 g',
+   note:'Todo dia, treinando ou não. Com água — aguardar ~30 min após o café (cafeína inibe a absorção).'},
   {when:'Almoço',name:'Multivitamínico',dose:'1 cáps.',
    note:'Junto da refeição. Preferir versão com B12 metilcobalamina.'},
-  {when:'Pós-treino',name:'Whey Soldiers Elite',dose:'25 g',
-   note:'Só com água, imediato após o treino. Sem misturar nada.'},
+  {when:'Lanche · op1',name:'Whey Concentrado',dose:'15 g',
+   note:'1 dosador diluído na água ou misturado ao iogurte natural. Opção 1 do lanche.'},
+  {when:'Lanche · op2',name:'Whey Concentrado',dose:'10 g',
+   note:'Diluído em água. Opção 2 do lanche (pão + queijo minas).'},
 ];
 
 const GASTRO_ITEMS=[
-  {i:'✅',t:'Tapioca como base',b:'Digestão limpa, não fermenta. Titular do café e do jantar.'},
-  {i:'⚠️',t:'Pão só tostado',b:'Pão cru fermenta e piora gases. Tostado na chapa ou torradeira: ok.'},
-  {i:'❌',t:'Psyllium removido',b:'Fibra gel em mucosa inflamada gera gases e distensão. Fora do plano.'},
-  {i:'⏱',t:'Pré-treino: 60 min fixos',b:'Esforço com estômago cheio faz ácido subir para o esôfago.'},
-  {i:'🚫',t:'Evitar à noite',b:'Refrigerante, frituras e gordura pesada. Mucosa precisa de paz.'},
-  {i:'☕',t:'Café com moderação',b:'1–2 xícaras de manhã: ok. Café forte em excesso irrita a mucosa.'},
-  {i:'🩺',t:'Próxima consulta',b:'Pedir exame de B12 e magnésio. 1+ ano de uso pode baixar devagar.'},
+  {i:'🩺',t:'Gastrite crônica grau 2',b:'Diagnóstico confirmado. Esomeprazol 20 mg uso intermitente — mais de 1 ano em protocolo.'},
+  {i:'💊',t:'Esomeprazol: como tomar',b:'Em jejum, ~30–60 min antes de comer. Uso a cada 3 dias (intermitente). Não use no dia que acordar sem sintomas.'},
+  {i:'✅',t:'Pão francês: ok sem tostar',b:'O novo plano inclui pão francês direto. Se sentir desconforto, tostar na chapa. Tapioca também continua como alternativa.'},
+  {i:'🚫',t:'Evitar à noite',b:'Refrigerante, frituras e gordura pesada. Mucosa precisa de paz para reparar durante o sono.'},
+  {i:'☕',t:'Cafeína: somente de manhã',b:'Máximo 1–2 xícaras pela manhã. Café ácido em excesso irrita a mucosa gástrica.'},
+  {i:'🥛',t:'Iogurte natural é ok',b:'Iogurte natural sem açúcar ajuda a mucosa gástrica. Opção 1 do lanche é bem tolerada.'},
+  {i:'🩺',t:'Acompanhamento B12',b:'1+ ano de uso de IBP pode baixar devagar a vitamina B12. Pedir exame na próxima consulta.'},
 ];
 
 const SHOP=[
@@ -853,12 +872,16 @@ const SHOP=[
 ];
 
 const RULES=[
-  {i:'🥩',t:'Proteína o dia inteiro',b:'<b>~170 g</b> em 5 refeições. Nenhuma janela acima de 4h sem proteína.',hi:false},
-  {i:'🍚',t:'Carbo em volta do treino',b:'Aveia e fruta no pré. Tapioca no pós. Nos dias sem treino reduz o carbo do jantar.',hi:false},
-  {i:'☕',t:'Cafeína só até o almoço',b:'Meia-vida de <b>5–6 h</b>. Depois das 13h chega ativa na hora de dormir.',hi:false},
-  {i:'⏱',t:'Pré-treino: 60 min fixos',b:'Com gastrite grau 2 não tem negociação. Esforço com estômago cheio = refluxo.',hi:false},
+  {i:'🥩',t:'Meta: 123g de proteína/dia',b:'<b>1,5g × 82 kg = 123g.</b> Distribuídas nas 4 refeições. Nenhuma janela acima de 4–5h sem proteína.',hi:false},
+  {i:'🔥',t:'Meta: ~1600 kcal/dia',b:'Déficit calculado para recomposição corporal. Não cortar mais que isso — prejudica o treino e o sono.',hi:false},
+  {i:'💧',t:'Meta: 2,8 L de água/dia',b:'<b>35 ml × 82 kg.</b> Obrigatório com creatina diária. Distribua ao longo do dia.',hi:true},
+  {i:'🏋',t:'Creatina: 5g/dia · todo dia',b:'Todo dia, treinando ou não. Tomar com água — esperar ~30 min após o café (cafeína reduz absorção).',hi:false},
+  {i:'🍞',t:'Carbo: moderação e qualidade',b:'Arroz, pão francês, feijão. Evitar batata inglesa, mandioca ou batata doce <b>junto com</b> arroz — dobra a carga glicêmica.',hi:false},
+  {i:'☕',t:'Cafeína só pela manhã',b:'Café somente no café da manhã. Meia-vida de <b>5–6 h</b> — café depois de 13h interfere no sono e no GH.',hi:false},
+  {i:'🍽',t:'Refeição livre: 1x por semana',b:'Permitida pelo plano. Não penaliza, não anula o progresso. Aproveite com consciência.',hi:false},
   {i:'😴',t:'Jantar leve · protege o sono',b:'Sem sono profundo cai o GH e a síntese proteica trava. <b>Dormir bem vale tanto quanto treinar.</b>',hi:false},
-  {i:'💧',t:'3–4 L de água por dia',b:'Obrigatório com creatina diária e proteína acima de <b>160 g</b>.',hi:true},
+  {i:'🟣',t:'Gastrite: respeitar o protocolo',b:'Esomeprazol a cada 3 dias em jejum. Evitar refrigerante, fritura e gordura pesada à noite. Café com moderação.',hi:false},
+  {i:'📅',t:'Consistência acima de perfeição',b:'80% de adesão sustentado é muito melhor que 100% por 2 semanas. Registre, acompanhe, ajuste.',hi:false},
 ];
 
 // ── Nutri data ───────────────────────────────────────
@@ -1096,95 +1119,125 @@ function setColor(c){
   document.documentElement.style.setProperty('--day',c);
 }
 
+const PROT_GOAL=123;
+
+function getMealOpts(dateStr){
+  try{return JSON.parse(localStorage.getItem('plano_opts_'+dateStr)||'{}')}catch(e){return{}}
+}
+window.setMealOpt=function(mealId,optKey,dateStr,e){
+  e.stopPropagation();
+  const opts=getMealOpts(dateStr);
+  opts[mealId]=optKey;
+  localStorage.setItem('plano_opts_'+dateStr,JSON.stringify(opts));
+  render();
+};
+
+function getMealProt(mealIdx,dateStr){
+  const m=MEALS[mealIdx];
+  if(!m.hasOptions) return m.p;
+  const opts=getMealOpts(dateStr);
+  const selKey=opts[m.id]||m.options[0].key;
+  const opt=m.options.find(o=>o.key===selKey)||m.options[0];
+  return opt.p;
+}
+
 function updProt(){
-  const d=DAYS[DAY_MAP[day]];
-  let base=0;
-  d.meals.forEach((m,i)=>{
-    if(!m.p)return;
-    const isSkip=m.skipable&&skipped[`${dateForDay(day)}-skip-${i}`];
-    if(isSkip){base+=m.skipProt;}
-    else if(chk[`${dateForDay(day)}-${i}`]){base+=m.p;}
+  const dateStr=dateForDay(day);
+  let earned=0;
+  MEALS.forEach((m,i)=>{
+    if(chk[`${dateStr}-${i}`]) earned+=getMealProt(i,dateStr);
   });
-  // show total possible for this day config
-  const tot=d.meals.reduce((a,m,i)=>{
-    if(!m.p)return a;
-    return a+(m.skipable&&skipped[`${dateForDay(day)}-skip-${i}`]?m.skipProt:m.p);
-  },0);
-  const pct=Math.min(100,(base/tot)*100);
+  const pct=Math.min(100,(earned/PROT_GOAL)*100);
   document.getElementById('pval').innerHTML=
-    `${base} g <small>/ <span id="ptot">${tot}</span> g</small>`;
+    `${earned} g <small>/ <span id="ptot">${PROT_GOAL}</span> g</small>`;
   document.getElementById('pfill').style.width=pct+'%';
 }
 
 // ── Render sections ────────────────────────────────
+function renderMealItems(items){
+  return '<div class="mc-items">'+items.map(item=>{
+    const hasSubs=item.subs&&item.subs.length;
+    return `<div class="mc-item${hasSubs?' has-subs':''}">${
+      hasSubs
+        ?`<div class="mc-item-main" onclick="event.stopPropagation();this.parentElement.classList.toggle('open')">
+            <span class="mc-item-name">${item.n}</span>
+            <span class="mc-item-qty">${item.qty}</span>
+            <span class="mc-item-chevron">›</span>
+          </div>
+          <div class="mc-item-subs">${item.subs.map(s=>`<div class="mc-sub-opt">${s}</div>`).join('')}</div>`
+        :`<div class="mc-item-main">
+            <span class="mc-item-name">${item.n}</span>
+            <span class="mc-item-qty">${item.qty}</span>
+          </div>`
+    }</div>`;
+  }).join('')+'</div>';
+}
+
+function getTrainingForDay(d){
+  if(['seg','qua'].includes(d)) return {t:'19h30',n:'MUAY THAI',desc:'Aula com professor · academia'};
+  if(['ter','qui','sex'].includes(d)) return {t:'20h00',n:'FORÇA',desc:'Em casa · halteres · kettlebell · varanda'};
+  return null;
+}
+
 function renderMeals(){
-  const d=DAYS[DAY_MAP[day]];
+  const dateStr=dateForDay(day);
+  const opts=getMealOpts(dateStr);
   let h='<div class="tl">';
-  d.meals.forEach((m,i)=>{
-    if(m.type==='train'){
-      h+=`<div class="tn" style="margin-left:-52px">
+  MEALS.forEach((m,i)=>{
+    // insert training block before jantar (index 3)
+    if(i===3){
+      const tr=getTrainingForDay(day);
+      if(tr) h+=`<div class="tn" style="margin-left:-52px">
         <div class="tn-dot"></div>
-        <div><div class="tn-time">${m.t}</div>
-        <div class="tn-name">${m.n}</div>
-        <div class="tn-desc">${m.d}</div></div></div>`;
-    } else {
-      const done=chk[`${dateForDay(day)}-${i}`]?'done':'';
-      const isSkipped=m.skipable&&skipped[`${dateForDay(day)}-skip-${i}`];
-      // calc missing prot if skipped
-      let skipCalc='';
-      if(m.skipable&&isSkipped){
-        const eaten=DAYS[DAY_MAP[day]].meals.reduce((acc,mx,ix)=>{
-          if(!mx.p)return acc;
-          if(ix===i)return acc;
-          return acc+(chk[`${day}-${ix}`]?mx.p:mx.p);
-        },0)-m.p;
-        const goal=DAYS[DAY_MAP[day]].tot;
-        const have=DAYS[DAY_MAP[day]].meals.reduce((a,mx)=>a+(mx.p&&mx!==m?mx.p:0),0);
-        const missing=goal-have;
-        skipCalc=`
-          <div class="skip-calc">
-            Sem jantar você fica com <b>~${have}g</b> de proteína.<br>
-            Faltam <b>${missing}g</b> para a meta de ${goal}g.<br>
-            ✅ <b>${m.skipScoops}</b> do Soldiers Elite = ~${m.skipProt}g → fecha em <b>~${have+m.skipProt}g</b>.
-          </div>`;
-      }
-      h+=`<div class="tl-row"><div class="mc ${done} ${isSkipped?'skipped':''}" data-i="${i}">
+        <div><div class="tn-time">${tr.t}</div>
+        <div class="tn-name">${tr.n}</div>
+        <div class="tn-desc">${tr.desc}</div></div></div>`;
+    }
+    const done=chk[`${dateStr}-${i}`]?'done':'';
+    if(m.hasOptions){
+      const selKey=opts[m.id]||m.options[0].key;
+      const curOpt=m.options.find(o=>o.key===selKey)||m.options[0];
+      const pillsHtml=m.options.map(o=>
+        `<span class="opt-pill${o.key===selKey?' on':''}"
+         onclick="setMealOpt('${m.id}','${o.key}','${dateStr}',event)">${o.label}</span>`
+      ).join('');
+      h+=`<div class="tl-row"><div class="mc ${done}" data-i="${i}">
         <div class="mc-head">
           <span class="mc-time">${m.t}</span>
           <span class="mc-name">${m.n}</span>
-          <span class="mc-prot">${isSkipped?`+${m.skipProt}g whey`:`+${m.p} g`}</span>
-          <div class="mc-chk">${chk[`${dateForDay(day)}-${i}`]?'✓':''}</div>
+          <span class="mc-prot">+${curOpt.p} g</span>
+          <div class="mc-chk">${chk[`${dateStr}-${i}`]?'✓':''}</div>
         </div>
-        ${m.sum?`<div class="mc-sum">${isSkipped?'<s>'+m.sum+'</s>':m.sum}</div>`:''}
-        ${isSkipped?`
-        <div class="skip-replace">
-          <div class="skip-title">🚫 Sem jantar · compensação via whey</div>
-          <div class="skip-macros">
-            <div class="skip-m"><span class="sm-v">${m.skipScoops.split(' ')[0]}</span><span class="sm-l">Scoops</span></div>
-            <div class="skip-m"><span class="sm-v">37g</span><span class="sm-l">De pó</span></div>
-            <div class="skip-m"><span class="sm-v">${m.skipProt}g</span><span class="sm-l">Proteína</span></div>
-          </div>
-          <div class="skip-food">Soldiers Elite Whey + água · pode adicionar 1 banana para repor energia se quiser.</div>
-          ${skipCalc}
-          <span class="skip-undo" onclick="unskipMeal(${i},event)">↩ voltei a jantar</span>
-        </div>`:`
+        <div class="mc-sum">${curOpt.sum}</div>
         <div class="mc-body">
-          <div class="mc-food">${m.f}</div>
+          <div class="opt-pills">${pillsHtml}</div>
+          ${curOpt.obs?`<div class="mc-warn">💡 ${curOpt.obs}</div>`:''}
+          ${renderMealItems(curOpt.items)}
+        </div>
+      </div></div>`;
+    } else {
+      h+=`<div class="tl-row"><div class="mc ${done}" data-i="${i}">
+        <div class="mc-head">
+          <span class="mc-time">${m.t}</span>
+          <span class="mc-name">${m.n}</span>
+          <span class="mc-prot">+${m.p} g</span>
+          <div class="mc-chk">${chk[`${dateStr}-${i}`]?'✓':''}</div>
+        </div>
+        ${m.sum?`<div class="mc-sum">${m.sum}</div>`:''}
+        <div class="mc-body">
+          ${renderMealItems(m.items)}
           ${m.s?`<div class="mc-supp">${m.s}</div>`:''}
           ${m.w?`<div class="mc-warn">⚡ ${m.w}</div>`:''}
           ${m.g?`<div class="mc-gastro">🟣 ${m.g}</div>`:''}
-          ${m.skipable?`</div><button class="mc-skip-btn" onclick="skipMeal(${i},event)">🚫 Não vou jantar hoje · ver compensação</button>`:`</div>`}
-        `}
+        </div>
       </div></div>`;
     }
   });
   h+='</div>';
   h+=`<div class="total">
-    <span class="total-lbl">Total do dia</span>
-    <span class="total-val">${d.tot} g</span></div>`;
-  if(day!=='fds')
-    h+=`<div class="ibox">🐟 Tilápia entra 2x por mês em qualquer jantar no lugar do atum, sardinha ou frango.</div>`;
-  if(day!=='fds') h+=renderEnergyWidget();
+    <span class="total-lbl">Meta proteína</span>
+    <span class="total-val">${PROT_GOAL} g</span></div>`;
+  h+=renderEnergyWidget();
   const modo=MODOS[getModo()];
   if(getModo()!=='manutencao')
     h+=`<div class="modo-note-meals">${modo.icon} <b>Modo ${modo.label}:</b> ${modo.desc}</div>`;
@@ -1217,18 +1270,32 @@ function renderPrep(){
     'Cobre com filme plástico. 8–10 min na potência alta.',
     'Vira na metade do tempo. Desfía ao terminar.',
   ];
+  const steps3=[
+    'Usa alcatra, patinho ou coxão mole moído (pede para moer na hora se possível).',
+    'Tempera levemente: sal, alho amassado, pimenta do reino. <b>Sem gordura extra.</b>',
+    'Faz bolinhos de ~90g e aperta para dar formato de hambúrguer.',
+    'Grelha na frigideira antiaderente quente, sem óleo. ~4 min de cada lado.',
+    'Não pressionar com a espátula — perde o suco.',
+    'Monta: pão + carne + 1 fatia muçarela + alface. Sem maionese, ketchup ou mostarda.',
+  ];
   return `<p class="sec-title">Preparo</p>
   <div class="prep-card">
     <div class="prep-hed">🍗 Frango desfiado · prep semanal</div>
     ${steps1.map((s,i)=>`<div class="prep-step">
       <div class="prep-n">${i+1}</div><div>${s}</div></div>`).join('')}
-    <div class="prep-tip green">✅ Dura 4–5 dias · cobre lanche e jantar de toda a semana sem cozinhar na hora.</div>
+    <div class="prep-tip green">✅ Dura 4–5 dias · cobre jantar op1 de toda a semana sem cozinhar na hora.</div>
   </div>
   <div class="prep-card">
     <div class="prep-hed">⚡ Micro-ondas · emergência</div>
     ${steps2.map((s,i)=>`<div class="prep-step">
       <div class="prep-n">${i+1}</div><div>${s}</div></div>`).join('')}
     <div class="prep-tip gold">⚠ Fica menos saboroso — só usar quando não tiver tempo.</div>
+  </div>
+  <div class="prep-card">
+    <div class="prep-hed">🍔 Hambúrguer caseiro · jantar op2</div>
+    ${steps3.map((s,i)=>`<div class="prep-step">
+      <div class="prep-n">${i+1}</div><div>${s}</div></div>`).join('')}
+    <div class="prep-tip green">✅ Carne magra sem gordura saturada extra. ~26g proteína, entra no plano.</div>
   </div>`;
 }
 
@@ -1251,60 +1318,62 @@ function renderGastro(){
 
 
 const MONTHLY=[
-  {cat:'🥩 Proteínas animais',items:[
-    {e:'🥚',n:'Ovos inteiros',qty:'90 unidades',tip:'~7 cartelas de 12',
+  {cat:'🥚 Proteínas animais',items:[
+    {e:'🥚',n:'Ovos inteiros',qty:'90 unidades',tip:'~7 cartelas de 12 — café da manhã todo dia',
      p:'6g',c:'0.5g',g:'5g',k:'77',por:'1 ovo (50g)'},
-    {e:'🍗',n:'Peito de frango',qty:'10 kg',tip:'Compra em bandeja grande',
+    {e:'🍗',n:'Peito de frango / frango desfiado',qty:'4 kg',tip:'Jantar op1 (desfiado) + preparo semanal',
      p:'31g',c:'0g',g:'3.6g',k:'165',por:'100g'},
-    {e:'🥩',n:'Alcatra',qty:'1 kg',tip:'~4 refeições no mês (quinta)',
-     p:'26g',c:'0g',g:'15g',k:'242',por:'100g'},
-    {e:'🐟',n:'Atum ao natural 170g',qty:'12 latas',tip:'Gomes da Costa',
+    {e:'🥩',n:'Carne magra (alcatra, patinho, contrafilé)',qty:'5 kg',tip:'Almoço todo dia (135g) + hambúrguer eventual',
+     p:'26g',c:'0g',g:'8g',k:'180',por:'100g'},
+    {e:'🐟',n:'Atum ao natural 170g',qty:'4 latas',tip:'Substituição eventual do frango no jantar',
      p:'28g',c:'0g',g:'0.8g',k:'120',por:'100g · lata ≈ 48g prot'},
-    {e:'🐟',n:'Sardinha lata',qty:'8 latas',tip:'Alternância com o atum',
-     p:'25g',c:'0g',g:'11g',k:'208',por:'100g'},
-    {e:'🐟',n:'Tilápia congelada',qty:'2 embalagens 400g',tip:'2x por mês',
-     p:'26g',c:'0g',g:'2.7g',k:'128',por:'100g'},
   ]},
   {cat:'🧀 Laticínios',items:[
-    {e:'🧀',n:'Muçarela fatiada',qty:'1,8 kg',tip:'30–40g/café + 25g/lanche · todo dia',
-     p:'22g',c:'1.2g',g:'22g',k:'300',por:'100g · 30g = 7g prot'},
-    {e:'🥛',n:'Iogurte Danone zero lactose',qty:'22 potes',tip:'Pré-treino 5x/semana',
-     p:'6.3g',c:'8g',g:'1g',k:'69',por:'100g · pote 160g = 10g prot'},
+    {e:'🧀',n:'Queijo muçarela fatiado',qty:'600 g',tip:'Café da manhã (1 fatia/dia) + jantar hambúrguer',
+     p:'22g',c:'1.2g',g:'22g',k:'300',por:'100g'},
+    {e:'🧀',n:'Queijo minas frescal',qty:'500 g',tip:'Lanche op2 (60g) · reposição quinzenal',
+     p:'17g',c:'0g',g:'8g',k:'140',por:'100g'},
+    {e:'🥛',n:'Iogurte natural',qty:'8 potes (170g)',tip:'Lanche opção 1 · ~2×/semana',
+     p:'5g',c:'7g',g:'1.5g',k:'61',por:'100g'},
+    {e:'🥛',n:'Requeijão light',qty:'3 potes',tip:'Jantar op1 (2 col sopa) e eventuais substituições',
+     p:'3g',c:'5g',g:'4g',k:'67',por:'100g'},
+  ]},
+  {cat:'🍞 Pães e grãos',items:[
+    {e:'🍞',n:'Pão francês',qty:'30 unidades',tip:'Café da manhã + lanche op2 + jantar op1',
+     p:'7g',c:'31g',g:'1g',k:'150',por:'1 un (50g)'},
+    {e:'🍞',n:'Pão de hambúrguer',qty:'4 unidades',tip:'Jantar hambúrguer eventual',
+     p:'7g',c:'29g',g:'2g',k:'140',por:'1 un (50g)'},
+    {e:'🫓',n:'Granola',qty:'500 g',tip:'Lanche opção 1 (30g/vez)',
+     p:'6g',c:'65g',g:'7g',k:'350',por:'100g'},
   ]},
   {cat:'🍚 Carboidratos',items:[
-    {e:'🫓',n:'Goma de tapioca',qty:'1,5 kg',tip:'~50g por café da manhã',
-     p:'0g',c:'89g',g:'0g',k:'356',por:'100g (seca)'},
-    {e:'🍚',n:'Arroz branco',qty:'3 kg',tip:'~100g seco por almoço',
+    {e:'🍚',n:'Arroz branco',qty:'3 kg',tip:'~100g cozido por almoço e jantar op3',
      p:'2.6g',c:'28g',g:'0.3g',k:'128',por:'100g cozido'},
-    {e:'🫘',n:'Feijão',qty:'2 kg',tip:'Almoço seg–sex · ~80g seco/dia',
+    {e:'🫘',n:'Feijão',qty:'1,5 kg',tip:'Almoço + jantar op3 · ~80g cozido',
      p:'8.7g',c:'14g',g:'0.5g',k:'77',por:'100g cozido'},
-    {e:'🌾',n:'Farelo de aveia',qty:'600 g',tip:'Pré-treino 25g · 22 dias',
-     p:'14g',c:'66g',g:'7g',k:'394',por:'100g · 25g = 3.5g prot'},
   ]},
   {cat:'🍌 Frutas e vegetais',items:[
-    {e:'🍌',n:'Banana prata',qty:'3 kg (~25 un)',tip:'Pré-treino + lanche fds',
+    {e:'🍌',n:'Banana',qty:'2 kg (~15 un)',tip:'Café da manhã ou substituição de fruta',
      p:'1.4g',c:'23g',g:'0.2g',k:'98',por:'100g'},
-    {e:'🍎',n:'Maçã gala',qty:'1 kg (~8 un)',tip:'Alternativa no pré-treino',
+    {e:'🍊',n:'Laranja',qty:'8 unidades (180g)',tip:'Almoço todo dia',
+     p:'1g',c:'9g',g:'0.2g',k:'43',por:'100g'},
+    {e:'🍇',n:'Uva',qty:'350 g',tip:'Lanche opção 1 (80g/vez)',
+     p:'0.7g',c:'18g',g:'0.2g',k:'69',por:'100g'},
+    {e:'🍎',n:'Maçã',qty:'500 g',tip:'Lanche op2 e substituições',
      p:'0.3g',c:'14g',g:'0.2g',k:'56',por:'100g'},
-    {e:'🥬',n:'Legumes Petrofolhas (couve)',qty:'15 embal. 180g',tip:'Almoço + jantar diário',
-     p:'3.3g',c:'5g',g:'0.7g',k:'33',por:'100g'},
-    {e:'🥕',n:'Cenoura/beterraba Petrofolhas',qty:'10 embal. 250g',tip:'Almoço + jantar',
-     p:'1.1g',c:'9g',g:'0.2g',k:'41',por:'100g'},
-    {e:'🫙',n:'Palmito Royal Palms 270g',qty:'1 lata',tip:'Só quinta-feira · 4x/mês',
-     p:'2g',c:'3g',g:'0.3g',k:'21',por:'100g'},
+    {e:'🥬',n:'Folhas verdes e legumes variados',qty:'~2 kg',tip:'Almoço e jantar — à vontade',
+     p:'2g',c:'4g',g:'0.3g',k:'25',por:'100g'},
   ]},
   {cat:'🫒 Gorduras',items:[
-    {e:'🫒',n:'Azeite extra virgem 500ml',qty:'1 frasco',tip:'Dura 1,5 mês · ~10ml/dia',
-     p:'0g',c:'0g',g:'100g',k:'884',por:'100ml · 10ml = 9g gorд'},
-    {e:'🥜',n:'Castanha do pará',qty:'100 g',tip:'2–3 un no lanche eventual',
-     p:'14g',c:'12g',g:'67g',k:'659',por:'100g · 3 un ≈ 30g'},
+    {e:'🫒',n:'Azeite extra virgem 500ml',qty:'1 frasco',tip:'Mínimo no preparo · 1ml = 9 kcal',
+     p:'0g',c:'0g',g:'100g',k:'884',por:'100ml'},
   ]},
   {cat:'💊 Suplementos',items:[
-    {e:'💪',n:'Creatina monohidratada 1kg',qty:'120 g/mês',tip:'1kg dura ~8 meses',
+    {e:'💪',n:'Creatina monohidratada 1kg',qty:'150 g/mês',tip:'5g/dia · 1kg dura ~6,5 meses',
      p:'0g',c:'0g',g:'0g',k:'0',por:'5g (dose diária)'},
-    {e:'🥤',n:'Whey Soldiers Elite',qty:'~600 g/mês',tip:'1kg dura ~1,7 meses',
-     p:'20g',c:'2g',g:'1g',k:'97',por:'25g (1 scoop)'},
-    {e:'🌿',n:'Multivitamínico',qty:'1 caixa (30 caps)',tip:'1 por mês',
+    {e:'🥤',n:'Whey Concentrado',qty:'~700 g/mês',tip:'15g (op1) ou 10g (op2) no lanche · todo dia',
+     p:'18g',c:'3g',g:'1.5g',k:'100',por:'25g'},
+    {e:'🌿',n:'Multivitamínico',qty:'1 caixa (30 caps)',tip:'1 por dia no almoço',
      p:'—',c:'—',g:'—',k:'—',por:'1 cápsula/dia'},
   ]},
 ];
@@ -1692,7 +1761,7 @@ function renderCharts(){
     out+=`<div class="chart-card">
       <div class="chart-hed"><div><div class="chart-title">🥩 Proteína diária</div>
         <div class="chart-sub">Últimos ${protArr.length} dias · g</div></div></div>
-      ${svgBars(protArr,{color:'var(--teal)',goalVal:150,colorFn:v=>v>=150?'var(--teal)':v>=120?'var(--gold)':'var(--ember)'})}
+      ${svgBars(protArr,{color:'var(--teal)',goalVal:123,colorFn:v=>v>=123?'var(--teal)':v>=90?'var(--gold)':'var(--ember)'})}
       <div class="chart-stats">
         <div class="cstat"><div class="cstat-v">${avg}g</div><div class="cstat-l">Média</div></div>
         <div class="cstat"><div class="cstat-v">${Math.max(...vals)}g</div><div class="cstat-l">Melhor</div></div>
@@ -1742,7 +1811,7 @@ function renderCharts(){
     out+=`<div class="chart-card">
       <div class="chart-hed"><div><div class="chart-title">💧 Hidratação</div>
         <div class="chart-sub">Últimos ${waterArr.length} dias · litros</div></div></div>
-      ${svgBars(waterArr,{color:'var(--blue)',goalVal:3.5,fixedMax:5,colorFn:v=>v>=3.5?'var(--teal)':v>=2.5?'var(--blue)':'var(--ember)'})}
+      ${svgBars(waterArr,{color:'var(--blue)',goalVal:2.8,fixedMax:4,colorFn:v=>v>=2.8?'var(--teal)':v>=2?'var(--blue)':'var(--ember)'})}
       <div class="chart-stats">
         <div class="cstat"><div class="cstat-v bl">${avg}L</div><div class="cstat-l">Média</div></div>
         <div class="cstat"><div class="cstat-v bl">${Math.max(...vals)}L</div><div class="cstat-l">Melhor</div></div>
@@ -1904,19 +1973,20 @@ async function gdriveLoad(){
 
 // ── Water counter ────────────────────────────────────
 const WATER_KEY='plano_water_v1';
-const WATER_ML=250,WATER_GOAL=3500;
+const WATER_ML=250,WATER_GOAL=2800;
 
 function loadWater(){try{return JSON.parse(localStorage.getItem(WATER_KEY)||'{}')}catch(e){return{}}}
 
-window.tapWater=function(){
+window.addWater=function(ml){
   const w=loadWater(),t=todayStr();
-  w[t]=Math.min((w[t]||0)+WATER_ML, WATER_GOAL+1000);
+  w[t]=Math.min((w[t]||0)+ml, WATER_GOAL+1000);
   localStorage.setItem(WATER_KEY,JSON.stringify(w));
   renderWaterDiv();
 };
+window.tapWater=function(){window.addWater(WATER_ML);};
 
 window.resetWater=function(e){
-  e.stopPropagation();
+  if(e) e.stopPropagation();
   const w=loadWater();w[todayStr()]=0;
   localStorage.setItem(WATER_KEY,JSON.stringify(w));
   renderWaterDiv();
@@ -1930,11 +2000,17 @@ function renderWaterDiv(){
   const col=done?'var(--teal)':'var(--blue)';
   const el=document.getElementById('waterDiv');
   if(!el)return;
-  el.innerHTML=`💧 <span style="flex:1"><b style="color:${col}">${L} L</b> / 3,5 L · toque +250 ml${
+  el.innerHTML=`💧 <span style="flex:1"><b style="color:${col}">${L} L</b> / 2,8 L${
     ml>0?` <span class="water-reset" onclick="resetWater(event)">↺</span>`:''
   }</span><span style="font-size:11px;font-weight:600;color:${col}">${Math.round(pct)}%</span>
   <div class="water-bar" style="position:absolute;bottom:0;left:0;right:0;border-radius:0 0 8px 8px">
     <div class="water-fill" style="width:${pct}%;background:${col}"></div>
+  </div>
+  <div class="water-btns">
+    <button class="water-add-btn" onclick="addWater(200)">+200 ml</button>
+    <button class="water-add-btn" onclick="addWater(300)">+300 ml</button>
+    <button class="water-add-btn" onclick="addWater(500)">+500 ml</button>
+    ${ml>0?`<button class="water-reset-btn" onclick="resetWater(event)">↺</button>`:''}
   </div>`;
   el.style.position='relative';
   el.style.paddingBottom='9px';
@@ -2048,18 +2124,18 @@ function scheduleNotifications(){
   clearNotifTimers();
   if(Notification.permission!=='granted') return;
   if(localStorage.getItem(NOTIF_PREF)!=='1') return;
-  const now=new Date(),dt=getCurrentDayType();
-  DAYS[dt].meals.forEach(meal=>{
-    if(!meal.t||meal.type==='train') return;
+  const now=new Date();
+  MEALS.forEach(meal=>{
     const m=meal.t.match(/(\d{1,2})h(\d{2})/);
     if(!m) return;
     const target=new Date();
     target.setHours(parseInt(m[1]),parseInt(m[2]),0,0);
     const diff=target-now;
     if(diff>0&&diff<14*3600000){
+      const body=meal.hasOptions?(meal.options[0].sum||''):(meal.sum||'');
       _notifTimers.push(setTimeout(()=>{
         new Notification(`🍽 ${meal.n}`,{
-          body:meal.sum||'',icon:'./icon-192.png',
+          body,icon:'./icon-192.png',
           tag:`meal-${meal.t}`,silent:false
         });
       },diff));
@@ -2151,39 +2227,40 @@ function loadHistory(){
   try{return JSON.parse(localStorage.getItem(HIST_KEY)||'{}')}catch(e){return{}}
 }
 
+function getHistDayType(dateStr){
+  const dow=new Date(dateStr+'T12:00').getDay();
+  if(dow===1||dow===3) return 'mt';
+  if(dow===2||dow===4||dow===5) return 'tf';
+  return 'fds';
+}
+
 function saveToHistory(){
   const hist=loadHistory();
   const today=todayStr();
-  const d=DAYS[DAY_MAP[day]];
-  const meals=d.meals.filter(m=>m.p);
-  const earned=meals.reduce((a,m,i)=>{
-    const ri=d.meals.indexOf(m);
-    const isSkip=m.skipable&&skipped[`${dateForDay(day)}-skip-${ri}`];
-    return a+(isSkip?m.skipProt:(chk[`${dateForDay(day)}-${ri}`]?m.p:0));
+  const dateStr=dateForDay(day);
+  const earned=MEALS.reduce((a,m,i)=>{
+    if(!chk[`${dateStr}-${i}`]) return a;
+    return a+getMealProt(i,dateStr);
   },0);
-  const goal=meals.reduce((a,m,i)=>{
-    const ri=d.meals.indexOf(m);
-    return a+(m.skipable&&skipped[`${dateForDay(day)}-skip-${ri}`]?m.skipProt:m.p);
-  },0);
-  const doneCount=meals.filter((m,i)=>{
-    const ri=d.meals.indexOf(m);
-    return chk[`${dateForDay(day)}-${ri}`]||(m.skipable&&skipped[`${dateForDay(day)}-skip-${ri}`]);
-  }).length;
-  const mealNames=d.meals.filter(m=>m.p).map((m,i)=>{
-    const ri=d.meals.indexOf(m);
-    const isDone=chk[`${dateForDay(day)}-${ri}`];
-    const isSkip=m.skipable&&skipped[`${dateForDay(day)}-skip-${ri}`];
-    return{name:m.n.replace(' · leve','').replace(' · alcatra 🥩',''),
-           done:isDone,skip:isSkip};
+  const doneCount=MEALS.filter((_,i)=>!!chk[`${dateStr}-${i}`]).length;
+  const mealNames=MEALS.map((m,i)=>{
+    const isDone=!!chk[`${dateStr}-${i}`];
+    let name=m.n;
+    if(m.hasOptions){
+      const opts=getMealOpts(dateStr);
+      const selKey=opts[m.id]||m.options[0].key;
+      const curOpt=m.options.find(o=>o.key===selKey)||m.options[0];
+      name=`${m.n} (${curOpt.label})`;
+    }
+    return{name,done:isDone};
   });
   hist[today]={
-    dayType:day,
+    dayType:getHistDayType(dateStr),
     protein:earned,
-    goal:goal,
+    goal:PROT_GOAL,
     done:doneCount,
-    total:meals.length,
+    total:MEALS.length,
     meals:mealNames,
-    skippedDinner:!!(day==='fds'&&skipped[`fds-skip-3`]),
     ts:new Date().toISOString()
   };
   localStorage.setItem(HIST_KEY,JSON.stringify(hist));
@@ -2430,23 +2507,7 @@ window.setHistView=function(v){
   if(sec==='hist') document.getElementById('main').innerHTML=renderHistorico();
 };
 
-// ── skip state (not persisted — resets with page)
-let skipped={};
-
-window.skipMeal=function(idx,e){
-  e.stopPropagation();
-  const k=`${dateForDay(day)}-skip-${idx}`;
-  skipped[k]=true;
-  saveState();saveToHistory();
-  render();
-};
-window.unskipMeal=function(idx,e){
-  e.stopPropagation();
-  const k=`${dateForDay(day)}-skip-${idx}`;
-  delete skipped[k];
-  saveState();saveToHistory();
-  render();
-};
+let skipped={}; // kept for backwards compat with old history entries
 
 function render(){
   const fns={meals:renderMeals,supps:renderSupps,prep:renderPrep,
@@ -2462,7 +2523,6 @@ document.getElementById('pills').addEventListener('click',e=>{
   day=p.dataset.d;
   document.querySelectorAll('.pill').forEach(x=>x.classList.remove('on'));
   p.classList.add('on');
-  setColor(DAYS[DAY_MAP[day]].color);
   sec='meals';
   document.querySelectorAll('.nb').forEach(x=>x.classList.remove('on'));
   document.querySelector('.nb[data-s="meals"]').classList.add('on');
@@ -2515,14 +2575,12 @@ document.addEventListener('visibilitychange',()=>{
     if(newDay!==day){
       day=newDay;
       document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.dataset.d===day));
-      setColor(DAYS[DAY_MAP[day]].color);
       if(sec==='meals') render();
     }
   }
 });
 
 // ── Init ───────────────────────────────────────────
-setColor(DAYS[DAY_MAP[day]||'mt'].color);
 document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.dataset.d===day));
 render();
 renderWaterDiv();
