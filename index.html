@@ -570,6 +570,12 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 .corr-sub{font-size:10px;color:var(--faint);margin-top:4px}
 
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes check-pop{0%{transform:scale(1)}35%{transform:scale(1.4)}70%{transform:scale(.9)}100%{transform:scale(1)}}
+.mc-chk.pop{animation:check-pop .28s ease-out}
+@keyframes swipe-left{from{opacity:.6;transform:translateX(18px)}to{opacity:1;transform:none}}
+@keyframes swipe-right{from{opacity:.6;transform:translateX(-18px)}to{opacity:1;transform:none}}
+main.swipe-left{animation:swipe-left .2s ease-out}
+main.swipe-right{animation:swipe-right .2s ease-out}
 
 /* ── DESKTOP LAYOUT ──────────────────────────────── */
 @media (min-width: 768px) {
@@ -1240,8 +1246,14 @@ function updProt(){
   });
   const pct=Math.min(100,(earned/PROT_GOAL)*100);
   document.getElementById('pval').innerHTML=
-    `${earned} g <small>/ <span id="ptot">${PROT_GOAL}</span> g</small>`;
+    `${earned} g<small>/${PROT_GOAL}g</small>`;
   document.getElementById('pfill').style.width=pct+'%';
+  // Label mostra contexto: "hoje" vs dia navegado
+  const lbl=document.querySelector('.pbar-lbl');
+  if(lbl){
+    const isToday=dateStr===todayStr();
+    lbl.textContent=isToday?'Proteína · Hoje':'Prot. · '+day.toUpperCase()+' (plano)';
+  }
 }
 
 // ── Render sections ────────────────────────────────
@@ -1830,7 +1842,7 @@ function buildNutriReportText(days){
 
   const today=new Date().toLocaleDateString('pt-BR');
   return `📋 ACOMPANHAMENTO NUTRICIONAL
-Período: ${fmt(startD)} – ${fmt(endD)}/2026 (${entries.length} dias)
+Período: ${fmt(startD)}/${startD.slice(0,4)} – ${fmt(endD)}/${endD.slice(0,4)} (${entries.length} dias)
 Nutricionista: Dra. Priscila Garcia · CRN-31670
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -1875,16 +1887,25 @@ window.openNutriReport=function(){
     </div>
     <pre class="nrep-text" id="nrepText">${txt}</pre>
     <div class="nrep-btns">
-      <button class="nrep-copy" onclick="copyNutriReport()">📋 Copiar texto</button>
-      <button class="nrep-close" onclick="document.getElementById('nutriReportModal').remove()">Fechar</button>
+      <button class="nrep-copy" onclick="shareNutriReport()">📤 Compartilhar</button>
+      <button class="nrep-copy" style="background:var(--blue-d);border-color:rgba(74,140,247,.4);color:var(--blue)" onclick="copyNutriReport()">📋 Copiar</button>
+      <button class="nrep-close" onclick="document.getElementById('nutriReportModal').remove()">✕</button>
     </div>
   </div>`;
   document.body.appendChild(m);
 };
 window.copyNutriReport=function(){
   const txt=document.getElementById('nrepText')?.textContent||'';
-  if(navigator.clipboard) navigator.clipboard.writeText(txt).then(()=>showToast('📋 Copiado para a área de transferência'));
+  if(navigator.clipboard) navigator.clipboard.writeText(txt).then(()=>showToast('📋 Copiado!'));
   else showToast('❌ Copiar não suportado neste browser');
+};
+window.shareNutriReport=function(){
+  const txt=document.getElementById('nrepText')?.textContent||'';
+  if(navigator.share){
+    navigator.share({title:'Acompanhamento Nutricional',text:txt}).catch(()=>{});
+  } else {
+    window.copyNutriReport();
+  }
 };
 
 // ── Estagnação de peso ───────────────────────────────
@@ -2844,6 +2865,11 @@ document.getElementById('main').addEventListener('click',e=>{
     chk[k]=!chk[k];
     mc.classList.toggle('done',!!chk[k]);
     chkBtn.textContent=chk[k]?'✓':'';
+    if(chk[k]){
+      chkBtn.classList.remove('pop');
+      void chkBtn.offsetWidth;
+      chkBtn.classList.add('pop');
+    }
     saveState();
     saveToHistory();
     updProt();
@@ -2880,6 +2906,33 @@ document.addEventListener('visibilitychange',()=>{
     }
   }
 });
+
+// ── Swipe para navegar entre dias ──────────────────
+const DAYS_ORDER=['seg','ter','qua','qui','sex','sab','dom'];
+let _swX=0,_swY=0,_swMoved=false;
+const mainEl=document.getElementById('main');
+mainEl.addEventListener('touchstart',e=>{
+  _swX=e.touches[0].clientX;_swY=e.touches[0].clientY;_swMoved=false;
+},{passive:true});
+mainEl.addEventListener('touchmove',()=>{_swMoved=true;},{passive:true});
+mainEl.addEventListener('touchend',e=>{
+  if(!_swMoved||sec!=='meals') return;
+  // Ignore swipes starting inside an expanded card body or note
+  if(e.target.closest('.mc-body')) return;
+  const dx=e.changedTouches[0].clientX-_swX;
+  const dy=Math.abs(e.changedTouches[0].clientY-_swY);
+  if(Math.abs(dx)<55||dy>Math.abs(dx)*.65) return;
+  const idx=DAYS_ORDER.indexOf(day);
+  const newIdx=dx<0?Math.min(idx+1,6):Math.max(idx-1,0);
+  if(newIdx===idx) return;
+  const dir=dx<0?'swipe-left':'swipe-right';
+  day=DAYS_ORDER[newIdx];
+  document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.dataset.d===day));
+  render();
+  mainEl.classList.remove('swipe-left','swipe-right');
+  void mainEl.offsetWidth;
+  mainEl.classList.add(dir);
+},{passive:true});
 
 // ── Init ───────────────────────────────────────────
 (function cleanOldStorage(){
