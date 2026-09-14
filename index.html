@@ -24,6 +24,14 @@
   --txt:#F0E8DF;--muted:#9A8F86;--faint:#4E4742;
   --day:#F2682C;
 }
+:root.light{
+  --bg:#F2EFEC;--surf:#FFFFFF;--card:#FAF8F6;--bdr:#E0DAD4;
+  --ember-d:rgba(242,104,44,.09);--teal-d:rgba(61,191,140,.10);
+  --gold-d:rgba(212,146,42,.09);--blue-d:rgba(74,140,247,.09);
+  --green-d:rgba(77,170,115,.09);--violet-d:rgba(155,94,212,.09);
+  --txt:#1A1512;--muted:#6B6560;--faint:#A09893;
+}
+.light .hdr{background:linear-gradient(var(--surf),transparent)}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
   font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}
@@ -139,6 +147,8 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 .mc-name{font-size:13.5px;font-weight:500;flex:1;line-height:1.2}
 .mc-prot{font-size:10px;font-weight:600;color:var(--teal);background:var(--teal-d);
   padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.mc-kcal{font-size:9.5px;font-weight:600;color:var(--ember-s);background:var(--ember-d);
+  padding:3px 7px;border-radius:20px;white-space:nowrap;flex-shrink:0}
 .mc-chk{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--bdr);
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
   font-size:10px;transition:all .18s;color:transparent}
@@ -529,6 +539,10 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 .modo-btn[data-m="recomp"].on{background:var(--teal-d);border-color:var(--teal);color:var(--teal)}
 .modo-btn[data-m="ganho"].on{background:var(--blue-d);border-color:var(--blue);color:var(--blue)}
 .modo-note{font-size:11px;color:var(--muted);line-height:1.4}
+.theme-btn{background:none;border:1px solid var(--bdr);border-radius:8px;
+  padding:3px 7px;font-size:14px;cursor:pointer;line-height:1;color:var(--muted);
+  transition:border-color .15s;flex-shrink:0}
+.theme-btn:hover{border-color:var(--ember)}
 .modo-pill{font-size:10px;font-weight:600;padding:3px 9px;border-radius:10px;
   background:var(--ember-d);color:var(--ember-s);border:1px solid rgba(242,104,44,.3);
   white-space:nowrap;cursor:pointer}
@@ -711,6 +725,7 @@ main.swipe-right{animation:swipe-right .2s ease-out}
   <div class="hdr-row">
     <span class="hdr-title">Recomposição</span>
     <span class="week-badge">S<b id="wnum">—</b></span>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Alternar tema">🌙</button>
     <span class="modo-pill" id="modoPill" onclick="showSec('hist')">⚡ Recomposição</span>
   </div>
   <div class="pills" id="pills">
@@ -813,7 +828,7 @@ function saveState(){
 // Meta: ~1600 kcal/dia · 123g proteína/dia · 2,8L água/dia
 
 const MEALS=[
-  {id:'cafe',t:'~10h00',n:'Café da manhã',p:20,
+  {id:'cafe',t:'~10h00',n:'Café da manhã',p:20,kcal:340,
    sum:'Pão francês + ovo + queijo muçarela + banana + café',
    s:'Creatina 5g — tome com água, afastado do café (esperar ~30 min após o café)',
    g:'Esomeprazol nos dias de uso: em jejum, 30–60 min antes de comer.',
@@ -828,7 +843,7 @@ const MEALS=[
       subs:['Pera - 1 un (110g)','Laranja - 1 un peq. (90g)','Melão - 2 fatias (230g)','Ameixa - 2 un (84g)','Pêssego - 1 un (110g)','Mexerica - 1 un (125g)','Abacaxi - 1,5 fatia (112,5g)','Uva - 8 un (96g)','Morango - 9 un (180g)','Kiwi - 1 un (75g)','Mamão - 1 fatia (100g)','Goiaba - 1 un (130g)','Manga - 85g','Melancia - 1 fatia (200g)','Maçã - 1 un peq. (80g)']},
      {n:'Café puro ou com sucralose',qty:'1 xícara (50ml)'},
    ]},
-  {id:'almoco',t:'~13h00',n:'Almoço',p:45,
+  {id:'almoco',t:'~13h00',n:'Almoço',p:45,kcal:560,
    sum:'Arroz + carne magra + feijão + legumes + salada + laranja',
    s:'Multivitamínico junto da refeição',
    w:'Evitar batata inglesa, mandioca e batata doce junto com arroz — dobra a carga de carboidratos.',
@@ -845,7 +860,7 @@ const MEALS=[
    ]},
   {id:'lanche',t:'~16h30',n:'Lanche da tarde',hasOptions:true,
    options:[
-     {key:'op1',label:'Op 1 · Iogurte',p:22,
+     {key:'op1',label:'Op 1 · Iogurte',p:22,kcal:340,
       sum:'Iogurte natural + uva + granola + whey 15g',
       items:[
         {n:'Iogurte natural',qty:'1 un (170g)',
@@ -856,7 +871,7 @@ const MEALS=[
         {n:'Whey Concentrado',qty:'1 dosador (15g)',
          subs:['Piracanjuba ProForce 23g - 1 garrafa (250ml) · Sáb e Dom · mais econômico · 170kcal']},
       ]},
-     {key:'op2',label:'Op 2 · Pão',p:19,
+     {key:'op2',label:'Op 2 · Pão',p:19,kcal:325,
       sum:'Pão francês + queijo minas frescal + maçã + whey 10g',
       items:[
         {n:'Pão francês',qty:'1 un (50g)',
@@ -871,7 +886,7 @@ const MEALS=[
    ]},
   {id:'jantar',t:'~20h00',n:'Jantar',hasOptions:true,
    options:[
-     {key:'op1',label:'Op 1 · Sanduíche',p:28,
+     {key:'op1',label:'Op 1 · Sanduíche',p:28,kcal:360,
       sum:'Pão francês + frango desfiado + requeijão light + alface',
       items:[
         {n:'Pão francês',qty:'1 un (50g)',
@@ -882,7 +897,7 @@ const MEALS=[
          subs:['Creme de ricota - 2,5 col sopa (50g)','Queijo muçarela - 2 fatias (40g)','Queijo minas frescal - 1,5 fatia (45g)']},
         {n:'Alface',qty:'À vontade'},
       ]},
-     {key:'op2',label:'Op 2 · Hambúrguer',p:26,
+     {key:'op2',label:'Op 2 · Hambúrguer',p:26,kcal:350,
       sum:'Pão de hambúrguer + carne magra + queijo muçarela + alface',
       obs:'Hambúrguer caseiro com carne magra (alcatra, patinho), sem gordura.',
       items:[
@@ -891,7 +906,7 @@ const MEALS=[
         {n:'Queijo muçarela',qty:'1 fatia (20g)'},
         {n:'Alface',qty:'À vontade'},
       ]},
-     {key:'op3',label:'Op 3 · Prato',p:42,
+     {key:'op3',label:'Op 3 · Prato',p:42,kcal:430,
       sum:'Arroz + filé de frango + feijão + legumes + salada',
       items:[
         {n:'Arroz branco',qty:'5 col sopa (100g)',
@@ -1194,6 +1209,7 @@ function setColor(c){
 }
 
 const PROT_GOAL=123;
+const KCAL_GOAL=1600;
 
 // ── Notas livres por refeição ─────────────────────
 function getMealNote(dateStr,idx){
@@ -1236,6 +1252,15 @@ function getMealProt(mealIdx,dateStr){
   const selKey=opts[m.id]||m.options[0].key;
   const opt=m.options.find(o=>o.key===selKey)||m.options[0];
   return opt.p;
+}
+
+function getMealKcal(mealIdx,dateStr){
+  const m=MEALS[mealIdx];
+  if(!m.hasOptions) return m.kcal||0;
+  const opts=getMealOpts(dateStr);
+  const selKey=opts[m.id]||m.options[0].key;
+  const opt=m.options.find(o=>o.key===selKey)||m.options[0];
+  return opt.kcal||0;
 }
 
 function updProt(){
@@ -1329,6 +1354,7 @@ function renderMeals(){
         <div class="mc-head">
           <span class="mc-time">${m.t}</span>
           <span class="mc-name">${m.n}${livreBadge}</span>
+          <span class="mc-kcal">~${curOpt.kcal||0} kcal</span>
           <span class="mc-prot">+${curOpt.p} g</span>
           <div class="mc-chk">${chk[`${dateStr}-${i}`]?'✓':''}</div>
         </div>
@@ -1345,6 +1371,7 @@ function renderMeals(){
         <div class="mc-head">
           <span class="mc-time">${m.t}</span>
           <span class="mc-name">${m.n}${livreBadge}</span>
+          <span class="mc-kcal">~${m.kcal||0} kcal</span>
           <span class="mc-prot">+${m.p} g</span>
           <div class="mc-chk">${chk[`${dateStr}-${i}`]?'✓':''}</div>
         </div>
@@ -1360,9 +1387,14 @@ function renderMeals(){
     }
   });
   h+='</div>';
+  const plannedKcal=MEALS.reduce((a,m,i)=>a+getMealKcal(i,dateStr),0);
+  const earnedKcal=MEALS.reduce((a,m,i)=>chk[`${dateStr}-${i}`]?a+getMealKcal(i,dateStr):a,0);
   h+=`<div class="total">
     <span class="total-lbl">Meta proteína</span>
-    <span class="total-val">${PROT_GOAL} g</span></div>`;
+    <span class="total-val">${PROT_GOAL} g</span>
+    <span class="total-lbl" style="margin-left:auto">Kcal plano</span>
+    <span class="total-val" style="color:var(--ember-s)">~${earnedKcal}<small>/${plannedKcal}</small></span>
+  </div>`;
   h+=renderEnergyWidget();
   const modo=MODOS[getModo()];
   if(getModo()==='recomp')
@@ -1676,6 +1708,18 @@ const MODOS={
 };
 
 function getModo(){return localStorage.getItem(MODO_KEY)||'recomp';}
+
+const THEME_KEY='plano_theme_v1';
+function applyTheme(t){
+  document.documentElement.classList.toggle('light',t==='light');
+  const btn=document.getElementById('themeBtn');
+  if(btn) btn.textContent=t==='light'?'🌞':'🌙';
+}
+window.toggleTheme=function(){
+  const next=document.documentElement.classList.contains('light')?'dark':'light';
+  localStorage.setItem(THEME_KEY,next);
+  applyTheme(next);
+};
 
 window.setModo=function(m){
   localStorage.setItem(MODO_KEY,m);
@@ -2543,6 +2587,10 @@ function saveToHistory(){
     if(!chk[`${dateStr}-${i}`]) return a;
     return a+getMealProt(i,dateStr);
   },0);
+  const earnedKcalHist=MEALS.reduce((a,m,i)=>{
+    if(!chk[`${dateStr}-${i}`]) return a;
+    return a+getMealKcal(i,dateStr);
+  },0);
   const doneCount=MEALS.filter((_,i)=>!!chk[`${dateStr}-${i}`]).length;
   const mealNames=MEALS.map((m,i)=>{
     const isDone=!!chk[`${dateStr}-${i}`];
@@ -2560,6 +2608,7 @@ function saveToHistory(){
   hist[today]={
     dayType:getHistDayType(dateStr),
     protein:earned,
+    kcal:earnedKcalHist,
     goal:PROT_GOAL,
     done:doneCount,
     total:MEALS.length,
@@ -2948,6 +2997,7 @@ mainEl.addEventListener('touchend',e=>{
   toRemove.forEach(k=>localStorage.removeItem(k));
 })();
 
+applyTheme(localStorage.getItem(THEME_KEY)||'dark');
 const todayDay=getCurrentDay();
 document.querySelectorAll('.pill').forEach(p=>{
   p.classList.toggle('on',p.dataset.d===day);

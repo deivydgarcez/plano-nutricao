@@ -1,4 +1,4 @@
-const CACHE = 'plano-nutricao-v20';
+const CACHE = 'plano-nutricao-v21';
 const ASSETS = [
   './',
   './index.html',
