@@ -800,11 +800,13 @@ const MEALS=[
      {key:'op1',label:'Op 1 · Iogurte',p:22,
       sum:'Iogurte natural + uva + granola + whey 15g',
       items:[
-        {n:'Iogurte natural',qty:'1 un (170g)'},
+        {n:'Iogurte natural',qty:'1 un (170g)',
+         subs:['Parmalat Fit 10g proteínas - 1 pote (120g) · zero lactose, zero açúcar']},
         {n:'Uva',qty:'10 un médias (80g)',
          subs:['Pera - 1 un (110g)','Laranja - 1 un peq. (90g)','Melão - 2 fatias (230g)','Ameixa - 2 un (84g)','Pêssego - 1 un (110g)','Mexerica - 1 un (125g)','Abacaxi - 1,5 fatia (112,5g)','Morango - 9 un (180g)','Kiwi - 1 un (75g)','Mamão - 1 fatia (100g)','Goiaba - 1 un (130g)','Manga - 85g','Melancia - 1 fatia (200g)','Banana - 1 un (100g)','Maçã - 1 un (130g)']},
         {n:'Granola',qty:'3 col sopa (30g)'},
-        {n:'Whey Concentrado',qty:'1 dosador (15g)'},
+        {n:'Whey Concentrado',qty:'1 dosador (15g)',
+         subs:['Piracanjuba ProForce 23g - 1 garrafa (250ml) · Sáb e Dom · mais econômico · 170kcal']},
       ]},
      {key:'op2',label:'Op 2 · Pão',p:19,
       sum:'Pão francês + queijo minas frescal + maçã + whey 10g',
@@ -815,7 +817,8 @@ const MEALS=[
          subs:['Ovo de galinha - 2 un (100g)','Requeijão light - 2 col sopa (60g)','Queijo muçarela - 2 fatias (40g)','Creme de ricota - 3 col sopa (60g)','Ricota - 3 fatias (105g)']},
         {n:'Maçã',qty:'1 un pequena (80g)',
          subs:['Pera - 1 un (110g)','Laranja - 1 un peq. (90g)','Melão - 2 fatias (230g)','Ameixa - 2 un (84g)','Pêssego - 1 un (110g)','Mexerica - 1 un (125g)','Abacaxi - 1,5 fatia (112,5g)','Uva - 8 un (96g)','Morango - 9 un (180g)','Kiwi - 1 un (75g)','Mamão - 1 fatia (100g)','Goiaba - 1 un (130g)','Manga - 85g','Melancia - 1 fatia (200g)','Banana - 1 un média (65g)']},
-        {n:'Whey Concentrado com água',qty:'10g'},
+        {n:'Whey Concentrado com água',qty:'10g',
+         subs:['Piracanjuba ProForce 23g - 1 garrafa (250ml) · Sáb e Dom · mais econômico · 170kcal']},
       ]},
    ]},
   {id:'jantar',t:'~20h00',n:'Jantar',hasOptions:true,
@@ -865,6 +868,8 @@ const SUPPS=[
    note:'1 dosador diluído na água ou misturado ao iogurte natural. Opção 1 do lanche.'},
   {when:'Lanche · op2',name:'Whey Concentrado',dose:'10 g',
    note:'Diluído em água. Opção 2 do lanche (pão + queijo minas).'},
+  {when:'SAB · DOM · lanche',name:'Piracanjuba ProForce 23g',dose:'1 garrafa\n(250ml)',
+   note:'Substitui o whey no fim de semana por economia. 23g proteína · 17g carbs · 170 kcal · zero lactose. Guardar gelado.'},
 ];
 
 const GASTRO_ITEMS=[
@@ -1402,6 +1407,8 @@ const MONTHLY=[
      p:'17g',c:'0g',g:'8g',k:'140',por:'100g'},
     {e:'🥛',n:'Iogurte natural',qty:'8 potes (170g)',tip:'Lanche opção 1 · ~2×/semana',
      p:'5g',c:'7g',g:'1.5g',k:'61',por:'100g'},
+    {e:'🥛',n:'Parmalat Fit 10g proteínas',qty:'8 potes (120g)',tip:'Substitui iogurte natural no lanche op1 · zero lactose, zero açúcar',
+     p:'8.3g',c:'5g',g:'1g',k:'64',por:'100g · pote 120g = 10g prot · 77 kcal'},
     {e:'🥛',n:'Requeijão light',qty:'3 potes',tip:'Jantar op1 (2 col sopa) e eventuais substituições',
      p:'3g',c:'5g',g:'4g',k:'67',por:'100g'},
   ]},
@@ -1436,6 +1443,8 @@ const MONTHLY=[
      p:'0g',c:'0g',g:'100g',k:'884',por:'100ml'},
   ]},
   {cat:'💊 Suplementos',items:[
+    {e:'🥤',n:'Piracanjuba ProForce 23g (250ml)',qty:'8 unidades/mês',tip:'Sáb e Dom · substitui whey por economia · guardar gelado',
+     p:'9.2g',c:'6.8g',g:'0.3g',k:'68',por:'100ml · garrafa 250ml = 23g prot · 170 kcal · 17g carbs'},
     {e:'💪',n:'Creatina monohidratada 1kg',qty:'150 g/mês',tip:'5g/dia · 1kg dura ~6,5 meses',
      p:'0g',c:'0g',g:'0g',k:'0',por:'5g (dose diária)'},
     {e:'🥤',n:'Whey Concentrado',qty:'~700 g/mês',tip:'15g (op1) ou 10g (op2) no lanche · todo dia',
@@ -2186,6 +2195,26 @@ window.toggleNotifications=async function(){
   if(sec==='hist') document.getElementById('main').innerHTML=renderHistorico();
 };
 
+function showMealNotif(meal){
+  const body=meal.hasOptions?(meal.options[0].sum||''):(meal.sum||'');
+  const opts={
+    body,icon:'./icon-192.png',badge:'./icon-192.png',
+    tag:`meal-${meal.t}`,silent:false,
+    vibrate:[200,100,200],
+    data:{url:'./'},
+    actions:[
+      {action:'done',title:'✓ Feito'},
+      {action:'snooze',title:'⏰ +30 min'}
+    ]
+  };
+  if('serviceWorker' in navigator&&navigator.serviceWorker.controller){
+    navigator.serviceWorker.ready.then(reg=>reg.showNotification(`🍽 ${meal.n}`,opts))
+      .catch(()=>new Notification(`🍽 ${meal.n}`,opts));
+  } else {
+    new Notification(`🍽 ${meal.n}`,opts);
+  }
+}
+
 function scheduleNotifications(){
   clearNotifTimers();
   if(Notification.permission!=='granted') return;
@@ -2198,13 +2227,21 @@ function scheduleNotifications(){
     target.setHours(parseInt(m[1]),parseInt(m[2]),0,0);
     const diff=target-now;
     if(diff>0&&diff<14*3600000){
-      const body=meal.hasOptions?(meal.options[0].sum||''):(meal.sum||'');
-      _notifTimers.push(setTimeout(()=>{
-        new Notification(`🍽 ${meal.n}`,{
-          body,icon:'./icon-192.png',
-          tag:`meal-${meal.t}`,silent:false
-        });
-      },diff));
+      _notifTimers.push(setTimeout(()=>showMealNotif(meal),diff));
+    }
+    // snooze support: if action='snooze' was tapped, re-schedule +30min
+    const snoozeKey=`plano_snooze_${meal.t}`;
+    const snoozeAt=parseInt(localStorage.getItem(snoozeKey)||'0');
+    if(snoozeAt>0){
+      const snoozeDiff=snoozeAt-now.getTime();
+      if(snoozeDiff>0&&snoozeDiff<3600000){
+        _notifTimers.push(setTimeout(()=>{
+          localStorage.removeItem(snoozeKey);
+          showMealNotif(meal);
+        },snoozeDiff));
+      } else {
+        localStorage.removeItem(snoozeKey);
+      }
     }
   });
 }
@@ -2663,6 +2700,13 @@ scheduleNotifications();
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+  // Recebe snooze do SW e agenda re-notificação
+  navigator.serviceWorker.addEventListener('message',e=>{
+    if(e.data&&e.data.type==='snooze'){
+      localStorage.setItem(e.data.snoozeKey,String(e.data.snoozeAt));
+      scheduleNotifications();
+    }
   });
 }
 </script>
