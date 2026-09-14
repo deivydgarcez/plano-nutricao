@@ -31,17 +31,17 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
   margin:0 auto;position:relative;overflow:hidden}
 
 /* HEADER */
-.hdr{padding:14px 18px 10px;flex-shrink:0;background:linear-gradient(var(--surf),transparent)}
-.hdr-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.hdr-title{font-family:'Anton',sans-serif;font-size:20px;letter-spacing:.02em;
+.hdr{padding:10px 16px 8px;flex-shrink:0;background:linear-gradient(var(--surf),transparent)}
+.hdr-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.hdr-title{font-family:'Anton',sans-serif;font-size:18px;letter-spacing:.02em;
   text-transform:uppercase;flex:1}
 .week-badge{font-size:10px;color:var(--muted);background:var(--surf);
-  border:1px solid var(--bdr);border-radius:6px;padding:4px 9px;
+  border:1px solid var(--bdr);border-radius:6px;padding:3px 8px;
   letter-spacing:.04em;white-space:nowrap}
 .week-badge b{color:var(--teal);font-weight:600}
-.pills{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
+.pills{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
 .pills::-webkit-scrollbar{display:none}
-.pill{flex-shrink:0;padding:7px 13px;border-radius:20px;font-size:11px;
+.pill{flex-shrink:0;padding:5px 11px;border-radius:20px;font-size:10.5px;
   font-weight:600;letter-spacing:.07em;text-transform:uppercase;
   border:1.5px solid var(--bdr);background:var(--surf);color:var(--muted);
   cursor:pointer;transition:all .18s}
@@ -49,19 +49,51 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
 .pill.today:not(.on)::after{content:'';display:block;width:4px;height:4px;
   border-radius:50%;background:var(--ember);margin:3px auto -6px;}
 
-/* PROGRESS */
-.pbar-wrap{margin-top:10px;background:var(--surf);border-radius:10px;padding:10px 14px}
-.pbar-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.pbar-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.pbar-val{font-family:'Anton',sans-serif;font-size:15px}
-.pbar-val small{font-family:'DM Sans';font-size:10px;color:var(--muted);margin-left:2px}
-.ptrack{height:4px;background:var(--bdr);border-radius:3px;overflow:hidden}
+/* METRICS STRIP: protein + water side by side */
+.metrics-row{display:flex;gap:6px;margin-top:8px}
+.pbar-wrap{flex:1;background:var(--surf);border-radius:8px;padding:8px 10px}
+.pbar-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.pbar-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.pbar-val{font-family:'Anton',sans-serif;font-size:13px;color:var(--teal)}
+.pbar-val small{font-family:'DM Sans';font-size:9px;color:var(--muted);margin-left:1px}
+.ptrack{height:3px;background:var(--bdr);border-radius:3px;overflow:hidden}
 .pfill{height:100%;background:var(--teal);border-radius:3px;
   transition:width .35s cubic-bezier(.4,0,.2,1);width:0}
-.water{margin-top:8px;background:var(--blue-d);border:1px solid rgba(74,140,247,.25);
-  border-radius:8px;padding:7px 12px;font-size:11.5px;color:var(--blue);
-  display:flex;gap:8px;align-items:center}
-.water b{font-weight:600}
+.water-metric{flex:1;background:var(--blue-d);border:1px solid rgba(74,140,247,.2);
+  border-radius:8px;padding:8px 10px;cursor:default}
+.water-m-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.water-m-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.water-m-val{font-family:'Anton',sans-serif;font-size:13px;color:var(--blue)}
+.water-m-val small{font-family:'DM Sans';font-size:9px;color:var(--muted);margin-left:1px}
+.water-btns-row{display:flex;gap:5px;margin-top:6px}
+
+/* NUTRI REPORT */
+.nutri-btn{width:100%;padding:11px;background:var(--teal-d);
+  border:1.5px solid rgba(61,191,140,.4);border-radius:10px;color:var(--teal);
+  font-family:'DM Sans';font-size:12.5px;font-weight:600;cursor:pointer;
+  margin-bottom:10px;transition:all .18s;display:flex;align-items:center;
+  gap:8px;justify-content:center}
+.nutri-btn:hover{background:rgba(61,191,140,.2)}
+.rperiod-row{display:flex;gap:6px;margin-bottom:12px}
+.rperiod-btn{flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--bdr);
+  background:var(--surf);color:var(--muted);font-family:'DM Sans';font-size:11px;
+  font-weight:600;cursor:pointer;transition:all .18s;text-align:center}
+.rperiod-btn.on{background:var(--teal-d);border-color:var(--teal);color:var(--teal)}
+.nrep-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;
+  display:flex;align-items:flex-end;padding:12px;overflow:hidden}
+.nrep-box{background:var(--card);border-radius:16px 16px 12px 12px;padding:16px;
+  width:100%;max-width:460px;margin:0 auto;max-height:85vh;
+  display:flex;flex-direction:column;gap:10px}
+.nrep-title{font-family:'Anton';font-size:16px;text-transform:uppercase;letter-spacing:.03em}
+.nrep-text{font-family:monospace;font-size:11.5px;white-space:pre-wrap;
+  color:var(--txt);line-height:1.6;overflow-y:auto;flex:1;
+  background:var(--surf);border-radius:8px;padding:12px}
+.nrep-btns{display:flex;gap:8px}
+.nrep-copy{flex:1;padding:10px;background:var(--teal-d);border:1.5px solid rgba(61,191,140,.4);
+  border-radius:8px;color:var(--teal);font-family:'DM Sans';font-size:12px;
+  font-weight:600;cursor:pointer}
+.nrep-close{padding:10px 16px;background:var(--surf);border:1px solid var(--bdr);
+  border-radius:8px;color:var(--muted);font-family:'DM Sans';font-size:12px;cursor:pointer}
 
 /* RESET BANNER (hidden by default) */
 .reset-banner{display:none;margin-top:8px;background:var(--teal-d);
@@ -241,12 +273,14 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
   padding-bottom:env(safe-area-inset-bottom,0);
   overflow-x:auto;scrollbar-width:none}
 .nav::-webkit-scrollbar{display:none}
-.nb{flex:0 0 auto;min-width:60px;padding:9px 6px;display:flex;
-  flex-direction:column;align-items:center;gap:3px;cursor:pointer;
+.nb{flex:1 0 auto;min-width:42px;max-width:68px;padding:8px 4px;display:flex;
+  flex-direction:column;align-items:center;gap:1px;cursor:pointer;
   background:none;border:none;color:var(--faint);font-family:'DM Sans';
-  font-size:9.5px;letter-spacing:.03em;transition:color .15s}
+  font-size:9px;letter-spacing:.02em;transition:color .15s}
 .nb.on{color:var(--day)}
-.nb-ic{font-size:19px;line-height:1}
+.nb-ic{font-size:17px;line-height:1}
+.nb-lbl{display:none;font-size:9px;letter-spacing:.02em}
+.nb.on .nb-lbl{display:block}
 
 /* NUTRI */
 .ncard{background:var(--card);border:1px solid var(--bdr);border-radius:12px;
@@ -492,6 +526,7 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
   color:var(--txt);cursor:pointer;transition:all .18s;text-align:center}
 .modo-btn.on{border-color:var(--day);background:var(--ember-d);color:var(--ember-s)}
 .modo-btn[data-m="manutencao"].on{background:var(--teal-d);border-color:var(--teal);color:var(--teal)}
+.modo-btn[data-m="recomp"].on{background:var(--teal-d);border-color:var(--teal);color:var(--teal)}
 .modo-btn[data-m="ganho"].on{background:var(--blue-d);border-color:var(--blue);color:var(--blue)}
 .modo-note{font-size:11px;color:var(--muted);line-height:1.4}
 .modo-pill{font-size:10px;font-weight:600;padding:3px 9px;border-radius:10px;
@@ -578,12 +613,14 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
   }
   .nb{
     flex-direction:row;justify-content:flex-start;
-    gap:10px;min-width:auto;
+    gap:10px;min-width:auto;max-width:none;
     padding:10px 12px;border-radius:8px;
     font-size:12px;letter-spacing:.02em;text-align:left;
   }
   .nb:hover{background:var(--card)}
   .nb-ic{font-size:17px}
+  /* On desktop sidebar, always show labels */
+  .nb-lbl{display:block}
 
   /* ── Header ── */
   .hdr{
@@ -667,7 +704,7 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 <div class="hdr">
   <div class="hdr-row">
     <span class="hdr-title">Recomposição</span>
-    <span class="week-badge" id="wbadge">Semana <b id="wnum">—</b></span>
+    <span class="week-badge">S<b id="wnum">—</b></span>
     <span class="modo-pill" id="modoPill" onclick="showSec('hist')">⚡ Recomposição</span>
   </div>
   <div class="pills" id="pills">
@@ -679,14 +716,17 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
     <button class="pill" data-d="sab">SAB</button>
     <button class="pill" data-d="dom">DOM</button>
   </div>
-  <div class="pbar-wrap">
-    <div class="pbar-top">
-      <span class="pbar-lbl">Proteína marcada hoje</span>
-      <span class="pbar-val" id="pval">0 g <small>/ <span id="ptot">123</span> g</small></span>
+  <div class="metrics-row">
+    <div class="pbar-wrap">
+      <div class="pbar-top">
+        <span class="pbar-lbl">Proteína</span>
+        <span class="pbar-val" id="pval">0 g<small>/<span id="ptot">123</span>g</small></span>
+      </div>
+      <div class="ptrack"><div class="pfill" id="pfill"></div></div>
     </div>
-    <div class="ptrack"><div class="pfill" id="pfill"></div></div>
+    <div class="water-metric" id="waterDiv"></div>
   </div>
-  <div class="water" id="waterDiv">💧 <span><b>2,8 L de água/dia</b> · meta do plano</span></div>
+  <div class="water-btns-row" id="waterBtnsDiv"></div>
   <div class="reset-banner" id="resetBanner">
     <span>🔄 <b>Nova semana detectada.</b> Progresso resetado automaticamente.</span>
     <button class="reset-btn" id="dismissReset">Ok</button>
@@ -696,14 +736,14 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 <main id="main"></main>
 
 <nav class="nav">
-  <button class="nb on" data-s="meals"><span class="nb-ic">🍽</span>Refeições</button>
-  <button class="nb" data-s="supps"><span class="nb-ic">💊</span>Suplementos</button>
-  <button class="nb" data-s="prep"><span class="nb-ic">🍗</span>Preparo</button>
-  <button class="nb" data-s="gastro"><span class="nb-ic">🟣</span>Gastrite</button>
-  <button class="nb" data-s="shop"><span class="nb-ic">🛒</span>Compras</button>
-  <button class="nb" data-s="rules"><span class="nb-ic">⚡</span>Regras</button>
-  <button class="nb" data-s="nutri"><span class="nb-ic">🔬</span>Nutrição</button>
-  <button class="nb" data-s="hist"><span class="nb-ic">📅</span>Histórico</button>
+  <button class="nb on" data-s="meals"><span class="nb-ic">🍽</span><span class="nb-lbl">Refeições</span></button>
+  <button class="nb" data-s="supps"><span class="nb-ic">💊</span><span class="nb-lbl">Suplementos</span></button>
+  <button class="nb" data-s="prep"><span class="nb-ic">🍗</span><span class="nb-lbl">Preparo</span></button>
+  <button class="nb" data-s="gastro"><span class="nb-ic">🟣</span><span class="nb-lbl">Gastrite</span></button>
+  <button class="nb" data-s="shop"><span class="nb-ic">🛒</span><span class="nb-lbl">Compras</span></button>
+  <button class="nb" data-s="rules"><span class="nb-ic">⚡</span><span class="nb-lbl">Regras</span></button>
+  <button class="nb" data-s="nutri"><span class="nb-ic">🔬</span><span class="nb-lbl">Nutrição</span></button>
+  <button class="nb" data-s="hist"><span class="nb-ic">📅</span><span class="nb-lbl">Histórico</span></button>
 </nav>
 </div>
 
@@ -1313,8 +1353,8 @@ function renderMeals(){
     <span class="total-val">${PROT_GOAL} g</span></div>`;
   h+=renderEnergyWidget();
   const modo=MODOS[getModo()];
-  if(getModo()!=='manutencao')
-    h+=`<div class="modo-note-meals">${modo.icon} <b>Modo ${modo.label}:</b> ${modo.desc}</div>`;
+  if(getModo()==='recomp')
+    h+=`<div class="modo-note-meals">${modo.icon} <b>Plano atual:</b> ${modo.desc}</div>`;
   return h;
 }
 
@@ -1719,6 +1759,134 @@ function showReportModal(txt){
 }
 window.generateReport=generateReport;
 
+// ── Relatório para Nutricionista ─────────────────────
+let nutriReportDays=14;
+window.setNutriPeriod=function(d){
+  nutriReportDays=d;
+  document.querySelectorAll('.rperiod-btn').forEach(b=>b.classList.toggle('on',parseInt(b.dataset.d)===d));
+  const box=document.getElementById('nrepText');
+  if(box) box.textContent=buildNutriReportText(d);
+};
+
+function buildNutriReportText(days){
+  const hist=loadHistory(),weights=loadWeights(),energies=loadEnergies(),water=loadWater();
+  const cutoff=new Date();cutoff.setDate(cutoff.getDate()-days+1);
+  const cutStr=cutoff.getFullYear()+'-'+String(cutoff.getMonth()+1).padStart(2,'0')+'-'+String(cutoff.getDate()).padStart(2,'0');
+  const entries=Object.entries(hist).filter(([d])=>d>=cutStr).sort((a,b)=>a[0].localeCompare(b[0]));
+  if(!entries.length) return 'Sem dados para o período selecionado.';
+
+  const startD=entries[0][0],endD=entries[entries.length-1][0];
+  function fmt(d){const[y,m,dd]=d.split('-');return`${dd}/${m}`;}
+
+  // Aderência
+  const totalMeals=entries.reduce((a,[,e])=>a+e.total,0);
+  const doneMeals=entries.reduce((a,[,e])=>a+e.done,0);
+  const adherePct=totalMeals?Math.round(doneMeals/totalMeals*100):0;
+  const fullDays=entries.filter(([,e])=>e.done===e.total).length;
+  // Refeições livres
+  let freeMeals=0;
+  entries.forEach(([,e])=>{if(e.meals)e.meals.forEach(m=>{if(m.livre)freeMeals++;});});
+
+  // Proteína
+  const prots=entries.map(([,e])=>e.protein);
+  const avgProt=Math.round(prots.reduce((a,b)=>a+b,0)/prots.length);
+  const maxProt=Math.max(...prots);
+  const minProt=Math.min(...prots);
+  const daysAboveGoal=prots.filter(p=>p>=123).length;
+  const daysBelow90=prots.filter(p=>p<90).length;
+
+  // Água
+  const waterVals=entries.map(([d])=>water[d]||0).filter(v=>v>0);
+  const avgWater=waterVals.length?Math.round(waterVals.reduce((a,b)=>a+b,0)/waterVals.length):null;
+  const waterDaysGoal=waterVals.filter(v=>v>=2800).length;
+
+  // Peso
+  const wts=entries.map(([d])=>weights[d]).filter(Boolean);
+  let weightLine='Não registrado no período';
+  if(wts.length>=2){
+    const wStart=wts[0],wEnd=wts[wts.length-1],diff=(wEnd-wStart).toFixed(1);
+    const avg=(wts.reduce((a,b)=>a+b,0)/wts.length).toFixed(1);
+    weightLine=`${wStart.toFixed(1)} kg → ${wEnd.toFixed(1)} kg (${diff>0?'+':''}${diff} kg)\n  Média: ${avg} kg`;
+  } else if(wts.length===1){
+    weightLine=`${wts[0].toFixed(1)} kg (1 registro)`;
+  }
+
+  // Energia
+  const enVals=entries.map(([d,e])=>e.dayType!=='fds'&&energies[d]?energies[d]:null).filter(Boolean);
+  let energyLine='Não registrado';
+  if(enVals.length){
+    const avg=(enVals.reduce((a,b)=>a+b,0)/enVals.length).toFixed(1);
+    energyLine=`Média ${avg}/5 · ${enVals.length} treinos registrados`;
+  }
+
+  // Notas
+  const noteLines=[];
+  entries.forEach(([date,e])=>{
+    if(!e.meals) return;
+    e.meals.forEach(m=>{
+      if(m.note) noteLines.push(`  ${fmt(date)} · ${m.name}: "${m.note}"`);
+    });
+  });
+
+  const today=new Date().toLocaleDateString('pt-BR');
+  return `📋 ACOMPANHAMENTO NUTRICIONAL
+Período: ${fmt(startD)} – ${fmt(endD)}/2026 (${entries.length} dias)
+Nutricionista: Dra. Priscila Garcia · CRN-31670
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 ADERÊNCIA AO PLANO
+✅ Conclusão média: ${adherePct}%
+🍽 Dias com plano completo: ${fullDays} de ${entries.length}
+🎉 Refeições livres: ${freeMeals}
+
+🥩 PROTEÍNA (meta: 123g/dia)
+Média: ${avgProt} g/dia
+Pico: ${maxProt} g · Mínimo: ${minProt} g
+Dias acima da meta (≥123g): ${daysAboveGoal} de ${entries.length}${daysBelow90?`\nDias críticos (<90g): ${daysBelow90}`:''}
+
+💧 HIDRATAÇÃO (meta: 2,8L/dia)
+${avgWater?`Média: ${(avgWater/1000).toFixed(1)} L/dia\nDias atingindo a meta: ${waterDaysGoal} de ${waterVals.length}`:'Não registrado no período'}
+
+⚖️ PESO CORPORAL
+${weightLine}
+
+⚡ ENERGIA NOS TREINOS
+${energyLine}
+${noteLines.length?`
+📝 VARIAÇÕES E ANOTAÇÕES
+${noteLines.join('\n')}`:''}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Gerado em ${today} · App pessoal de acompanhamento`;
+}
+
+window.openNutriReport=function(){
+  const old=document.getElementById('nutriReportModal');
+  if(old) old.remove();
+  const txt=buildNutriReportText(nutriReportDays);
+  const m=document.createElement('div');
+  m.id='nutriReportModal';
+  m.className='nrep-modal';
+  m.innerHTML=`<div class="nrep-box">
+    <div class="nrep-title">📋 Relatório para Nutri</div>
+    <div class="rperiod-row">
+      <button class="rperiod-btn${nutriReportDays===7?' on':''}" data-d="7" onclick="setNutriPeriod(7)">7 dias</button>
+      <button class="rperiod-btn${nutriReportDays===14?' on':''}" data-d="14" onclick="setNutriPeriod(14)">14 dias</button>
+      <button class="rperiod-btn${nutriReportDays===30?' on':''}" data-d="30" onclick="setNutriPeriod(30)">30 dias</button>
+    </div>
+    <pre class="nrep-text" id="nrepText">${txt}</pre>
+    <div class="nrep-btns">
+      <button class="nrep-copy" onclick="copyNutriReport()">📋 Copiar texto</button>
+      <button class="nrep-close" onclick="document.getElementById('nutriReportModal').remove()">Fechar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+};
+window.copyNutriReport=function(){
+  const txt=document.getElementById('nrepText')?.textContent||'';
+  if(navigator.clipboard) navigator.clipboard.writeText(txt).then(()=>showToast('📋 Copiado para a área de transferência'));
+  else showToast('❌ Copiar não suportado neste browser');
+};
+
 // ── Estagnação de peso ───────────────────────────────
 function checkStagnation(){
   const weights=loadWeights();
@@ -2080,20 +2248,22 @@ function renderWaterDiv(){
   const done=ml>=WATER_GOAL;
   const col=done?'var(--teal)':'var(--blue)';
   const el=document.getElementById('waterDiv');
-  if(!el)return;
-  el.innerHTML=`💧 <span style="flex:1"><b style="color:${col}">${L} L</b> / 2,8 L</span>
-  <span style="font-size:11px;font-weight:600;color:${col}">${Math.round(pct)}%</span>
-  <div class="water-bar" style="position:absolute;bottom:0;left:0;right:0;border-radius:0 0 8px 8px">
-    <div class="water-fill" style="width:${pct}%;background:${col}"></div>
-  </div>
-  <div class="water-btns">
+  if(el){
+    el.innerHTML=`
+    <div class="water-m-top">
+      <span class="water-m-lbl">💧 Água</span>
+      <span class="water-m-val" style="color:${col}">${L}<small>/2.8L</small></span>
+    </div>
+    <div class="ptrack"><div class="pfill" style="width:${pct}%;background:${col}"></div></div>`;
+  }
+  const btns=document.getElementById('waterBtnsDiv');
+  if(btns){
+    btns.innerHTML=`
     <button class="water-add-btn" onclick="addWater(200)">+200 ml</button>
     <button class="water-add-btn" onclick="addWater(300)">+300 ml</button>
     <button class="water-add-btn" onclick="addWater(500)">+500 ml</button>
-    ${ml>0?`<button class="water-reset-btn" onclick="resetWater(event)">↺</button>`:''}
-  </div>`;
-  el.style.position='relative';
-  el.style.paddingBottom='9px';
+    ${ml>0?`<button class="water-reset-btn" onclick="resetWater(event)">↺</button>`:''}`;
+  }
 }
 
 // ── Energy tracking ───────────────────────────────────
@@ -2346,6 +2516,8 @@ function saveToHistory(){
   const hist=loadHistory();
   const today=todayStr();
   const dateStr=dateForDay(day);
+  // Only record history for today — viewing other days shouldn't corrupt today's log
+  if(dateStr!==today) return;
   const earned=MEALS.reduce((a,m,i)=>{
     if(!chk[`${dateStr}-${i}`]) return a;
     return a+getMealProt(i,dateStr);
@@ -2608,7 +2780,8 @@ function renderHistorico(){
     </div>
   </div>
   ${renderWeightCard()}
-  <button class="report-btn" onclick="generateReport()">📊 Gerar relatório semanal · copiar para área de transferência</button>
+  <button class="nutri-btn" onclick="openNutriReport()">📋 Relatório para a Nutricionista</button>
+  <button class="report-btn" onclick="generateReport()">📊 Relatório semanal rápido · clipboard</button>
   <div class="backup-row">
     <button class="backup-btn export" onclick="exportHistory()">
       <span class="bb-ic">💾</span>Exportar backup
