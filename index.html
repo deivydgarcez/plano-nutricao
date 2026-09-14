@@ -636,6 +636,27 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 .water-reset-btn{padding:5px 8px;border-radius:6px;border:1px solid var(--bdr);
   background:transparent;color:var(--faint);font-family:'DM Sans';font-size:10.5px;
   cursor:pointer}
+
+/* ── Nota livre por refeição ── */
+.mc-note-wrap{margin-top:10px;padding-top:9px;border-top:1px solid var(--bdr)}
+.mc-note-lbl{font-size:10.5px;color:var(--faint);margin-bottom:5px}
+.mc-note-input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--bdr);
+  border-radius:7px;color:var(--txt);font-family:'DM Sans';font-size:12.5px;
+  padding:7px 9px;resize:none;outline:none;box-sizing:border-box;
+  line-height:1.45;transition:border-color .15s}
+.mc-note-input::placeholder{color:var(--faint)}
+.mc-note-input:focus{border-color:rgba(242,104,44,.5)}
+.mc-livre-btn{display:inline-flex;align-items:center;gap:4px;margin-top:7px;
+  font-size:11px;padding:4px 11px;border-radius:12px;
+  border:1.5px solid var(--bdr);background:transparent;color:var(--faint);
+  cursor:pointer;font-family:'DM Sans';font-weight:600;transition:all .15s}
+.mc-livre-btn.on{background:rgba(77,170,115,.12);border-color:var(--teal);color:var(--teal)}
+.mc-head-livre{font-size:10px;padding:1px 6px;border-radius:7px;
+  background:rgba(77,170,115,.15);color:var(--teal);font-weight:600;margin-left:5px}
+
+/* ── Nota no histórico ── */
+.hm-note-line{font-size:11px;color:var(--muted);font-style:italic;opacity:.8;
+  margin:3px 0 0 1px;line-height:1.4;word-break:break-word}
 </style>
 </head>
 <body>
@@ -1121,6 +1142,29 @@ function setColor(c){
 
 const PROT_GOAL=123;
 
+// ── Notas livres por refeição ─────────────────────
+function getMealNote(dateStr,idx){
+  return localStorage.getItem(`plano_note_${dateStr}_${idx}`)||'';
+}
+window.saveMealNote=function(dateStr,idx,val){
+  const v=val.trim();
+  if(v) localStorage.setItem(`plano_note_${dateStr}_${idx}`,v);
+  else localStorage.removeItem(`plano_note_${dateStr}_${idx}`);
+  saveToHistory();
+};
+
+// ── Refeição livre (1x/semana) ────────────────────
+function getLivreKey(){return 'plano_livre_'+getWeekKey();}
+function getLivreForWeek(){return localStorage.getItem(getLivreKey())||'';}
+function isLivre(dateStr,idx){return getLivreForWeek()===`${dateStr}_${idx}`;}
+window.toggleLivre=function(dateStr,idx,e){
+  e.stopPropagation();
+  const k=`${dateStr}_${idx}`;
+  if(getLivreForWeek()===k) localStorage.removeItem(getLivreKey());
+  else localStorage.setItem(getLivreKey(),k);
+  render();
+};
+
 function getMealOpts(dateStr){
   try{return JSON.parse(localStorage.getItem('plano_opts_'+dateStr)||'{}')}catch(e){return{}}
 }
@@ -1179,6 +1223,25 @@ function getTrainingForDay(d){
   return null;
 }
 
+function renderNoteWidget(dateStr,i){
+  const note=getMealNote(dateStr,i);
+  const livre=isLivre(dateStr,i);
+  return `<div class="mc-note-wrap" onclick="event.stopPropagation()">
+    <div class="mc-note-lbl">📝 O que você comeu</div>
+    <textarea class="mc-note-input" rows="2"
+      placeholder="Anote variações, substituições, refeição livre..."
+      onblur="saveMealNote('${dateStr}',${i},this.value)"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();this.blur()}"
+    >${note}</textarea>
+    <div>
+      <span class="mc-livre-btn${livre?' on':''}"
+        onclick="toggleLivre('${dateStr}',${i},event)">
+        🎉 ${livre?'Refeição livre da semana · ✓':'Marcar como refeição livre'}
+      </span>
+    </div>
+  </div>`;
+}
+
 function renderMeals(){
   const dateStr=dateForDay(day);
   const opts=getMealOpts(dateStr);
@@ -1194,6 +1257,8 @@ function renderMeals(){
         <div class="tn-desc">${tr.desc}</div></div></div>`;
     }
     const done=chk[`${dateStr}-${i}`]?'done':'';
+    const livre=isLivre(dateStr,i);
+    const livreBadge=livre?`<span class="mc-head-livre">🎉 Livre</span>`:'';
     if(m.hasOptions){
       const selKey=opts[m.id]||m.options[0].key;
       const curOpt=m.options.find(o=>o.key===selKey)||m.options[0];
@@ -1204,7 +1269,7 @@ function renderMeals(){
       h+=`<div class="tl-row"><div class="mc ${done}" data-i="${i}">
         <div class="mc-head">
           <span class="mc-time">${m.t}</span>
-          <span class="mc-name">${m.n}</span>
+          <span class="mc-name">${m.n}${livreBadge}</span>
           <span class="mc-prot">+${curOpt.p} g</span>
           <div class="mc-chk">${chk[`${dateStr}-${i}`]?'✓':''}</div>
         </div>
@@ -1213,13 +1278,14 @@ function renderMeals(){
           <div class="opt-pills">${pillsHtml}</div>
           ${curOpt.obs?`<div class="mc-warn">💡 ${curOpt.obs}</div>`:''}
           ${renderMealItems(curOpt.items)}
+          ${renderNoteWidget(dateStr,i)}
         </div>
       </div></div>`;
     } else {
       h+=`<div class="tl-row"><div class="mc ${done}" data-i="${i}">
         <div class="mc-head">
           <span class="mc-time">${m.t}</span>
-          <span class="mc-name">${m.n}</span>
+          <span class="mc-name">${m.n}${livreBadge}</span>
           <span class="mc-prot">+${m.p} g</span>
           <div class="mc-chk">${chk[`${dateStr}-${i}`]?'✓':''}</div>
         </div>
@@ -1229,6 +1295,7 @@ function renderMeals(){
           ${m.s?`<div class="mc-supp">${m.s}</div>`:''}
           ${m.w?`<div class="mc-warn">⚡ ${m.w}</div>`:''}
           ${m.g?`<div class="mc-gastro">🟣 ${m.g}</div>`:''}
+          ${renderNoteWidget(dateStr,i)}
         </div>
       </div></div>`;
     }
@@ -2000,9 +2067,8 @@ function renderWaterDiv(){
   const col=done?'var(--teal)':'var(--blue)';
   const el=document.getElementById('waterDiv');
   if(!el)return;
-  el.innerHTML=`💧 <span style="flex:1"><b style="color:${col}">${L} L</b> / 2,8 L${
-    ml>0?` <span class="water-reset" onclick="resetWater(event)">↺</span>`:''
-  }</span><span style="font-size:11px;font-weight:600;color:${col}">${Math.round(pct)}%</span>
+  el.innerHTML=`💧 <span style="flex:1"><b style="color:${col}">${L} L</b> / 2,8 L</span>
+  <span style="font-size:11px;font-weight:600;color:${col}">${Math.round(pct)}%</span>
   <div class="water-bar" style="position:absolute;bottom:0;left:0;right:0;border-radius:0 0 8px 8px">
     <div class="water-fill" style="width:${pct}%;background:${col}"></div>
   </div>
@@ -2252,7 +2318,9 @@ function saveToHistory(){
       const curOpt=m.options.find(o=>o.key===selKey)||m.options[0];
       name=`${m.n} (${curOpt.label})`;
     }
-    return{name,done:isDone};
+    const note=getMealNote(dateStr,i)||undefined;
+    const livre=isLivre(dateStr,i)||undefined;
+    return{name,done:isDone,note,livre};
   });
   hist[today]={
     dayType:getHistDayType(dateStr),
@@ -2296,9 +2364,12 @@ function renderHistDay(hist){
   return entries.map(([date,e])=>{
     const pct=Math.min(100,Math.round((e.protein/e.goal)*100));
     const full=pct>=95;
-    const chips=(e.meals||[]).map(m=>
-      `<span class="hmeal-chip ${m.done?'done':''} ${m.skip?'skip':''}">${m.name}</span>`
-    ).join('');
+    const chips=(e.meals||[]).map(m=>{
+      const badge=m.livre?' 🎉':'';
+      const noteIcon=m.note?' 📝':'';
+      return `<span class="hmeal-chip ${m.done?'done':''}">${m.name}${badge}${noteIcon}</span>`
+        +(m.note?`<div class="hm-note-line">"${m.note}"</div>`:'');
+    }).join('');
     const wt=weights[date];
     const en=energies[date];
     return `<div class="hcard">
@@ -2553,7 +2624,7 @@ document.getElementById('main').addEventListener('click',e=>{
     return;
   }
   const mc=e.target.closest('.mc');
-  if(mc) mc.classList.toggle('open');
+  if(mc&&!e.target.closest('.mc-body')) mc.classList.toggle('open');
 });
 
 // ── showSec (used by modo pill) ─────────────────────
