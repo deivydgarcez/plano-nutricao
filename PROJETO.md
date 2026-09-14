@@ -69,7 +69,7 @@ Single-file `index.html`. Navegação por abas na barra inferior.
 ### PWA
 
 `manifest.json` (standalone, tema #F2682C) + `service-worker.js`
-(cache-first, versão atual: `plano-nutricao-v16`). Incrementar a cada deploy.
+(cache-first, versão atual: `plano-nutricao-v18`). Incrementar a cada deploy.
 
 ## 5. Design
 

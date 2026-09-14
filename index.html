@@ -46,6 +46,8 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
   border:1.5px solid var(--bdr);background:var(--surf);color:var(--muted);
   cursor:pointer;transition:all .18s}
 .pill.on{background:var(--day);border-color:var(--day);color:#fff}
+.pill.today:not(.on)::after{content:'';display:block;width:4px;height:4px;
+  border-radius:50%;background:var(--ember);margin:3px auto -6px;}
 
 /* PROGRESS */
 .pbar-wrap{margin-top:10px;background:var(--surf);border-radius:10px;padding:10px 14px}
@@ -666,7 +668,7 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
   <div class="hdr-row">
     <span class="hdr-title">Recomposição</span>
     <span class="week-badge" id="wbadge">Semana <b id="wnum">—</b></span>
-    <span class="modo-pill" id="modoPill" onclick="showSec('hist')">⚖️ Manutenção</span>
+    <span class="modo-pill" id="modoPill" onclick="showSec('hist')">⚡ Recomposição</span>
   </div>
   <div class="pills" id="pills">
     <button class="pill on" data-d="seg">SEG</button>
@@ -1610,6 +1612,9 @@ const MODOS={
   corte:{label:'Corte',icon:'🔥',pill:'ember',
     desc:'Déficit ~300 kcal/dia. Reduzir carbo no jantar e aumentar proteína.',
     protBonus:10},
+  recomp:{label:'Recomposição',icon:'⚡',pill:'teal',
+    desc:'Plano atual Dra. Priscila: ~1600 kcal · 123g prot. Déficit controlado para perder gordura mantendo músculo.',
+    protBonus:0},
   manutencao:{label:'Manutenção',icon:'⚖️',pill:'teal',
     desc:'Manter peso atual. Macros como planejados.',
     protBonus:0},
@@ -1618,7 +1623,7 @@ const MODOS={
     protBonus:0}
 };
 
-function getModo(){return localStorage.getItem(MODO_KEY)||'manutencao';}
+function getModo(){return localStorage.getItem(MODO_KEY)||'recomp';}
 
 window.setModo=function(m){
   localStorage.setItem(MODO_KEY,m);
@@ -2523,20 +2528,29 @@ function showToast(msg){
 
 function exportHistory(){
   const hist=loadHistory();
+  // Collect all per-day notes and option selections
+  const notes={}, opts={};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&k.startsWith('plano_note_')) notes[k]=localStorage.getItem(k);
+    if(k&&k.startsWith('plano_opts_')) opts[k]=localStorage.getItem(k);
+  }
   const data={
-    version:1,
+    version:2,
     exportedAt:new Date().toISOString(),
-    history:hist
+    history:hist,
+    notes,
+    opts
   };
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   a.href=url;
   const d=new Date();
-  a.download=`plano_historico_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
+  a.download=`plano_backup_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  showToast('✅ Histórico exportado com sucesso');
+  showToast('✅ Backup completo exportado (histórico + notas)');
 }
 
 function importHistory(){
@@ -2553,10 +2567,13 @@ document.getElementById('fileInput').addEventListener('change',function(e){
       const incoming=data.history||data;
       if(typeof incoming!=='object')throw new Error('Formato inválido');
       const existing=loadHistory();
-      // Merge: incoming + existing, incoming wins on conflict
       const merged={...existing,...incoming};
       localStorage.setItem(HIST_KEY,JSON.stringify(merged));
-      showToast(`✅ ${Object.keys(incoming).length} dias importados`);
+      // Restore notes and opts if present (v2 backup)
+      if(data.notes) Object.entries(data.notes).forEach(([k,v])=>localStorage.setItem(k,v));
+      if(data.opts) Object.entries(data.opts).forEach(([k,v])=>localStorage.setItem(k,v));
+      const extras=Object.keys(data.notes||{}).length+Object.keys(data.opts||{}).length;
+      showToast(`✅ ${Object.keys(incoming).length} dias + ${extras} anotações importados`);
       if(sec==='hist') document.getElementById('main').innerHTML=renderHistorico();
     }catch(err){
       showToast('❌ Arquivo inválido ou corrompido');
@@ -2682,14 +2699,34 @@ document.addEventListener('visibilitychange',()=>{
     const newDay=getCurrentDay();
     if(newDay!==day){
       day=newDay;
-      document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.dataset.d===day));
+      document.querySelectorAll('.pill').forEach(p=>{
+        p.classList.toggle('on',p.dataset.d===day);
+        p.classList.toggle('today',p.dataset.d===newDay);
+      });
       if(sec==='meals') render();
     }
   }
 });
 
 // ── Init ───────────────────────────────────────────
-document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.dataset.d===day));
+(function cleanOldStorage(){
+  const cutoff=Date.now()-30*24*60*60*1000;
+  const toRemove=[];
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(!k||(k.indexOf('plano_note_')!==0&&k.indexOf('plano_opts_')!==0))continue;
+    // extract date from key: plano_note_YYYY-MM-DD_... or plano_opts_YYYY-MM-DD
+    const m=k.match(/(\d{4}-\d{2}-\d{2})/);
+    if(m&&new Date(m[1]+'T12:00').getTime()<cutoff) toRemove.push(k);
+  }
+  toRemove.forEach(k=>localStorage.removeItem(k));
+})();
+
+const todayDay=getCurrentDay();
+document.querySelectorAll('.pill').forEach(p=>{
+  p.classList.toggle('on',p.dataset.d===day);
+  p.classList.toggle('today',p.dataset.d===todayDay);
+});
 render();
 renderWaterDiv();
 renderModoPill();
