@@ -590,6 +590,82 @@ textarea.edit-input{min-height:70px}
 .bsheet-body{padding:16px 20px 20px}
 
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes fabPop{from{transform:scale(0.6);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* TRAINING COUNTDOWN */
+.train-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
+  color:var(--ember-s);background:var(--ember-d);border:1px solid rgba(242,104,44,.25);
+  border-radius:20px;padding:4px 10px;margin-top:6px;animation:rise .3s ease}
+.train-chip.done{color:var(--teal);background:var(--teal-d);border-color:rgba(61,200,180,.2)}
+.train-chip.now{color:#fff;background:var(--ember);border-color:var(--ember);
+  animation:rise .3s ease,fabPop .25s ease}
+
+/* FAB */
+.fab{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 72px);
+  right:18px;z-index:90;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.fab-main{width:52px;height:52px;border-radius:50%;background:var(--ember);border:none;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:24px;
+  font-weight:300;color:#fff;box-shadow:0 4px 18px rgba(242,104,44,.45);
+  transition:transform .2s,background .2s;line-height:1}
+.fab-main:active{transform:scale(.92)}
+.fab.open .fab-main{transform:rotate(45deg);background:var(--bdr2)}
+.fab-actions{display:flex;flex-direction:column;gap:10px;transition:opacity .2s,transform .2s;
+  opacity:0;transform:translateY(10px);pointer-events:none}
+.fab.open .fab-actions{opacity:1;transform:translateY(0);pointer-events:auto}
+.fab-action{display:flex;align-items:center;gap:10px;cursor:pointer;border:none;
+  background:none;padding:0}
+.fab-action-lbl{font-size:11px;font-weight:600;color:var(--txt);background:var(--card2);
+  border-radius:8px;padding:5px 10px;white-space:nowrap;
+  box-shadow:0 2px 10px rgba(0,0,0,.4)}
+.fab-btn{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:18px;border:none;cursor:pointer;
+  box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.fab-btn.water{background:#1a3560}
+.fab-btn.weight{background:#1a2b1a}
+.fab-btn.snack{background:#2a1508}
+
+/* OFFLINE BANNER */
+.offline-banner{display:none;background:var(--gold-d);border:1px solid rgba(232,184,75,.3);
+  border-radius:8px;padding:6px 12px;font-size:11px;color:var(--gold);
+  text-align:center;margin-bottom:6px}
+
+/* SETTINGS SHEET */
+.settings-row{display:flex;align-items:center;gap:12px;padding:12px 0;
+  border-bottom:1px solid var(--bdr)}
+.settings-row:last-child{border-bottom:none}
+.settings-lbl{flex:1;font-size:13.5px;font-weight:500}
+.settings-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.settings-val{font-family:'Anton',sans-serif;font-size:18px;color:var(--ember-s)}
+.settings-stepper{display:flex;align-items:center;gap:8px}
+.stepper-btn{width:34px;height:34px;border-radius:50%;background:var(--surf);
+  border:1.5px solid var(--bdr);color:var(--txt);font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s}
+.stepper-btn:active{background:var(--ember-d);border-color:var(--ember)}
+
+/* SNACK LOG */
+.snack-card{background:var(--ember-d);border:1px solid rgba(242,104,44,.25);
+  border-radius:12px;padding:11px 14px;margin-top:8px;
+  display:flex;align-items:center;gap:10px}
+.snack-info{flex:1;min-width:0}
+.snack-name{font-size:12.5px;font-weight:500;color:var(--ember-s)}
+.snack-meta{font-size:10.5px;color:var(--muted);margin-top:2px}
+.snack-del{background:none;border:none;color:var(--faint);font-size:16px;
+  cursor:pointer;padding:4px;border-radius:6px;flex-shrink:0}
+
+/* MOOD TIMELINE (history) */
+.mood-timeline{display:flex;justify-content:space-between;margin-bottom:16px;
+  padding:12px 14px;background:var(--card);border-radius:16px;
+  box-shadow:0 2px 16px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.03) inset;
+  border:1px solid rgba(255,255,255,.05)}
+.mood-day{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1}
+.mood-dot-w{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:16px;background:var(--surf)}
+.mood-dot-w.great{background:var(--teal-d)}
+.mood-dot-w.ok{background:var(--blue-d)}
+.mood-dot-w.tired{background:var(--gold-d)}
+.mood-dot-w.stomach{background:var(--violet-d)}
+.mood-day-lbl{font-size:8.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.04em}
+.mood-day.today .mood-day-lbl{color:var(--day);font-weight:700}
 </style>
 </head>
 <body>
@@ -634,6 +710,7 @@ textarea.edit-input{min-height:70px}
     <div id="weekDots" style="flex:1"></div>
     <div class="water-compact" id="waterCompact">💧 0/8</div>
   </div>
+  <div id="trainChipWrap" style="margin-top:6px"></div>
   <div id="waterTrack" style="display:none">
     <div class="wt-top"></div><div class="wt-cups"></div>
   </div>
@@ -643,6 +720,7 @@ textarea.edit-input{min-height:70px}
   </div>
 </div>
 
+<div class="offline-banner" id="offlineBanner">📵 Sem internet · o app funciona normalmente</div>
 <main id="main"></main>
 
 <nav class="nav">
@@ -1112,12 +1190,10 @@ function updProt(){
     if(isSkip){base+=m.skipProt;}
     else if(chk[`${day}-${i}`]){base+=prot;}
   });
+  // add snacks
+  getTodaySnacks().forEach(s=>base+=s.p||0);
   // show total possible for this day config
-  const tot=d.meals.reduce((a,m,i)=>{
-    if(!m.p)return a;
-    const prot=(getSub(i)||{p:m.p}).p;
-    return a+(m.skipable&&skipped[`${day}-skip-${i}`]?m.skipProt:prot);
-  },0);
+  const tot=getGoal();
   const pct=Math.min(100,(base/tot)*100);
   const pvalEl=document.getElementById('pval');
   const ptotEl=document.getElementById('ptot');
@@ -1227,6 +1303,21 @@ function renderMeals(){
     <span class="total-val">${d.tot} g</span></div>`;
   if(day!=='fds')
     h+=`<div class="ibox">🐟 Tilápia entra 2x por mês em qualquer jantar no lugar do atum, sardinha ou frango.</div>`;
+  // snack cards
+  const snacks=getTodaySnacks();
+  if(snacks.length){
+    h+=`<div style="margin-top:8px"><div style="font-size:9.5px;font-weight:600;color:var(--ember);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Refeições extras hoje</div>`;
+    snacks.forEach((s,i)=>{
+      h+=`<div class="snack-card">
+        <div class="snack-info">
+          <div class="snack-name">${s.t} · ${s.name}</div>
+          <div class="snack-meta">${s.p?s.p+'g prot':'—'}${s.k?' · '+s.k+' kcal':''}</div>
+        </div>
+        <button class="snack-del" onclick="removeSnack(${i})">✕</button>
+      </div>`;
+    });
+    h+='</div>';
+  }
   h+=getProteinAlert();
   h+=`<button class="share-btn" onclick="shareDay()">📤 Compartilhar resumo do dia</button>`;
   const tn=getTodayNote();
@@ -1404,6 +1495,9 @@ function renderRules(){
   let h=`<p class="sec-title">Regras</p>
   <button class="notif-btn ${notifsEnabled?'active':''}" onclick="toggleNotifs()">
     ${notifsEnabled?'🔔 Lembretes ativos · toque para desativar':'🔔 Ativar lembretes de refeição'}
+  </button>
+  <button class="share-btn" onclick="openSettings()" style="margin-bottom:10px">
+    ⚙️ Configurações · Meta de proteína: <b>${getGoal()}g/dia</b>
   </button>`;
   RULES.forEach(r=>{
     h+=`<div class="rule${r.hi?' hi':''}">
@@ -1490,7 +1584,7 @@ function renderHistDay(hist){
     <span class="hempty-icon">📋</span>
     Nenhum registro ainda.<br>Marque as refeições do dia e o histórico aparece aqui automaticamente.
   </div>`;
-  return entries.map(([date,e])=>{
+  return renderMoodTimeline()+entries.map(([date,e])=>{
     const pct=Math.min(100,Math.round((e.protein/e.goal)*100));
     const full=pct>=95;
     const chips=(e.meals||[]).map(m=>
@@ -1670,6 +1764,19 @@ function renderWeightTab(){
   </div>`;
   if(!entries.length) return h+`<div class="wt-empty">📊 Nenhum peso registrado ainda.<br><small style="color:var(--faint)">Registre todo dia de manhã em jejum para ver a evolução.</small></div>`;
   const ascending=entries.slice().sort((a,b)=>a[0].localeCompare(b[0]));
+  // trend chip
+  const trend=getWeightTrend();
+  if(trend){
+    const tIcon={up:'↑',down:'↓',stable:'→'}[trend.trend];
+    const tColor={up:'var(--ember)',down:'var(--teal)',stable:'var(--muted)'}[trend.trend];
+    const tLabel={up:'subindo',down:'caindo',stable:'estável'}[trend.trend];
+    const sign=trend.diff>0?'+':'';
+    h+=`<div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+      <span style="font-size:11px;font-weight:600;color:${tColor};background:var(--surf);
+        border:1px solid var(--bdr);border-radius:20px;padding:4px 12px">
+        ${tIcon} ${sign}${trend.diff}kg nos últimos 7 dias · ${tLabel}
+      </span></div>`;
+  }
   h+=buildWeightSVG(ascending);
   h+='<div class="wt-list">';
   entries.forEach(([date,val],idx)=>{
@@ -2041,6 +2148,230 @@ window.saveWeightEntry=function(e){
   if(sec==='hist') document.getElementById('main').innerHTML=renderHistorico();
 };
 
+// ── Snack log ───────────────────────────────────────────
+const SNACK_KEY='plano_snack_v1';
+let snackData=(()=>{try{return JSON.parse(localStorage.getItem(SNACK_KEY)||'{}')}catch(e){return{}}})();
+function saveSnack(){localStorage.setItem(SNACK_KEY,JSON.stringify(snackData));}
+function getTodaySnacks(){return snackData[todayStr()]||[];}
+function addSnack(name,p,k){
+  const list=getTodaySnacks();
+  list.push({name,p:parseInt(p)||0,k:parseInt(k)||0,t:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});
+  snackData[todayStr()]=list;
+  saveSnack();
+}
+
+// ── Custom protein goal ──────────────────────────────────
+const GOAL_KEY='plano_goal_v1';
+let goalOverride=(()=>{try{return JSON.parse(localStorage.getItem(GOAL_KEY)||'null')}catch(e){return null}})();
+function getGoal(){return goalOverride||DAYS[day].tot;}
+function setGoal(val){goalOverride=val;localStorage.setItem(GOAL_KEY,JSON.stringify(val));}
+
+// ── Training countdown ───────────────────────────────────
+function renderTrainChip(){
+  const wrap=document.getElementById('trainChipWrap');
+  if(!wrap) return;
+  const times={mt:19*60+30, tf:20*60, qui:20*60};
+  const t=times[day];
+  if(!t){wrap.innerHTML='';return;}
+  const now=new Date();
+  const cur=now.getHours()*60+now.getMinutes();
+  const diff=t-cur;
+  let label,cls='train-chip';
+  if(diff<=-90){label='✓ Treino concluído hoje';cls='train-chip done';}
+  else if(diff<0){label='🥊 Treino em andamento!';cls='train-chip now';}
+  else if(diff===0){label='🥊 Hora do treino!';cls='train-chip now';}
+  else if(diff<60){label=`⏱ Treino em ${diff}min`;}
+  else{const h=Math.floor(diff/60),m=diff%60;label=`⏱ Treino em ${h}h${m>0?m+'min':''}`;}
+  wrap.innerHTML=`<span class="${cls}">${label}</span>`;
+}
+
+// ── FAB ──────────────────────────────────────────────────
+let fabOpen=false;
+window.toggleFab=function(){
+  fabOpen=!fabOpen;
+  document.getElementById('fab').classList.toggle('open',fabOpen);
+  document.getElementById('fabMain').textContent=fabOpen?'×':'+';
+};
+window.fabAddWater=function(){
+  fabOpen=false;
+  document.getElementById('fab').classList.remove('open');
+  document.getElementById('fabMain').textContent='+';
+  const cur=getTodayWater();
+  waterCups[todayStr()]=Math.min(cur+1,8);
+  saveWater();renderWater();
+  showToast('💧 +500ml adicionado!');
+};
+window.fabOpenWeight=function(){
+  fabOpen=false;
+  document.getElementById('fab').classList.remove('open');
+  document.getElementById('fabMain').textContent='+';
+  openWeightBSheet();
+};
+window.fabOpenSnack=function(){
+  fabOpen=false;
+  document.getElementById('fab').classList.remove('open');
+  document.getElementById('fabMain').textContent='+';
+  openSnackBSheet();
+};
+function openWeightBSheet(){
+  const titleEl=document.getElementById('bsheetTitle');
+  const bodyEl=document.getElementById('bsheetBody');
+  const cur=weightData[todayStr()]||'';
+  if(titleEl) titleEl.textContent='Registrar Peso';
+  if(bodyEl) bodyEl.innerHTML=`
+    <div class="edit-row"><div class="edit-lbl">Peso (kg)</div>
+      <input class="edit-input" id="ws-kg" type="number" value="${cur}" placeholder="ex: 78.5" step="0.1" min="30" max="300" style="font-size:22px;text-align:center;font-weight:700"></div>
+    <div style="font-size:10.5px;color:var(--faint);text-align:center;margin:-4px 0 10px">Recomendado: em jejum, pela manhã</div>
+    <div class="edit-btns">
+      <button class="edit-save" onclick="saveWeightBSheet()">Salvar</button>
+      <button class="edit-cancel" onclick="closeBSheet()">Cancelar</button>
+    </div>`;
+  document.getElementById('bsheetOverlay').classList.add('show');
+  document.getElementById('bsheet').classList.add('open');
+  setTimeout(()=>{const i=document.getElementById('ws-kg');if(i)i.focus();},350);
+}
+window.saveWeightBSheet=function(){
+  const el=document.getElementById('ws-kg');
+  if(!el) return;
+  const val=parseFloat(el.value);
+  if(!val||val<30||val>300){showToast('❌ Peso inválido');return;}
+  weightData[todayStr()]=val;saveWeight();
+  closeBSheet();
+  showToast('✅ Peso salvo: '+val+' kg');
+  if(sec==='hist') render();
+};
+function openSnackBSheet(){
+  const titleEl=document.getElementById('bsheetTitle');
+  const bodyEl=document.getElementById('bsheetBody');
+  if(titleEl) titleEl.textContent='Refeição Extra';
+  if(bodyEl) bodyEl.innerHTML=`
+    <div class="edit-row"><div class="edit-lbl">O que foi</div>
+      <input class="edit-input" id="sk-n" placeholder="ex: Omelete extra, barra de proteína..."></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="edit-row"><div class="edit-lbl">Proteína (g)</div>
+        <input class="edit-input" id="sk-p" type="number" min="0" max="200" placeholder="0" style="text-align:center"></div>
+      <div class="edit-row"><div class="edit-lbl">Kcal (estimado)</div>
+        <input class="edit-input" id="sk-k" type="number" min="0" max="2000" placeholder="0" style="text-align:center"></div>
+    </div>
+    <div class="edit-btns">
+      <button class="edit-save" onclick="saveSnackBSheet()">Adicionar</button>
+      <button class="edit-cancel" onclick="closeBSheet()">Cancelar</button>
+    </div>`;
+  document.getElementById('bsheetOverlay').classList.add('show');
+  document.getElementById('bsheet').classList.add('open');
+  setTimeout(()=>{const i=document.getElementById('sk-n');if(i)i.focus();},350);
+}
+window.saveSnackBSheet=function(){
+  const n=document.getElementById('sk-n').value.trim();
+  if(!n){showToast('❌ Nome obrigatório');return;}
+  const p=document.getElementById('sk-p').value;
+  const k=document.getElementById('sk-k').value;
+  addSnack(n,p,k);
+  closeBSheet();
+  showToast('✅ Refeição extra registrada!');
+  if(sec==='meals') render();
+  else{updProt();updKcal();}
+};
+window.removeSnack=function(idx){
+  const list=getTodaySnacks();
+  list.splice(idx,1);
+  snackData[todayStr()]=list;
+  saveSnack();render();
+};
+
+// ── Weight trend ─────────────────────────────────────────
+function getWeightTrend(){
+  const sorted=Object.entries(weightData).sort((a,b)=>a[0].localeCompare(b[0])).slice(-7);
+  if(sorted.length<3) return null;
+  const first=sorted[0][1],last=sorted[sorted.length-1][1];
+  const diff=parseFloat((last-first).toFixed(1));
+  return{diff,trend:diff>0.3?'up':diff<-0.3?'down':'stable'};
+}
+
+// ── Mood timeline ────────────────────────────────────────
+function renderMoodTimeline(){
+  const now=new Date();
+  const dow=(now.getDay()||7)-1;
+  const mon=new Date(now);mon.setDate(now.getDate()-dow);mon.setHours(0,0,0,0);
+  const labels=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  const moodIcon={great:'😊',ok:'😐',tired:'😓',stomach:'🤢'};
+  const days=labels.map((_,i)=>{
+    const d=new Date(mon);d.setDate(mon.getDate()+i);
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const note=notesData[ds]||{};
+    const isToday=ds===todayStr();
+    const icon=moodIcon[note.mood]||'·';
+    const cls=note.mood||'';
+    return`<div class="mood-day${isToday?' today':''}">
+      <div class="mood-dot-w ${cls}">${icon}</div>
+      <span class="mood-day-lbl">${labels[i]}</span>
+    </div>`;
+  }).join('');
+  return`<div class="mood-timeline">${days}</div>`;
+}
+
+// ── Settings sheet ───────────────────────────────────────
+window.openSettings=function(){
+  const titleEl=document.getElementById('bsheetTitle');
+  const bodyEl=document.getElementById('bsheetBody');
+  if(titleEl) titleEl.textContent='Configurações';
+  const curGoal=getGoal();
+  const renderBody=()=>{
+    const g=getGoal();
+    if(bodyEl) bodyEl.innerHTML=`
+      <div class="settings-row">
+        <div><div class="settings-lbl">Meta de proteína diária</div>
+          <div class="settings-sub">Padrão: ${DAYS[day].tot}g (plano de treino)</div></div>
+        <div class="settings-stepper">
+          <button class="stepper-btn" onclick="adjustGoal(-5)">−</button>
+          <span class="settings-val" id="goalVal">${g}g</span>
+          <button class="stepper-btn" onclick="adjustGoal(5)">+</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div><div class="settings-lbl">Resetar meta</div>
+          <div class="settings-sub">Voltar ao padrão do plano</div></div>
+        <button class="edit-cancel" onclick="resetGoal()" style="padding:8px 14px">Resetar</button>
+      </div>`;
+  };
+  renderBody();
+  document.getElementById('bsheetOverlay').classList.add('show');
+  document.getElementById('bsheet').classList.add('open');
+};
+window.adjustGoal=function(delta){
+  const cur=getGoal();
+  const next=Math.max(80,Math.min(250,cur+delta));
+  setGoal(next);
+  const el=document.getElementById('goalVal');
+  if(el) el.textContent=next+'g';
+  updProt();updKcal();
+};
+window.resetGoal=function(){
+  goalOverride=null;localStorage.removeItem(GOAL_KEY);
+  const el=document.getElementById('goalVal');
+  if(el) el.textContent=getGoal()+'g';
+  updProt();updKcal();
+  showToast('✅ Meta resetada');
+};
+
+// ── Offline banner ───────────────────────────────────────
+window.addEventListener('online',()=>{const b=document.getElementById('offlineBanner');if(b)b.style.display='none';});
+window.addEventListener('offline',()=>{const b=document.getElementById('offlineBanner');if(b)b.style.display='block';});
+if(!navigator.onLine){const b=document.getElementById('offlineBanner');if(b)b.style.display='block';}
+
+// ── Water notifications ──────────────────────────────────
+function checkWaterNotif(){
+  const cups=getTodayWater();
+  const h=new Date().getHours();
+  if(h<8||h>20||cups>=4) return;
+  const last=parseInt(localStorage.getItem('plano_last_water_notif')||'0');
+  if(Date.now()-last<2*60*60*1000) return;
+  try{
+    new Notification('💧 Beba água!',{body:`${cups} copo${cups!==1?'s':''} hoje · meta 6-8 · cada 💧 = 500ml`,icon:'/icon-192.png',tag:'water-reminder',renotify:true});
+    localStorage.setItem('plano_last_water_notif',Date.now().toString());
+  }catch(e){}
+}
+
 // ── Weight SVG chart ────────────────────────────────────
 function buildWeightSVG(entries){
   if(entries.length<2) return '';
@@ -2085,6 +2416,7 @@ function updKcal(){
       earned+=sub?Math.round(sub.p*14):getMealKcal(day,i);
     }
   });
+  getTodaySnacks().forEach(s=>earned+=s.k||0);
   const tot=getDayTotKcal(day);
   const diff=earned-tot;
   const chip=document.getElementById('kcalChip');
@@ -2186,6 +2518,7 @@ function render(){
   renderWater();
   renderWeekDots();
   updEsoBadge();
+  renderTrainChip();
 }
 
 // ── Events ─────────────────────────────────────────
@@ -2242,10 +2575,30 @@ document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.dataset.
   if(hd){const now=new Date();hd.textContent=now.toLocaleDateString('pt-BR',{day:'2-digit',month:'long'});}
 })();
 render();
-if(notifsEnabled && Notification.permission==='granted')
-  notifInterval=setInterval(checkMealNotifs,60000);
+if(notifsEnabled && Notification.permission==='granted'){
+  notifInterval=setInterval(()=>{checkMealNotifs();checkWaterNotif();},60000);
+}
+// Update training chip every minute
+setInterval(renderTrainChip, 60000);
 </script>
 <div class="toast" id="toast"></div>
+<div class="fab" id="fab">
+  <div class="fab-actions" id="fabActions">
+    <button class="fab-action" onclick="fabAddWater()">
+      <span class="fab-action-lbl">+500ml água</span>
+      <span class="fab-btn water">💧</span>
+    </button>
+    <button class="fab-action" onclick="fabOpenWeight()">
+      <span class="fab-action-lbl">Registrar peso</span>
+      <span class="fab-btn weight">⚖️</span>
+    </button>
+    <button class="fab-action" onclick="fabOpenSnack()">
+      <span class="fab-action-lbl">Refeição extra</span>
+      <span class="fab-btn snack">🍖</span>
+    </button>
+  </div>
+  <button class="fab-main" id="fabMain" onclick="toggleFab()">+</button>
+</div>
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
