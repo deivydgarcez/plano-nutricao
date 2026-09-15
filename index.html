@@ -752,6 +752,31 @@ textarea.edit-input{min-height:70px}
 .mood-dot-w.stomach{background:var(--violet-d)}
 .mood-day-lbl{font-size:8.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.04em}
 .mood-day.today .mood-day-lbl{color:var(--day);font-weight:700}
+/* PILL TODAY (replaces day-type pills) */
+.pill-today{display:inline-block;padding:6px 16px;border-radius:100px;font-size:10.5px;
+  font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--day);color:#fff;margin-top:5px;margin-bottom:2px}
+/* OPT PILLS (lanche/jantar option selector) */
+.opt-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;margin-top:6px}
+.opt-pill{flex-shrink:0;padding:5px 12px;border-radius:100px;font-size:10.5px;font-weight:600;
+  border:1.5px solid var(--bdr);background:none;color:var(--faint);
+  cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.opt-pill.on{background:var(--day);border-color:var(--day);color:#fff}
+/* MEAL ITEMS LIST */
+.meal-items{display:flex;flex-direction:column;gap:5px;margin-top:4px}
+.meal-item{display:flex;align-items:center;gap:6px;min-height:22px}
+.mi-food{font-size:12.5px;color:var(--txt);flex:1}
+.mi-food.mi-subbed{color:var(--teal);text-decoration:underline dotted}
+.mi-qty{font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0}
+.mi-sub-btn{border:none;background:var(--surf);color:var(--muted);border-radius:6px;
+  padding:2px 6px;font-size:11px;cursor:pointer;flex-shrink:0;
+  border:1px solid var(--bdr);-webkit-tap-highlight-color:transparent;transition:all .2s}
+.mi-sub-btn:active,.mi-sub-btn.active{background:var(--teal-d);color:var(--teal)}
+.mi-subs-wrap{margin-left:0;margin-top:2px;margin-bottom:4px}
+.mi-subs{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px}
+.mi-sub-opt{font-size:10.5px;padding:3px 9px;border-radius:100px;border:1px solid var(--bdr);
+  color:var(--faint);background:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mi-sub-opt.on{background:var(--teal-d);border-color:var(--teal);color:var(--teal);font-weight:600}
 </style>
 </head>
 <body>
@@ -784,16 +809,11 @@ textarea.edit-input{min-height:70px}
       </div>
       <div class="hdr-info-bot">
         <div class="kcal-chip" id="kcalChip">— kcal</div>
-        <div class="water-compact" id="waterCompact" onclick="openWaterBSheet()">💧 0/8</div>
+        <div class="water-compact" id="waterCompact" onclick="openWaterBSheet()">💧 0/6</div>
       </div>
     </div>
   </div>
-  <div class="pills" id="pills">
-    <button class="pill on" data-d="mt">SEG · QUA</button>
-    <button class="pill" data-d="tf">TER · SEX</button>
-    <button class="pill" data-d="qui">QUINTA</button>
-    <button class="pill" data-d="fds">FIM DE SEM</button>
-  </div>
+  <div id="pills"><span class="pill-today" id="pillToday"></span></div>
   <div id="weekDots" style="margin-top:5px"></div>
   <div id="trainChipWrap" style="margin-top:3px"></div>
   <div class="reset-banner" id="resetBanner">
@@ -878,121 +898,74 @@ function saveState(){
 const ESO='Dias que toma esomeprazol: tomar às ~9h em jejum e esperar 30–60 min antes de comer.';
 const G60='Gastrite: respeitar 60 min fixos antes do treino. Esforço com estômago cheio faz o ácido subir.';
 
-const DAYS={
-  mt:{label:'Segunda · Quarta',sub:'Muay Thai · 19h30',color:'#a855f7',tot:169,
-    meals:[
-      {t:'~10h00',n:'Café da manhã',p:22,
-       f:'Tapioca com muçarela fatiada (30–40 g na balança) + 3 ovos inteiros. Se preferir: pão francês tostado na chapa.',
-       s:'Creatina 3–5 g junto do café · 1–2 xícaras no máximo',g:ESO,
-       sum:'Tapioca + muçarela + 3 ovos  ·  creatina'},
-      {t:'~13h00',n:'Almoço',p:58,
-       f:'250 g peito de frango grelhado + arroz + feijão + legumes Petrofolhas (couve, cenoura, beterraba) + fio de azeite EV.',
-       s:'Multivitamínico junto da refeição',
-       sum:'Frango 250g + arroz + feijão + legumes  ·  multivitamínico'},
-      {t:'~16h30',n:'Lanche da tarde',p:38,
-       f:'Omelete: 2 ovos + 80 g de frango desfiado + 1 fatia muçarela (25 g). Frango já pronto na geladeira.',
-       s:'Frango cozido na panela comum no domingo. Dura 4–5 dias.',
-       sum:'Omelete: 2 ovos + 80g frango desfiado + muçarela'},
-      {t:'~18h30',n:'Pré-treino',p:12,
-       f:'100–150 g de fruta picada (banana prata ou banana + maçã) + 20–30 g farelo de aveia + 1 pote iogurte Danone Mais Proteínas zero lactose (160 g).',
-       w:'Zero cafeína ou energético daqui em diante.',g:G60,
-       sum:'Fruta + aveia + iogurte zero lactose  ·  sem cafeína'},
-      {type:'train',t:'19h30',n:'MUAY THAI',d:'Saco de pancadas · luvas · corda'},
-      {t:'~21h00',n:'Pós-treino',p:20,
-       f:'1 scoop Soldiers Elite Whey batido só com água. Tomar imediatamente ao terminar.',
-       s:'Sem nada misturado — absorção rápida',
-       sum:'Whey Soldiers Elite + água  ·  imediato'},
-      {t:'~21h15',n:'Jantar · leve',p:22,
-       f:'Atum ou sardinha em lata + tapioca + legumes. Refeição leve — repõe glicogênio sem deitar pesado.',
-       g:'Evitar refrigerante, frituras e gordura pesada à noite.',
-       sum:'Atum ou sardinha + tapioca + legumes'},
-    ]},
-  tf:{label:'Terça · Sexta',sub:'Força · 20h00',color:'#a855f7',tot:169,
-    meals:[
-      {t:'~10h00',n:'Café da manhã',p:22,
-       f:'Tapioca com muçarela fatiada (30–40 g na balança) + 3 ovos inteiros. Ou pão francês tostado.',
-       s:'Creatina 3–5 g junto do café',g:ESO,
-       sum:'Tapioca + muçarela + 3 ovos  ·  creatina'},
-      {t:'~13h00',n:'Almoço',p:58,
-       f:'250 g peito de frango grelhado + arroz + feijão + legumes Petrofolhas + fio de azeite EV.',
-       s:'Multivitamínico junto da refeição',
-       sum:'Frango 250g + arroz + feijão + legumes  ·  multivitamínico'},
-      {t:'~16h30',n:'Lanche da tarde',p:38,
-       f:'Omelete: 2 ovos + 80 g de frango desfiado + 1 fatia muçarela (25 g). Frango já pronto na geladeira.',
-       s:'Frango cozido no domingo. Dura 4–5 dias.',
-       sum:'Omelete: 2 ovos + 80g frango desfiado + muçarela'},
-      {t:'~19h00',n:'Pré-treino',p:12,
-       f:'100–150 g de fruta picada + 20–30 g farelo de aveia + 1 pote iogurte Danone zero lactose. 60 min antes.',
-       w:'Zero cafeína ou energético daqui em diante.',g:G60,
-       sum:'Fruta + aveia + iogurte zero lactose  ·  60 min antes'},
-      {type:'train',t:'20h00',n:'FORÇA',d:'Halteres · kettlebell · varanda'},
-      {t:'~21h30',n:'Pós-treino',p:20,
-       f:'1 scoop Soldiers Elite Whey batido só com água. Imediato ao terminar.',
-       sum:'Whey Soldiers Elite + água  ·  imediato'},
-      {t:'~21h45',n:'Jantar · leve',p:22,
-       f:'Frango desfiado (já na geladeira) na tapioca + legumes. Ou pão tostado com frango/atum.',
-       g:'Pão só tostado. Pão cru fermenta e piora gases com gastrite.',
-       sum:'Frango desfiado + tapioca + legumes'},
-    ]},
-  qui:{label:'Quinta',sub:'Força · 20h00 · Alcatra',color:'#a855f7',tot:171,
-    meals:[
-      {t:'~10h00',n:'Café da manhã',p:22,
-       f:'Tapioca com muçarela (30–40 g) + 3 ovos. Ou pão francês tostado.',
-       s:'Creatina 3–5 g junto do café',g:ESO,
-       sum:'Tapioca + muçarela + 3 ovos  ·  creatina'},
-      {t:'~13h00',n:'Almoço · alcatra 🥩',p:60,
-       f:'Alcatra grelhada (200–250 g) + palmito + arroz + feijão + azeite EV.',
-       s:'Multivitamínico junto da refeição',
-       sum:'Alcatra 200–250g + palmito + arroz + feijão  ·  multivitamínico'},
-      {t:'~16h30',n:'Lanche da tarde',p:38,
-       f:'Omelete: 2 ovos + 80 g de frango desfiado + 1 fatia muçarela (25 g).',
-       sum:'Omelete: 2 ovos + 80g frango desfiado + muçarela'},
-      {t:'~19h00',n:'Pré-treino',p:12,
-       f:'100–150 g de fruta picada + 20–30 g farelo de aveia + 1 pote iogurte Danone zero lactose.',
-       w:'Zero cafeína ou energético daqui em diante.',g:G60,
-       sum:'Fruta + aveia + iogurte zero lactose  ·  60 min antes'},
-      {type:'train',t:'20h00',n:'FORÇA',d:'Halteres · kettlebell · varanda'},
-      {t:'~21h30',n:'Pós-treino',p:20,
-       f:'1 scoop Soldiers Elite Whey batido só com água. Imediato ao terminar.',
-       sum:'Whey Soldiers Elite + água  ·  imediato'},
-      {t:'~21h45',n:'Jantar · leve',p:22,
-       f:'Frango desfiado na tapioca + legumes. Já pronto na geladeira.',
-       g:'Pão só tostado se preferir substituir a tapioca.',
-       sum:'Frango desfiado + tapioca + legumes'},
-    ]},
-  fds:{label:'Sábado · Domingo',sub:'Descanso · sem treino',color:'#3ec97a',tot:140,
-    meals:[
-      {t:'~10h00',n:'Café da manhã',p:22,
-       f:'Tapioca com muçarela (30–40 g) + 3 ovos. Ou pão francês tostado.',
-       s:'Creatina 3–5 g · Café liberado (com moderação)',g:ESO,
-       sum:'Tapioca + muçarela + 3 ovos  ·  creatina'},
-      {t:'~14h00',n:'Almoço',p:55,
-       f:'Frango (250 g) ou alcatra + arroz + legumes + azeite EV. Sem feijão.',
-       s:'Multivitamínico junto da refeição',
-       sum:'Frango/alcatra + arroz + legumes (sem feijão)  ·  multivitamínico'},
-      {t:'~17h00',n:'Lanche da tarde',p:35,
-       f:'Omelete: 2 ovos + 80 g de frango desfiado + 1 fatia muçarela. Pode ser mais farto.',
-       sum:'Omelete: 2 ovos + 80g frango desfiado + muçarela'},
-      {t:'~20h00',n:'Jantar',p:28,
-       f:'Frango ou atum/sardinha + arroz ou tapioca + legumes. Porção normal.',
-       s:'Whey opcional se a proteína do dia não fechou',
-       g:'Evitar refrigerante, frituras e gordura saturada.',
-       sum:'Frango ou atum/sardinha + arroz/tapioca + legumes',
-       skipable:true,
-       skipProt:30,
-       skipScoops:'1,5 scoops (37g de pó)'},
-    ]},
+const PLAN={
+  tot:123, kcal:1600,
+  meals:[
+    {id:'cafe',t:'07:00',n:'Café da manhã',p:16,
+     items:[
+       {f:'Pão francês',q:'1 un (50g)'},
+       {f:'Ovo galinha',q:'1 un (50g)'},
+       {f:'Queijo mussarela',q:'1 fatia (20g)'},
+       {f:'Banana média',q:'65g'},
+       {f:'Café puro ou c/ adoçante zero-cal',q:'50ml'},
+     ],
+     subs:{
+       'Pão francês':['Pão de forma 2 fatias (50g)','Tapioca 3,5 col sopa (60g)','Torrada 4 un (40g)','Pão integral 2 fatias (50g)','Cuscuz 4 col sopa rasa (40g)'],
+       'Ovo galinha':['Queijo mussarela 1 fatia (20g)','Requeijão light 1 col sopa (30g)','Queijo minas frescal 1 fatia (30g)','Ricota 1,5 fatia (53g)'],
+       'Banana média':['Pera 1 un (110g)','Laranja 1 un (90g)','Morango 9 un (180g)','Maçã 1 un (80g)','Mamão 1 fatia (100g)','Melão 2 fatias (230g)'],
+     }
+    },
+    {id:'almoco',t:'12:00',n:'Almoço',p:38,
+     items:[
+       {f:'Arroz branco cozido',q:'5 col sopa (100g)'},
+       {f:'Carne magra (alcatra, patinho, filé)',q:'1 filé grande (135g)'},
+       {f:'Feijão',q:'1 concha rasa (80g)'},
+       {f:'Legumes',q:'à vontade'},
+       {f:'Salada',q:'à vontade'},
+       {f:'Laranja',q:'1 un média (180g)'},
+     ],
+     subs:{
+       'Arroz branco cozido':['Arroz integral 6 col sopa (120g)','Batata doce 4,5 col sopa (108g)','Batata inglesa 6,5 col sopa (260g)','Macarrão integral 2 col servir (100g)'],
+       'Carne magra (alcatra, patinho, filé)':['Filé de peixe 1 filé grande (155g)','Filé de frango 1,5 bife médio (113g)'],
+       'Laranja':['Pera 1 un (110g)','Banana 1 un grande (100g)','Morango 9 un (180g)','Maçã 1 un (130g)','Melão 2 fatias (230g)'],
+     }
+    },
+    {id:'lanche',t:'15:30',n:'Lanche da tarde',hasOpts:true,
+     opts:[
+       {id:'op1',label:'Op. 1 · Iogurte',p:24,
+        items:[{f:'Iogurte natural',q:'170g'},{f:'Uva',q:'10 un médias (80g)'},{f:'Granola',q:'3 col sopa (30g)'},{f:'Whey concentrado',q:'1 dosador (15g)'}],
+        subs:{'Uva':['Pera 1 un (110g)','Laranja 1 un (90g)','Morango 9 un (180g)','Banana 1 un (100g)','Maçã 1 un (130g)']}
+       },
+       {id:'op2',label:'Op. 2 · Pão + Queijo',p:18,
+        items:[{f:'Pão francês',q:'1 un (50g)'},{f:'Queijo minas frescal',q:'2 fatias (60g)'},{f:'Maçã pequena',q:'80g'},{f:'Whey concentrado',q:'c/ água (10g)'}],
+        subs:{'Pão francês':['Pão de forma 2 fatias (50g)','Tapioca 3,5 col sopa (60g)','Torrada 4 un (40g)'],'Queijo minas frescal':['Ovo 2 un (100g)','Requeijão light 2 col sopa (60g)','Ricota 3 fatias (105g)']}
+       },
+     ]
+    },
+    {id:'jantar',t:'20:00',n:'Jantar',hasOpts:true,
+     opts:[
+       {id:'op1',label:'Op. 1 · Sanduíche frango',p:30,
+        items:[{f:'Pão francês',q:'1 un (50g)'},{f:'Frango desfiado',q:'4 col sopa (80g)'},{f:'Requeijão light',q:'2 col sopa (60g)'},{f:'Alface',q:'à vontade'}],
+        subs:{'Pão francês':['Rap 10 1 un (40g)','Pão de forma 2 fatias (50g)','Tapioca 3,5 col sopa (60g)','Cuscuz 4 col sopa (40g)'],'Frango desfiado':['Carne moída magra 2 col sopa (50g)','Atum natural 5 col sopa (100g)'],'Requeijão light':['Creme de ricota 2,5 col sopa (50g)','Queijo mussarela 2 fatias (40g)','Queijo minas frescal 1,5 fatia (45g)']}
+       },
+       {id:'op2',label:'Op. 2 · Hambúrguer',p:28,
+        items:[{f:'Pão de hambúrguer',q:'1 un (50g)'},{f:'Carne magra hambúrguer caseiro',q:'1 bife pequeno (90g)'},{f:'Queijo mussarela',q:'1 fatia (20g)'},{f:'Alface',q:'à vontade'}],
+        subs:{}
+       },
+       {id:'op3',label:'Op. 3 · Prato feito',p:36,
+        items:[{f:'Arroz branco cozido',q:'5 col sopa (100g)'},{f:'Filé de frango',q:'1,5 bife médio (112g)'},{f:'Feijão',q:'1 concha rasa (80g)'},{f:'Legumes',q:'à vontade'},{f:'Salada',q:'à vontade'}],
+        subs:{'Arroz branco cozido':['Arroz integral 6 col sopa (120g)','Batata doce 4,5 col sopa (108g)','Batata inglesa 6,5 col sopa (260g)'],'Filé de frango':['Filé de peixe 1 filé grande (155g)','Carne magra 1 filé grande (135g)']}
+       },
+     ]
+    },
+  ]
 };
 
 const SUPPS=[
-  {when:'~9h · jejum',name:'Esomeprazol 20 mg',dose:'a cada\n3 dias',
-   note:'Em jejum, 30–60 min antes do café. Só nos dias do protocolo.',gc:true},
-  {when:'Manhã · café',name:'Creatina monohidratada',dose:'3–5 g',
-   note:'Todo dia, treinando ou não. Junto do café.'},
-  {when:'Almoço',name:'Multivitamínico',dose:'1 cáps.',
-   note:'Junto da refeição. Preferir versão com B12 metilcobalamina.'},
-  {when:'Pós-treino',name:'Whey Soldiers Elite',dose:'25 g',
-   note:'Só com água, imediato após o treino. Sem misturar nada.'},
+  {when:'Manhã (c/ café)',dose:'5g',name:'Creatina monohidratada',
+   note:'Todos os dias inclusive sem treino. Afastar de cafeína quando possível.',gc:false},
+  {when:'Lanche da tarde',dose:'15g (op1) / 10g (op2)',name:'Whey Concentrado',
+   note:'Incluído no lanche. Op1: 1 dosador c/ iogurte. Op2: 10g c/ água.',gc:false},
 ];
 
 const GASTRO_ITEMS=[
@@ -1021,12 +994,12 @@ const SHOP=[
 ];
 
 const RULES=[
-  {i:'🥩',t:'Proteína o dia inteiro',b:'<b>~170 g</b> em 5 refeições. Nenhuma janela acima de 4h sem proteína.',hi:false},
-  {i:'🍚',t:'Carbo em volta do treino',b:'Aveia e fruta no pré. Tapioca no pós. Nos dias sem treino reduz o carbo do jantar.',hi:false},
+  {i:'🥩',t:'Proteína o dia inteiro',b:'<b>~123 g</b> em 4 refeições (1,5 g × 82 kg). Nenhuma janela acima de 4 h sem proteína.',hi:false},
+  {i:'🍚',t:'Carbo nas refeições principais',b:'Arroz, feijão, fruta e pão. Evitar carbos extras fora do plano.',hi:false},
   {i:'☕',t:'Cafeína só até o almoço',b:'Meia-vida de <b>5–6 h</b>. Depois das 13h chega ativa na hora de dormir.',hi:false},
   {i:'⏱',t:'Pré-treino: 60 min fixos',b:'Com gastrite grau 2 não tem negociação. Esforço com estômago cheio = refluxo.',hi:false},
   {i:'😴',t:'Jantar leve · protege o sono',b:'Sem sono profundo cai o GH e a síntese proteica trava. <b>Dormir bem vale tanto quanto treinar.</b>',hi:false},
-  {i:'💧',t:'3–4 L de água por dia',b:'Obrigatório com creatina diária e proteína acima de <b>160 g</b>.',hi:true},
+  {i:'💧',t:'2,8 L de água por dia',b:'35 ml × 82 kg = 2,8 L. 6 copos de 500 ml. Obrigatório com creatina diária.',hi:true},
 ];
 
 // ── Nutri data ───────────────────────────────────────
@@ -1250,10 +1223,56 @@ function renderNutri(){
   return h;
 }
 
+// ── Training map (weekday → train info) ────────────
+const _trainMap={
+  1:{n:'Muay Thai',t:19*60+30},
+  2:{n:'Força',t:20*60},
+  3:{n:'Muay Thai',t:19*60+30},
+  4:{n:'Força',t:20*60},
+  5:{n:'Força',t:20*60},
+};
+
 // ── State ──────────────────────────────────────────
-const _dayMap={0:'fds',1:'mt',2:'tf',3:'mt',4:'qui',5:'tf',6:'fds'};
-let day=_dayMap[new Date().getDay()]||'mt', sec='meals';
+let sec='meals';
 let chk=loadState();
+
+// Daily option selection (lanche / jantar)
+const OPTS_KEY='plano_opts_v1';
+let optsData=(()=>{try{return JSON.parse(localStorage.getItem(OPTS_KEY)||'{}')}catch(e){return{}}})();
+function saveOpts(){localStorage.setItem(OPTS_KEY,JSON.stringify(optsData));}
+function getTodayOpts(){return optsData[todayStr()]||{};}
+function setTodayOpt(mealId,optId){
+  const d=optsData[todayStr()]||{};
+  d[mealId]=optId;optsData[todayStr()]=d;saveOpts();
+}
+
+// Item-level substitutions
+const ITEM_SUBS_KEY='plano_item_subs_v1';
+let itemSubsData=(()=>{try{return JSON.parse(localStorage.getItem(ITEM_SUBS_KEY)||'{}')}catch(e){return{}}})();
+function saveItemSubs(){localStorage.setItem(ITEM_SUBS_KEY,JSON.stringify(itemSubsData));}
+function getTodayItemSubs(){return itemSubsData[todayStr()]||{};}
+window.cycleItemSub=function(mealId,itemIdx,e){
+  e.stopPropagation();
+  const meal=PLAN.meals.find(m=>m.id===mealId);
+  if(!meal)return;
+  let items,subs;
+  if(meal.hasOpts){
+    const selId=getTodayOpts()[mealId]||meal.opts[0].id;
+    const selOpt=meal.opts.find(o=>o.id===selId)||meal.opts[0];
+    items=selOpt.items;subs=selOpt.subs||{};
+  } else {items=meal.items;subs=meal.subs||{};}
+  const food=items[itemIdx];if(!food)return;
+  const foodSubs=subs[food.f];if(!foodSubs||!foodSubs.length)return;
+  const td=getTodayItemSubs();
+  const key=mealId+'-'+itemIdx;
+  td[key]=((td[key]||0)+1)%(foodSubs.length+1);
+  itemSubsData[todayStr()]=td;saveItemSubs();
+  if(sec==='meals') render();
+};
+window.selectOpt=function(mealId,optId,e){
+  e.stopPropagation();setTodayOpt(mealId,optId);
+  if(sec==='meals') render();
+};
 
 // ── Week badge ──────────────────────────────────────
 document.getElementById('wnum').textContent=getWeekNum();
@@ -1266,18 +1285,18 @@ function setColor(c){
 }
 
 function updProt(){
-  const d=DAYS[day];
+  const today=todayStr();
+  const todayOpts=getTodayOpts();
   let base=0;
-  d.meals.forEach((m,i)=>{
-    if(!m.p)return;
-    const isSkip=m.skipable&&skipped[`${day}-skip-${i}`];
-    const prot=(getSub(i)||{p:m.p}).p;
-    if(isSkip){base+=m.skipProt;}
-    else if(chk[`${day}-${i}`]){base+=prot;}
+  PLAN.meals.forEach(m=>{
+    if(!chk[`${today}-${m.id}`]) return;
+    if(m.hasOpts){
+      const selId=todayOpts[m.id]||m.opts[0].id;
+      const selOpt=m.opts.find(o=>o.id===selId)||m.opts[0];
+      base+=selOpt.p;
+    } else { base+=m.p; }
   });
-  // add snacks
   getTodaySnacks().forEach(s=>base+=s.p||0);
-  // show total possible for this day config
   const tot=getGoal();
   const pct=Math.min(100,(base/tot)*100);
   const pvalEl=document.getElementById('pval');
@@ -1294,127 +1313,91 @@ function updProt(){
 }
 
 // ── Render sections ────────────────────────────────
+function renderMealItems(mealId, items, subs, todayItemSubs){
+  if(!items||!items.length) return '';
+  let h='<div class="meal-items">';
+  items.forEach((item,idx)=>{
+    const foodSubs=subs?subs[item.f]:null;
+    const key=mealId+'-'+idx;
+    const curSubIdx=todayItemSubs[key]||0;
+    const isSubbed=curSubIdx>0&&foodSubs&&curSubIdx<=foodSubs.length;
+    const dispFood=isSubbed?foodSubs[curSubIdx-1]:item.f;
+    h+=`<div class="meal-item">
+      <span class="mi-food${isSubbed?' mi-subbed':''}">${dispFood}</span>
+      <span class="mi-qty">${item.q}</span>
+      ${foodSubs?`<button class="mi-sub-btn${isSubbed?' active':''}" onclick="cycleItemSub('${mealId}',${idx},event)" title="Substituir">⇄</button>`:''}
+    </div>`;
+    if(foodSubs&&curSubIdx>0){
+      h+='<div class="mi-subs-wrap"><div class="mi-subs">';
+      foodSubs.forEach((s,si)=>{h+=`<span class="mi-sub-opt ${si===curSubIdx-1?'on':''}">${s}</span>`;});
+      h+='</div></div>';
+    }
+  });
+  h+='</div>';
+  return h;
+}
+
 function renderMeals(){
-  const d=DAYS[day];
-  const totalMeals=d.meals.filter(m=>m.type!=='train').length;
-  const doneMeals=d.meals.filter((m,i)=>m.type!=='train'&&chk[`${day}-${i}`]).length;
+  const today=todayStr();
+  const todayOpts=getTodayOpts();
+  const todayItemSubs=getTodayItemSubs();
+  const totalMeals=PLAN.meals.length;
+  const doneMeals=PLAN.meals.filter(m=>chk[`${today}-${m.id}`]).length;
   const goal=getGoal();
   let totalProt=0;
-  d.meals.forEach((m,i)=>{
-    if(!m.p)return;
-    const isSkip=m.skipable&&skipped[`${day}-skip-${i}`];
-    const prot=(getSub(i)||{p:m.p}).p;
-    if(isSkip)totalProt+=m.skipProt||0;
-    else if(chk[`${day}-${i}`])totalProt+=prot;
+  PLAN.meals.forEach(m=>{
+    if(!chk[`${today}-${m.id}`]) return;
+    if(m.hasOpts){
+      const selId=todayOpts[m.id]||m.opts[0].id;
+      const selOpt=m.opts.find(o=>o.id===selId)||m.opts[0];
+      totalProt+=selOpt.p;
+    } else { totalProt+=m.p; }
   });
-  totalProt+=(snackData[todayStr()]||[]).reduce((s,x)=>s+(x.p||0),0);
+  totalProt+=(snackData[today]||[]).reduce((s,x)=>s+(x.p||0),0);
   const remaining=Math.max(0,goal-totalProt);
-  const pct=Math.min(100,Math.round(totalProt/goal*100));
   let h=`<div class="day-summary">
     <span class="ds-meals">${doneMeals}/${totalMeals} refeições</span>
     <span class="ds-prot">${remaining>0?`faltam <b style="color:var(--ember-s)">${remaining}g</b> proteína`:`<b style="color:var(--teal)">✓ meta atingida!</b>`}</span>
   </div>`;
   h+='<div class="tl">';
-  d.meals.forEach((m,i)=>{
-    if(m.type==='train'){
-      const hist=loadHistory();const tdHist=hist[todayStr()]||{};
-      const savedDur=tdHist.trainDur?`<span class="timer-saved">✓ ${Math.floor(tdHist.trainDur/60)}min registrado</span>`:'';
-      h+=`<div class="tn" style="margin-left:-44px">
-        <div class="tn-dot"></div>
-        <div><div class="tn-time">${m.t}</div>
-        <div class="tn-name">${m.n}</div>
-        <div class="tn-desc">${m.d}</div>
-        <div class="timer-wrap">
-          <button class="timer-btn" id="timer-btn" onclick="toggleTimer()">▶ Iniciar treino</button>
-          <span class="timer-disp" id="timer-disp">00:00</span>
-          ${savedDur}
-        </div></div></div>`;
-    } else {
-      const done=chk[`${day}-${i}`]?'done':'';
-      const isSkipped=m.skipable&&skipped[`${day}-skip-${i}`];
-      const sub=getSub(i);
-      const dispT=sub?sub.t:m.t;
-      const dispP=sub?sub.p:m.p;
-      const dispF=sub?sub.f:m.f;
-      // calc missing prot if skipped
-      let skipCalc='';
-      if(m.skipable&&isSkipped){
-        const eaten=DAYS[day].meals.reduce((acc,mx,ix)=>{
-          if(!mx.p)return acc;
-          if(ix===i)return acc;
-          return acc+(chk[`${day}-${ix}`]?mx.p:mx.p);
-        },0)-m.p;
-        const goal=DAYS[day].tot;
-        const have=DAYS[day].meals.reduce((a,mx)=>a+(mx.p&&mx!==m?mx.p:0),0);
-        const missing=goal-have;
-        skipCalc=`
-          <div class="skip-calc">
-            Sem jantar você fica com <b>~${have}g</b> de proteína.<br>
-            Faltam <b>${missing}g</b> para a meta de ${goal}g.<br>
-            ✅ <b>${m.skipScoops}</b> do Soldiers Elite = ~${m.skipProt}g → fecha em <b>~${have+m.skipProt}g</b>.
-          </div>`;
-      }
-      h+=`<div class="tl-row"><div class="mc ${done} ${isSkipped?'skipped':''} ${sub&&!isSkipped?'mc-edited':''} ${editingMeal===i?'open':''}" data-i="${i}">
+  PLAN.meals.forEach(m=>{
+    const done=chk[`${today}-${m.id}`]?'done':'';
+    const checkMark=chk[`${today}-${m.id}`]?'✓':'';
+    if(m.hasOpts){
+      const selId=todayOpts[m.id]||m.opts[0].id;
+      const selOpt=m.opts.find(o=>o.id===selId)||m.opts[0];
+      const optPills=m.opts.map(o=>`<button class="opt-pill ${o.id===selId?'on':''}" onclick="selectOpt('${m.id}','${o.id}',event)">${o.label}</button>`).join('');
+      const itemsHtml=renderMealItems(m.id, selOpt.items, selOpt.subs||{}, todayItemSubs);
+      h+=`<div class="tl-row"><div class="mc ${done}" data-id="${m.id}">
         <div class="mc-head">
-          <span class="mc-time">${dispT}</span>
-          <span class="mc-name">${m.n}${sub?'<span class="sub-badge">✏️</span>':''}</span>
-          <span class="mc-prot">${isSkipped?`+${m.skipProt}g whey`:`+${dispP} g`}</span>
-          <div class="mc-chk">${chk[`${day}-${i}`]?'✓':''}</div>
+          <span class="mc-time">${m.t}</span>
+          <span class="mc-name">${m.n}</span>
+          <span class="mc-prot">+${selOpt.p}g</span>
+          <div class="mc-chk">${checkMark}</div>
         </div>
-        ${m.sum?`<div class="mc-sum">${isSkipped?'<s>'+m.sum+'</s>':(sub?'<span style="color:var(--blue);font-size:10.5px">✏️ personalizado hoje</span>':m.sum)}</div>`:''}
-        ${isSkipped?`
-        <div class="skip-replace">
-          <div class="skip-title">🚫 Sem jantar · compensação via whey</div>
-          <div class="skip-macros">
-            <div class="skip-m"><span class="sm-v">${m.skipScoops.split(' ')[0]}</span><span class="sm-l">Scoops</span></div>
-            <div class="skip-m"><span class="sm-v">37g</span><span class="sm-l">De pó</span></div>
-            <div class="skip-m"><span class="sm-v">${m.skipProt}g</span><span class="sm-l">Proteína</span></div>
-          </div>
-          <div class="skip-food">Soldiers Elite Whey + água · pode adicionar 1 banana para repor energia se quiser.</div>
-          ${skipCalc}
-          <span class="skip-undo" onclick="unskipMeal(${i},event)">↩ voltei a jantar</span>
-        </div>`:`
-        ${editingMeal===i?`
-        <div class="mc-edit-form">
-          <div class="edit-title">📝 O que comi hoje</div>
-          <div class="edit-row">
-            <div class="edit-lbl">Horário</div>
-            <input class="edit-input" id="edit-t-${i}" type="text" value="${dispT.replace(/^~/,'')}" placeholder="13h00">
-          </div>
-          <div class="edit-row">
-            <div class="edit-lbl">O que comi</div>
-            <textarea class="edit-input" id="edit-f-${i}" rows="3">${dispF}</textarea>
-          </div>
-          <div class="edit-row">
-            <div class="edit-lbl">Proteína estimada (g)</div>
-            <input class="edit-input" id="edit-p-${i}" type="number" value="${dispP}" min="0" max="200">
-          </div>
-          <div class="edit-btns">
-            <button class="edit-save" onclick="saveEdit(${i},event)">Salvar</button>
-            <button class="edit-cancel" onclick="cancelEdit(event)">Cancelar</button>
-          </div>
-          ${sub?`<span class="edit-undo" onclick="clearSub(${i},event)">↩ Voltar ao plano original</span>`:''}
-        </div>`:`
         <div class="mc-body">
-          <div class="mc-food">${dispF}</div>
-          ${!sub&&m.s?`<div class="mc-supp">${m.s}</div>`:''}
-          ${!sub&&m.w?`<div class="mc-warn">⚡ ${m.w}</div>`:''}
-          ${!sub&&m.g?`<div class="mc-gastro">🟣 ${m.g}</div>`:''}
-          <button class="mc-edit-btn" onclick="openBSheet(${i});event.stopPropagation()">✏️ O que comi foi diferente</button>
+          <div class="opt-pills">${optPills}</div>
+          ${itemsHtml}
         </div>
-        ${m.skipable?`<button class="mc-skip-btn" onclick="skipMeal(${i},event)">🚫 Não vou jantar hoje · ver compensação</button>`:''}`}
-        `}
+      </div></div>`;
+    } else {
+      const itemsHtml=renderMealItems(m.id, m.items, m.subs||{}, todayItemSubs);
+      h+=`<div class="tl-row"><div class="mc ${done}" data-id="${m.id}">
+        <div class="mc-head">
+          <span class="mc-time">${m.t}</span>
+          <span class="mc-name">${m.n}</span>
+          <span class="mc-prot">+${m.p}g</span>
+          <div class="mc-chk">${checkMark}</div>
+        </div>
+        <div class="mc-body">${itemsHtml}</div>
       </div></div>`;
     }
   });
   h+='</div>';
   h+=`<div class="total">
-    <span class="total-lbl">Meta proteína · ${day==='fds'?'descanso':'treino'}</span>
-    <span class="total-val">${getGoal()} g</span></div>`;
+    <span class="total-lbl">Meta proteína · diária</span>
+    <span class="total-val">${goal}g</span></div>`;
   h+=buildMacroDonut();
-  if(day!=='fds')
-    h+=`<div class="ibox">🐟 Tilápia entra 2x por mês em qualquer jantar no lugar do atum, sardinha ou frango.</div>`;
-  // snack cards
   const snacks=getTodaySnacks();
   if(snacks.length){
     h+=`<div style="margin-top:8px"><div style="font-size:9.5px;font-weight:600;color:var(--ember);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Refeições extras hoje</div>`;
@@ -1635,36 +1618,28 @@ function loadHistory(){
 function saveToHistory(){
   const hist=loadHistory();
   const today=todayStr();
-  const d=DAYS[day];
-  const meals=d.meals.filter(m=>m.p);
-  const earned=meals.reduce((a,m,i)=>{
-    const ri=d.meals.indexOf(m);
-    const isSkip=m.skipable&&skipped[`${day}-skip-${ri}`];
-    return a+(isSkip?m.skipProt:(chk[`${day}-${ri}`]?m.p:0));
-  },0);
-  const goal=meals.reduce((a,m,i)=>{
-    const ri=d.meals.indexOf(m);
-    return a+(m.skipable&&skipped[`${day}-skip-${ri}`]?m.skipProt:m.p);
-  },0);
-  const doneCount=meals.filter((m,i)=>{
-    const ri=d.meals.indexOf(m);
-    return chk[`${day}-${ri}`]||(m.skipable&&skipped[`${day}-skip-${ri}`]);
-  }).length;
-  const mealNames=d.meals.filter(m=>m.p).map((m,i)=>{
-    const ri=d.meals.indexOf(m);
-    const isDone=chk[`${day}-${ri}`];
-    const isSkip=m.skipable&&skipped[`${day}-skip-${ri}`];
-    return{name:m.n.replace(' · leve','').replace(' · alcatra 🥩',''),
-           done:isDone,skip:isSkip};
+  const todayOpts=getTodayOpts();
+  let earned=0;
+  const mealNames=[];
+  PLAN.meals.forEach(m=>{
+    const isDone=!!chk[`${today}-${m.id}`];
+    let p;
+    if(m.hasOpts){
+      const selId=todayOpts[m.id]||m.opts[0].id;
+      const selOpt=m.opts.find(o=>o.id===selId)||m.opts[0];
+      p=selOpt.p;
+    } else { p=m.p; }
+    if(isDone) earned+=p;
+    mealNames.push({name:m.n, done:isDone, skip:false});
   });
+  const goal=getGoal();
+  const doneCount=PLAN.meals.filter(m=>chk[`${today}-${m.id}`]).length;
   hist[today]={
-    dayType:day,
     protein:earned,
     goal:goal,
     done:doneCount,
-    total:meals.length,
+    total:PLAN.meals.length,
     meals:mealNames,
-    skippedDinner:!!(day==='fds'&&skipped[`fds-skip-3`]),
     ts:new Date().toISOString()
   };
   localStorage.setItem(HIST_KEY,JSON.stringify(hist));
@@ -1936,11 +1911,6 @@ window.setHistView=function(v){
 // ── skip state (not persisted — resets with page)
 let skipped={};
 
-const SUBS_KEY='plano_subs_v1';
-let subs=(()=>{try{return JSON.parse(localStorage.getItem(SUBS_KEY)||'{}')}catch(e){return{}}})();
-function saveSubs(){localStorage.setItem(SUBS_KEY,JSON.stringify(subs));}
-function subKey(i){return todayStr()+'-'+day+'-'+i;}
-function getSub(i){return subs[subKey(i)];}
 let editingMeal=null;
 
 // ── Water ──────────────────────────────────────────────
@@ -1951,11 +1921,11 @@ function getTodayWater(){return waterCups[todayStr()]||0;}
 function renderWater(){
   const cups=getTodayWater();
   const wc=document.getElementById('waterCompact');
-  if(wc) wc.textContent='💧 '+cups+'/8'+(cups>=6?' ✓':'');
+  if(wc) wc.textContent='💧 '+cups+'/6'+(cups>=6?' ✓':'');
   const wb=document.getElementById('waterBSheetCups');
   if(wb){
     let h='';
-    for(let i=0;i<8;i++) h+=`<span class="wt-cup ${i<cups?'on':''}" onclick="toggleCup(${i})">💧</span>`;
+    for(let i=0;i<6;i++) h+=`<span class="wt-cup ${i<cups?'on':''}" onclick="toggleCup(${i})">💧</span>`;
     wb.innerHTML=h;
   }
 }
@@ -1964,9 +1934,9 @@ window.openWaterBSheet=function(){
   const ml=cups*500;
   const totalStr=ml>=1000?(ml/1000).toFixed(1).replace('.0','')+'L':ml+'ml';
   document.getElementById('bsheetTitle').textContent='Água de hoje';
-  let h=`<div style="margin-bottom:10px;font-size:13px;color:var(--muted)">Meta: 6–8 copos · cada 💧 = 500ml</div>`;
+  let h=`<div style="margin-bottom:10px;font-size:13px;color:var(--muted)">Meta: 6 copos · cada 💧 = 500ml · total 3L</div>`;
   h+=`<div class="wt-cups" id="waterBSheetCups">`;
-  for(let i=0;i<8;i++) h+=`<span class="wt-cup ${i<cups?'on':''}" onclick="toggleCup(${i})">💧</span>`;
+  for(let i=0;i<6;i++) h+=`<span class="wt-cup ${i<cups?'on':''}" onclick="toggleCup(${i})">💧</span>`;
   h+=`</div>`;
   h+=`<div class="wt-hint" style="margin-top:8px">Total hoje: <b style="color:var(--txt)">${cups?totalStr:'0ml'}</b></div>`;
   document.getElementById('bsheetBody').innerHTML=h;
@@ -2108,10 +2078,10 @@ function parseHour(t){const m=(t||'').replace(/^~/,'').match(/(\d+)h(\d+)?/);ret
 function checkMealNotifs(){
   const now=new Date();
   const cur=now.getHours()*60+now.getMinutes();
-  ((DAYS[day]||{}).meals||[]).filter(m=>m.p&&m.t).forEach(m=>{
+  PLAN.meals.forEach(m=>{
     const mt=parseHour(m.t);
     if(mt>=0&&cur>=mt&&cur<=mt+4){
-      try{new Notification('🍽 '+m.n,{body:m.t.replace('~','')+' · toque para abrir o app',icon:'/icon-192.png',tag:'meal-'+m.n,renotify:false});}catch(e){}
+      try{new Notification('🍽 '+m.n,{body:m.t+' · toque para abrir o app',icon:'/icon-192.png',tag:'meal-'+m.n,renotify:false});}catch(e){}
     }
   });
 }
@@ -2138,58 +2108,27 @@ function renderWeekDots(){
 // ── Protein alert (after 20h) ───────────────────────────
 function getProteinAlert(){
   if(new Date().getHours()<20) return '';
-  const d=DAYS[day];let earned=0;
-  d.meals.forEach((m,i)=>{
-    if(!m.p)return;
-    if(m.skipable&&skipped[`${day}-skip-${i}`]){earned+=m.skipProt;return;}
-    if(chk[`${day}-${i}`]) earned+=(getSub(i)||{p:m.p}).p;
+  const today=todayStr();const todayOpts=getTodayOpts();
+  let earned=0;
+  PLAN.meals.forEach(m=>{
+    if(!chk[`${today}-${m.id}`]) return;
+    if(m.hasOpts){
+      const selId=todayOpts[m.id]||m.opts[0].id;
+      const selOpt=m.opts.find(o=>o.id===selId)||m.opts[0];
+      earned+=selOpt.p;
+    } else { earned+=m.p; }
   });
-  const missing=d.tot-earned;
+  const missing=PLAN.tot-earned;
   if(missing<=0) return '';
   const scoops=(missing/20).toFixed(1);
-  return`<div class="prot-alert">⚠️ Fim do dia · faltam <b>${missing}g</b> de proteína · <b>${scoops} scoops</b> de Soldiers Elite fecha a meta.</div>`;
+  return`<div class="prot-alert">⚠️ Fim do dia · faltam <b>${missing}g</b> de proteína · <b>${scoops} scoops</b> de Whey fecha a meta.</div>`;
 }
 
-// ── Bottom sheet (edit meal) ────────────────────────────
-window.openBSheet=function(mealIdx){
-  editingMeal=mealIdx;
-  const m=DAYS[day].meals[mealIdx];
-  const cur=getSub(mealIdx)||{};
-  const titleEl=document.getElementById('bsheetTitle');
-  const bodyEl=document.getElementById('bsheetBody');
-  if(titleEl) titleEl.textContent='Editar: '+m.n;
-  if(bodyEl) bodyEl.innerHTML=`
-    <div class="edit-row"><div class="edit-lbl">Horário</div>
-      <input class="edit-input" id="es-t" value="${(cur.t||m.t||'').replace(/^~/,'')}" placeholder="${(m.t||'').replace(/^~/,'')}"></div>
-    <div class="edit-row"><div class="edit-lbl">O que comi</div>
-      <textarea class="edit-input" id="es-f" rows="3">${cur.f||m.f||''}</textarea></div>
-    <div class="edit-row"><div class="edit-lbl">Proteína estimada (g)</div>
-      <input class="edit-input" id="es-p" type="number" value="${cur.p||m.p||0}" min="0" max="200"></div>
-    <div class="edit-btns">
-      <button class="edit-save" onclick="saveBSheet()">Salvar</button>
-      <button class="edit-cancel" onclick="closeBSheet()">Cancelar</button>
-    </div>
-    ${cur.f||cur.t||cur.p?'<button class="edit-undo" onclick="clearSubBSheet()">↩ Voltar ao plano original</button>':''}`;
-  document.getElementById('bsheetOverlay').classList.add('show');
-  document.getElementById('bsheet').classList.add('open');
-};
+// ── Bottom sheet (edit meal) — kept as stub for compat ──
 window.closeBSheet=function(){
   document.getElementById('bsheetOverlay').classList.remove('show');
   document.getElementById('bsheet').classList.remove('open');
   editingMeal=null;
-};
-window.saveBSheet=function(){
-  if(editingMeal===null)return;
-  const t=(document.getElementById('es-t').value||'').trim();
-  const f=(document.getElementById('es-f').value||'').trim();
-  const p=parseInt(document.getElementById('es-p').value)||0;
-  const origT=DAYS[day].meals[editingMeal]?DAYS[day].meals[editingMeal].t:'';
-  subs[subKey(editingMeal)]={t:t?'~'+t.replace(/^~/,''):origT,f,p};
-  saveSubs();saveToHistory();closeBSheet();render();
-};
-window.clearSubBSheet=function(){
-  if(editingMeal===null)return;
-  delete subs[subKey(editingMeal)];saveSubs();saveToHistory();closeBSheet();render();
 };
 
 // ── Share day summary ───────────────────────────────────
@@ -2214,20 +2153,26 @@ window.takEso=function(e){
 };
 
 window.shareDay=function(){
-  const d=DAYS[day];let earned=0;
-  d.meals.forEach((m,i)=>{
-    if(!m.p)return;
-    if(m.skipable&&skipped[`${day}-skip-${i}`]){earned+=m.skipProt;return;}
-    if(chk[`${day}-${i}`]) earned+=(getSub(i)||{p:m.p}).p;
+  const today=todayStr();const todayOpts=getTodayOpts();
+  let earned=0;
+  PLAN.meals.forEach(m=>{
+    if(!chk[`${today}-${m.id}`]) return;
+    if(m.hasOpts){
+      const selId=todayOpts[m.id]||m.opts[0].id;
+      const selOpt=m.opts.find(o=>o.id===selId)||m.opts[0];
+      earned+=selOpt.p;
+    } else { earned+=m.p; }
   });
-  const pct=Math.round(earned/d.tot*100);
+  earned+=(snackData[today]||[]).reduce((a,s)=>a+(s.p||0),0);
+  const goal=getGoal();
+  const pct=Math.round(earned/goal*100);
   const tn=getTodayNote();
   const moodTxt={great:'😊 Ótimo',ok:'😐 Ok',tired:'😓 Cansado',stomach:'🤢 Estômago'};
-  const wt=weightData[todayStr()];
+  const wt=weightData[today];
   const water=getTodayWater();
   const now=new Date();
-  const lines=['📅 '+['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][now.getDay()]+' '+fmtDate(todayStr())+' · Plano Muay Thai + Força'];
-  lines.push('🥩 Proteína: '+earned+'g / '+d.tot+'g ('+pct+'%)');
+  const lines=['📅 '+['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][now.getDay()]+' '+fmtDate(today)+' · Plano Nutri · Priscila Garcia'];
+  lines.push('🥩 Proteína: '+earned+'g / '+goal+'g ('+pct+'%)');
   if(water) lines.push('💧 Água: '+(water*500>=1000?(water*500/1000).toFixed(1)+'L':water*500+'ml'));
   if(wt) lines.push('⚖️ Peso: '+wt+'kg');
   if(tn.mood&&moodTxt[tn.mood]) lines.push(moodTxt[tn.mood]);
@@ -2254,52 +2199,6 @@ function toggleNotifs(){
   });
 }
 
-window.skipMeal=function(idx,e){
-  e.stopPropagation();
-  const k=`${day}-skip-${idx}`;
-  skipped[k]=true;
-  saveState();saveToHistory();
-  render();
-};
-window.unskipMeal=function(idx,e){
-  e.stopPropagation();
-  const k=`${day}-skip-${idx}`;
-  delete skipped[k];
-  saveState();saveToHistory();
-  render();
-};
-
-window.openEdit=function(idx,e){
-  e.stopPropagation();
-  editingMeal=idx;
-  render();
-};
-window.cancelEdit=function(e){
-  e.stopPropagation();
-  editingMeal=null;
-  render();
-};
-window.saveEdit=function(idx,e){
-  e.stopPropagation();
-  const tEl=document.getElementById('edit-t-'+idx);
-  const fEl=document.getElementById('edit-f-'+idx);
-  const pEl=document.getElementById('edit-p-'+idx);
-  if(!fEl){editingMeal=null;render();return;}
-  const t=(tEl?tEl.value:'').trim();
-  const f=fEl.value.trim();
-  const p=parseInt(pEl?pEl.value:0)||0;
-  if(!f){editingMeal=null;render();return;}
-  const origT=DAYS[day].meals[idx]?DAYS[day].meals[idx].t:'';
-  subs[subKey(idx)]={t:t?'~'+t.replace(/^~/,''):origT,f,p};
-  saveSubs();saveToHistory();
-  editingMeal=null;render();
-};
-window.clearSub=function(idx,e){
-  e.stopPropagation();
-  delete subs[subKey(idx)];
-  saveSubs();saveToHistory();
-  editingMeal=null;render();
-};
 window.setMood=function(mood,e){
   e.stopPropagation();
   const cur=getTodayNote();
@@ -2393,7 +2292,7 @@ window.saveBioData=function(){
 
 // ── Macro donut ──────────────────────────────────────────
 function buildMacroDonut(){
-  const tot=getDayTotKcal(day);
+  const tot=PLAN.kcal;
   const p=getGoal();
   const pK=p*4;
   const gK=Math.round(tot*0.28);
@@ -2501,26 +2400,24 @@ function addSnack(name,p,k){
 // ── Custom protein goal ──────────────────────────────────
 const GOAL_KEY='plano_goal_v1';
 let goalOverride=(()=>{try{return JSON.parse(localStorage.getItem(GOAL_KEY)||'null')}catch(e){return null}})();
-function getGoal(){return goalOverride||DAYS[day].tot;}
+function getGoal(){return goalOverride||PLAN.tot;}
 function setGoal(val){goalOverride=val;localStorage.setItem(GOAL_KEY,JSON.stringify(val));}
 
 // ── Training countdown ───────────────────────────────────
 function renderTrainChip(){
   const wrap=document.getElementById('trainChipWrap');
   if(!wrap) return;
-  if(day==='fds'){wrap.innerHTML='';return;}
-  const times={mt:19*60+30, tf:20*60, qui:20*60};
-  const t=times[day];
-  if(!t){wrap.innerHTML='';return;}
+  const tr=_trainMap[new Date().getDay()];
+  if(!tr){wrap.innerHTML='';return;}
   const now=new Date();
   const cur=now.getHours()*60+now.getMinutes();
-  const diff=t-cur;
+  const diff=tr.t-cur;
   let label,cls='train-chip';
-  if(diff<=-90){label='✓ Treino concluído hoje';cls='train-chip done';}
-  else if(diff<0){label='🥊 Treino em andamento!';cls='train-chip now';}
-  else if(diff===0){label='🥊 Hora do treino!';cls='train-chip now';}
-  else if(diff<60){label=`⏱ Treino em ${diff}min`;}
-  else{const h=Math.floor(diff/60),m=diff%60;label=`⏱ Treino em ${h}h${m>0?m+'min':''}`;}
+  if(diff<=-90){label=`✓ ${tr.n} concluído`;cls='train-chip done';}
+  else if(diff<0){label=`🥊 ${tr.n} em andamento!`;cls='train-chip now';}
+  else if(diff===0){label=`🥊 Hora do ${tr.n}!`;cls='train-chip now';}
+  else if(diff<60){label=`⏱ ${tr.n} em ${diff}min`;}
+  else{const h=Math.floor(diff/60),m=diff%60;label=`⏱ ${tr.n} em ${h}h${m>0?m+'min':''}`;}
   wrap.innerHTML=`<span class="${cls}">${label}</span>`;
 }
 
@@ -2536,7 +2433,7 @@ window.fabAddWater=function(){
   document.getElementById('fab').classList.remove('open');
   document.getElementById('fabMain').textContent='+';
   const cur=getTodayWater();
-  waterCups[todayStr()]=Math.min(cur+1,8);
+  waterCups[todayStr()]=Math.min(cur+1,6);
   saveWater();renderWater();
   showToast('💧 +500ml adicionado!');
 };
@@ -2660,7 +2557,7 @@ window.openSettings=function(){
     if(bodyEl) bodyEl.innerHTML=`
       <div class="settings-row">
         <div><div class="settings-lbl">Meta de proteína diária</div>
-          <div class="settings-sub">Padrão: ${DAYS[day].tot}g (plano de treino)</div></div>
+          <div class="settings-sub">Padrão: ${PLAN.tot}g (plano Priscila Garcia)</div></div>
         <div class="settings-stepper">
           <button class="stepper-btn" onclick="adjustGoal(-5)">−</button>
           <span class="settings-val" id="goalVal">${g}g</span>
@@ -2706,7 +2603,7 @@ function checkWaterNotif(){
   const last=parseInt(localStorage.getItem('plano_last_water_notif')||'0');
   if(Date.now()-last<2*60*60*1000) return;
   try{
-    new Notification('💧 Beba água!',{body:`${cups} copo${cups!==1?'s':''} hoje · meta 6-8 · cada 💧 = 500ml`,icon:'/icon-192.png',tag:'water-reminder',renotify:true});
+    new Notification('💧 Beba água!',{body:`${cups} copo${cups!==1?'s':''} hoje · meta 6 · cada 💧 = 500ml`,icon:'/icon-192.png',tag:'water-reminder',renotify:true});
     localStorage.setItem('plano_last_water_notif',Date.now().toString());
   }catch(e){}
 }
@@ -2745,18 +2642,20 @@ function buildWeightSVG(entries){
 
 // ── Kcal bar ─────────────────────────────────────────────
 function updKcal(){
-  const d=DAYS[day];let earned=0;
-  d.meals.forEach((m,i)=>{
-    if(m.type==='train') return;
-    const isSkip=m.skipable&&skipped[`${day}-skip-${i}`];
-    if(isSkip){earned+=80;}
-    else if(chk[`${day}-${i}`]){
-      const sub=getSub(i);
-      earned+=sub?Math.round(sub.p*14):getMealKcal(day,i);
-    }
+  const today=todayStr();const todayOpts=getTodayOpts();
+  let earned=0;
+  PLAN.meals.forEach(m=>{
+    if(!chk[`${today}-${m.id}`]) return;
+    let mp;
+    if(m.hasOpts){
+      const selId=todayOpts[m.id]||m.opts[0].id;
+      const selOpt=m.opts.find(o=>o.id===selId)||m.opts[0];
+      mp=selOpt.p;
+    } else { mp=m.p; }
+    earned+=Math.round(mp*(PLAN.kcal/PLAN.tot));
   });
   getTodaySnacks().forEach(s=>earned+=s.k||0);
-  const tot=getDayTotKcal(day);
+  const tot=PLAN.kcal;
   const diff=earned-tot;
   const chip=document.getElementById('kcalChip');
   if(chip){
@@ -2850,21 +2749,6 @@ function render(){
 }
 
 // ── Events ─────────────────────────────────────────
-document.getElementById('pills').addEventListener('click',e=>{
-  const p=e.target.closest('.pill');if(!p)return;
-  day=p.dataset.d;
-  document.querySelectorAll('.pill').forEach(x=>x.classList.remove('on'));
-  p.classList.add('on');
-  setColor(DAYS[day].color);
-  const dn=document.getElementById('dayName');
-  const dmap={mt:'Seg · Qua',tf:'Ter · Sex',qui:'Quinta',fds:'Fim de Semana'};
-  if(dn) dn.textContent=dmap[day]||'—';
-  sec='meals';
-  document.querySelectorAll('.nb').forEach(x=>x.classList.remove('on'));
-  document.querySelector('.nb[data-s="meals"]').classList.add('on');
-  render();
-});
-
 document.querySelector('.nav').addEventListener('click',e=>{
   const b=e.target.closest('.nb');if(!b)return;
   sec=b.dataset.s;
@@ -2878,7 +2762,8 @@ document.getElementById('main').addEventListener('click',e=>{
   const chkBtn=e.target.closest('.mc-chk');
   if(chkBtn){
     const mc=chkBtn.closest('.mc');
-    const i=mc.dataset.i,k=`${day}-${i}`;
+    const mealId=mc.dataset.id;
+    const k=`${todayStr()}-${mealId}`;
     chk[k]=!chk[k];
     mc.classList.toggle('done',!!chk[k]);
     chkBtn.textContent=chk[k]?'✓':'';
@@ -2895,14 +2780,17 @@ document.getElementById('main').addEventListener('click',e=>{
 });
 
 // ── Init ───────────────────────────────────────────
-setColor(DAYS[day].color);
-document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.dataset.d===day));
 (()=>{
-  const dmap={mt:'Seg · Qua',tf:'Ter · Sex',qui:'Quinta',fds:'Fim de Semana'};
+  const tr=_trainMap[new Date().getDay()];
+  setColor(tr?'#3dc8b4':'#e8b84b');
+  const dow=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const dn=document.getElementById('dayName');
-  if(dn) dn.textContent=dmap[day]||'—';
+  const now=new Date();
+  if(dn) dn.textContent=dow[now.getDay()]+(tr?' · '+tr.n:' · Descanso');
   const hd=document.getElementById('hdrDate');
-  if(hd){const now=new Date();hd.textContent=now.toLocaleDateString('pt-BR',{day:'2-digit',month:'long'});}
+  if(hd) hd.textContent=now.toLocaleDateString('pt-BR',{day:'2-digit',month:'long'});
+  const pt=document.getElementById('pillToday');
+  if(pt) pt.textContent=dow[now.getDay()]+(tr?' · '+tr.n:' · Descanso');
 })();
 render();
 if(notifsEnabled && Notification.permission==='granted'){
