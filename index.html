@@ -34,27 +34,27 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
 /* HEADER */
 .hdr{padding:10px 20px 8px;flex-shrink:0;background:var(--bg);
   border-bottom:1px solid var(--bdr)}
-.hdr-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+/* HEADER HORIZONTAL */
+.hdr-main{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.hdr-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.hdr-info-top{display:flex;align-items:flex-start;justify-content:space-between;gap:4px}
+.hdr-info-bot{display:flex;align-items:center;gap:7px}
 .hdr-day{font-family:'Anton',sans-serif;font-size:22px;letter-spacing:.01em;
-  text-transform:uppercase;line-height:1;flex:1}
+  text-transform:uppercase;line-height:1}
 .hdr-date{font-size:11px;color:var(--faint);margin-top:3px}
 .week-badge{font-size:11px;color:var(--faint);letter-spacing:.03em;white-space:nowrap}
 .week-badge b{color:var(--muted);font-weight:500}
 /* RING */
-.hdr-center{display:flex;flex-direction:column;align-items:center;padding:0;gap:3px}
-.ring-wrap{position:relative;display:flex;align-items:center;justify-content:center}
-.pring{display:block;filter:drop-shadow(0 0 22px rgba(168,85,247,.45)) drop-shadow(0 0 50px rgba(168,85,247,.12))}
+.ring-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pring{display:block;filter:drop-shadow(0 0 16px rgba(168,85,247,.5))}
 .ring-center{position:absolute;display:flex;flex-direction:column;align-items:center;
   justify-content:center;text-align:center}
-.ring-prot{font-family:'Anton',sans-serif;font-size:20px;line-height:1;color:var(--txt)}
-.ring-goal{font-size:11px;color:var(--muted);margin-top:3px}
-.ring-lbl{font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
-.kcal-chip{font-size:12px;font-weight:600;color:var(--muted);background:var(--surf);
-  border:1px solid var(--bdr);border-radius:100px;padding:5px 18px;text-align:center}
+.ring-prot{font-family:'Anton',sans-serif;font-size:18px;line-height:1;color:var(--txt)}
+.ring-goal{font-size:9px;color:var(--muted);margin-top:2px}
+.kcal-chip{font-size:11.5px;font-weight:600;color:var(--muted);background:var(--surf);
+  border:1px solid var(--bdr);border-radius:100px;padding:4px 12px}
 .kcal-chip.surplus{color:var(--teal);background:var(--teal-d);border-color:rgba(34,211,238,.25)}
 .kcal-chip.deficit{color:var(--ember-s);background:var(--ember-d);border-color:rgba(168,85,247,.25)}
-/* HDR BOTTOM */
-.hdr-bottom{display:flex;align-items:center;gap:10px;margin-top:5px}
 .pills{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;
   flex-wrap:nowrap;justify-content:flex-start;
   margin-top:5px;padding-bottom:2px;touch-action:pan-x}
@@ -121,9 +121,18 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
   width:8px;height:8px;border-radius:50%;background:var(--day);
   box-shadow:0 0 0 3px var(--bg)}
 .mc{background:var(--card);border:1px solid var(--bdr);border-radius:20px;
-  overflow:hidden;transition:border-color .2s;cursor:pointer}
-.mc:hover{border-color:rgba(168,85,247,.35)}
-.mc.done{border-color:rgba(34,211,238,.25);box-shadow:inset 4px 0 0 var(--teal)}
+  overflow:hidden;transition:border-color .2s,background .2s;cursor:pointer}
+.mc:hover{border-color:rgba(168,85,247,.3)}
+.mc.done{background:var(--bg);border-color:rgba(34,211,238,.2);box-shadow:inset 3px 0 0 var(--teal)}
+.mc.done .mc-name{color:var(--faint)}
+.mc.done .mc-time{color:var(--faint)}
+
+/* DAY SUMMARY */
+.day-summary{display:flex;align-items:center;justify-content:space-between;
+  background:var(--surf);border:1px solid var(--bdr);border-radius:14px;
+  padding:9px 14px;margin-bottom:14px;font-size:12px}
+.ds-meals{font-weight:600;color:var(--txt)}
+.ds-prot{color:var(--muted)}
 .mc-head{display:flex;align-items:center;gap:10px;padding:14px 16px}
 .mc-time{font-size:10px;font-weight:600;letter-spacing:.04em;color:var(--muted);
   padding:0;white-space:nowrap;flex-shrink:0}
@@ -722,31 +731,35 @@ textarea.edit-input{min-height:70px}
 <div id="app">
 <input type="file" id="fileInput" accept=".json">
 <div class="hdr">
-  <div class="hdr-row">
-    <div>
-      <div class="hdr-day" id="dayName">—</div>
-      <div class="hdr-date" id="hdrDate">—</div>
-    </div>
-    <div style="display:flex;gap:6px;align-items:center">
-      <span class="streak-badge" id="streakBadge" style="display:none">🔥 <b id="streakNum">0</b></span>
-      <span class="week-badge" id="wbadge">Sem <b id="wnum">—</b></span>
-    </div>
-  </div>
-  <div class="hdr-center">
+  <div class="hdr-main">
     <div class="ring-wrap">
-      <svg class="pring" viewBox="0 0 100 100" width="90" height="90">
-        <circle cx="50" cy="50" r="40" fill="none" stroke="var(--bdr)" stroke-width="7"/>
+      <svg class="pring" viewBox="0 0 100 100" width="78" height="78">
+        <circle cx="50" cy="50" r="40" fill="none" stroke="var(--bdr)" stroke-width="8"/>
         <circle id="ringArc" cx="50" cy="50" r="40" fill="none" stroke="var(--ember)"
-          stroke-width="7" stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="251.3"
+          stroke-width="8" stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="251.3"
           transform="rotate(-90 50 50)" style="transition:stroke-dashoffset .4s cubic-bezier(.4,0,.2,1)"/>
       </svg>
       <div class="ring-center">
         <span class="ring-prot" id="pval">0g</span>
-        <span class="ring-goal">/ <span id="ptot">169</span>g</span>
-        <span class="ring-lbl">Proteína</span>
+        <span class="ring-goal">/<span id="ptot">169</span>g</span>
       </div>
     </div>
-    <div class="kcal-chip" id="kcalChip">— kcal</div>
+    <div class="hdr-info">
+      <div class="hdr-info-top">
+        <div>
+          <div class="hdr-day" id="dayName">—</div>
+          <div class="hdr-date" id="hdrDate">—</div>
+        </div>
+        <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
+          <span class="streak-badge" id="streakBadge" style="display:none">🔥 <b id="streakNum">0</b></span>
+          <span class="week-badge" id="wbadge">Sem <b id="wnum">—</b></span>
+        </div>
+      </div>
+      <div class="hdr-info-bot">
+        <div class="kcal-chip" id="kcalChip">— kcal</div>
+        <div class="water-compact" id="waterCompact" onclick="openWaterBSheet()">💧 0/8</div>
+      </div>
+    </div>
   </div>
   <div class="pills" id="pills">
     <button class="pill on" data-d="mt">SEG · QUA</button>
@@ -754,11 +767,8 @@ textarea.edit-input{min-height:70px}
     <button class="pill" data-d="qui">QUINTA</button>
     <button class="pill" data-d="fds">FIM DE SEM</button>
   </div>
-  <div class="hdr-bottom">
-    <div id="weekDots" style="flex:1"></div>
-    <div class="water-compact" id="waterCompact" onclick="openWaterBSheet()">💧 0/8</div>
-  </div>
-  <div id="trainChipWrap" style="margin-top:4px"></div>
+  <div id="weekDots" style="margin-top:5px"></div>
+  <div id="trainChipWrap"></div>
   <div class="reset-banner" id="resetBanner">
     <span>🔄 <b>Nova semana.</b> Progresso resetado.</span>
     <button class="reset-btn" id="dismissReset">Ok</button>
@@ -1259,7 +1269,25 @@ function updProt(){
 // ── Render sections ────────────────────────────────
 function renderMeals(){
   const d=DAYS[day];
-  let h='<div class="tl">';
+  const totalMeals=d.meals.filter(m=>m.type!=='train').length;
+  const doneMeals=d.meals.filter((m,i)=>m.type!=='train'&&chk[`${day}-${i}`]).length;
+  const goal=getGoal();
+  let totalProt=0;
+  d.meals.forEach((m,i)=>{
+    if(!m.p)return;
+    const isSkip=m.skipable&&skipped[`${day}-skip-${i}`];
+    const prot=(getSub(i)||{p:m.p}).p;
+    if(isSkip)totalProt+=m.skipProt||0;
+    else if(chk[`${day}-${i}`])totalProt+=prot;
+  });
+  totalProt+=(loadSnacks()[todayStr()]||[]).reduce((s,x)=>s+(x.p||0),0);
+  const remaining=Math.max(0,goal-totalProt);
+  const pct=Math.min(100,Math.round(totalProt/goal*100));
+  let h=`<div class="day-summary">
+    <span class="ds-meals">${doneMeals}/${totalMeals} refeições</span>
+    <span class="ds-prot">${remaining>0?`faltam <b style="color:var(--ember-s)">${remaining}g</b> proteína`:`<b style="color:var(--teal)">✓ meta atingida!</b>`}</span>
+  </div>`;
+  h+='<div class="tl">';
   d.meals.forEach((m,i)=>{
     if(m.type==='train'){
       const hist=loadHistory();const tdHist=hist[todayStr()]||{};
@@ -2397,6 +2425,7 @@ function setGoal(val){goalOverride=val;localStorage.setItem(GOAL_KEY,JSON.string
 function renderTrainChip(){
   const wrap=document.getElementById('trainChipWrap');
   if(!wrap) return;
+  if(day==='fds'){wrap.innerHTML='';return;}
   const times={mt:19*60+30, tf:20*60, qui:20*60};
   const t=times[day];
   if(!t){wrap.innerHTML='';return;}
