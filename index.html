@@ -410,6 +410,41 @@ textarea.edit-input{min-height:70px}
 .edit-undo{margin-top:8px;font-size:11px;color:var(--faint);
   text-decoration:underline;cursor:pointer;display:block;text-align:center}
 
+/* SHOP CHECK */
+.shop-chk{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--bdr);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:transparent;transition:all .18s;cursor:pointer;margin-left:4px}
+.mcard.shop-done .shop-chk{background:var(--teal);border-color:var(--teal);color:#fff}
+.mcard.shop-done .mcard-name{text-decoration:line-through;color:var(--faint)}
+.mcard.shop-done{opacity:.65}
+
+/* ESO TIMER */
+.eso-timer{background:var(--card);border:1px solid var(--bdr);border-radius:12px;
+  padding:13px 14px;margin-bottom:12px;display:flex;gap:12px;align-items:center}
+.eso-timer.eso-due{border-color:rgba(242,104,44,.5);background:var(--ember-d)}
+.eso-icon{font-size:24px;flex-shrink:0}
+.eso-info{flex:1;min-width:0}
+.eso-title{font-size:11.5px;font-weight:600;color:var(--txt);margin-bottom:3px}
+.eso-status{font-size:13px;font-weight:600;margin-bottom:2px;line-height:1.2}
+.eso-dates{font-size:10.5px;color:var(--faint)}
+.eso-btn{padding:8px 14px;background:var(--violet);border:none;border-radius:8px;
+  color:#fff;font-family:'DM Sans';font-size:12px;font-weight:600;cursor:pointer;
+  flex-shrink:0;white-space:nowrap}
+.eso-timer.eso-due .eso-btn{background:var(--ember)}
+
+/* ACHIEVEMENTS */
+.achievements{display:flex;gap:6px;flex-wrap:wrap}
+.ach{display:flex;flex-direction:column;align-items:center;gap:4px;
+  flex:0 0 calc(16.6% - 5px);min-width:48px;cursor:default}
+.ach-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:20px;border:2px solid var(--bdr);
+  background:var(--surf);filter:grayscale(1);opacity:.35;transition:all .3s}
+.ach.unlocked .ach-icon{filter:none;opacity:1;border-color:var(--teal);
+  background:var(--teal-d);box-shadow:0 0 12px rgba(61,191,140,.25)}
+.ach-name{font-size:8.5px;color:var(--faint);text-align:center;line-height:1.3;
+  max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ach.unlocked .ach-name{color:var(--muted)}
+
 /* WEEK DOTS */
 .wdots{display:flex;justify-content:space-between;padding:8px 2px 2px;gap:2px}
 .wdot-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;cursor:default}
@@ -526,6 +561,11 @@ textarea.edit-input{min-height:70px}
       <span class="pbar-val" id="pval">0 g <small>/ <span id="ptot">169</span> g</small></span>
     </div>
     <div class="ptrack"><div class="pfill" id="pfill"></div></div>
+    <div class="pbar-top" style="margin-top:8px">
+      <span class="pbar-lbl" style="color:var(--gold)">Calorias estimadas</span>
+      <span class="pbar-val" id="kval" style="color:var(--gold)">— <small style="color:var(--faint)">/ <span id="ktot">—</span></small></span>
+    </div>
+    <div class="ptrack"><div class="pfill" id="kfill" style="background:var(--gold);width:0%"></div></div>
   </div>
   <div class="water-track" id="waterTrack">
     <div class="wt-top">💧 <span class="wt-lbl">Água hoje</span><span class="wt-total">—</span></div>
@@ -1168,7 +1208,7 @@ function renderPrep(){
 }
 
 function renderGastro(){
-  let h=`<p class="sec-title">Gastrite Grau 2</p>
+  let h=`<p class="sec-title">Gastrite Grau 2</p>${renderEsoTimer()}`+`
   <div class="ibox" style="background:var(--violet-d);border-color:rgba(155,94,212,.3);
     color:var(--violet);margin-bottom:14px;line-height:1.6;">
     Esomeprazol 20 mg · a cada 3 dias · uso intermitente há mais de 1 ano.<br>
@@ -1254,7 +1294,9 @@ function renderShop(){
   MONTHLY.forEach(cat=>{
     h+=`<div class="shop-cat">${cat.cat}</div>`;
     cat.items.forEach(item=>{
-      h+=`<div class="mcard" onclick="this.classList.toggle('open')">
+      const sid=shopItemId(cat.cat,item.n);
+      const done=isShopDone(cat.cat,item.n);
+      h+=`<div class="mcard ${done?'shop-done':''}" data-sid="${sid}" onclick="this.classList.toggle('open')">
         <div class="mcard-top">
           <span class="mcard-e">${item.e}</span>
           <div class="mcard-info">
@@ -1262,6 +1304,7 @@ function renderShop(){
             <div class="mcard-tip">${item.tip}</div>
           </div>
           <div class="mcard-qty">${item.qty}</div>
+          <div class="shop-chk" onclick="toggleShop('${sid}',event)">${done?'✓':''}</div>
         </div>
         <div class="mcard-macros">
           <div class="mcard-por">Por ${item.por}</div>
@@ -1547,6 +1590,8 @@ function renderWeightTab(){
     <button class="wt-entry-btn" onclick="saveWeightEntry(event)">Salvar</button>
   </div>`;
   if(!entries.length) return h+`<div class="wt-empty">📊 Nenhum peso registrado ainda.<br><small style="color:var(--faint)">Registre todo dia de manhã em jejum para ver a evolução.</small></div>`;
+  const ascending=entries.slice().sort((a,b)=>a[0].localeCompare(b[0]));
+  h+=buildWeightSVG(ascending);
   h+='<div class="wt-list">';
   entries.forEach(([date,val],idx)=>{
     const prev=entries[idx+1];
@@ -1569,6 +1614,7 @@ function renderHistorico(){
   const hist=loadHistory();
   const views={day:renderHistDay,week:renderHistWeek,month:renderHistMonth,peso:renderWeightTab};
   return `<p class="sec-title">Histórico</p>
+  ${renderAchievements()}
   <div class="backup-row">
     <button class="backup-btn export" onclick="exportHistory()">
       <span class="bb-ic">💾</span>Exportar backup
@@ -1658,6 +1704,35 @@ const WEIGHT_KEY='plano_weight_v1';
 let weightData=(()=>{try{return JSON.parse(localStorage.getItem(WEIGHT_KEY)||'{}')}catch(e){return{}}})();
 function saveWeight(){localStorage.setItem(WEIGHT_KEY,JSON.stringify(weightData));}
 
+// ── Shop check ──────────────────────────────────────────
+const SHOP_STATE_KEY='plano_shop_v1';
+let shopState=(()=>{try{return JSON.parse(localStorage.getItem(SHOP_STATE_KEY)||'{}')}catch(e){return{}}})();
+function saveShopState(){localStorage.setItem(SHOP_STATE_KEY,JSON.stringify(shopState));}
+function shopItemId(cat,name){return getWeekKey()+'-'+cat+'-'+name;}
+function isShopDone(cat,name){return!!shopState[shopItemId(cat,name)];}
+
+// ── Esomeprazol ─────────────────────────────────────────
+const ESO_KEY='plano_eso_v1';
+let esoData=(()=>{try{return JSON.parse(localStorage.getItem(ESO_KEY)||'{}')}catch(e){return{}}})();
+function saveEso(){localStorage.setItem(ESO_KEY,JSON.stringify(esoData));}
+function getNextEsoDate(){
+  if(!esoData.last) return null;
+  const d=new Date(esoData.last+'T12:00:00');
+  d.setDate(d.getDate()+3);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function isEsoDue(){const n=getNextEsoDate();return!n||todayStr()>=n;}
+
+// ── Calorie estimates ────────────────────────────────────
+const KCAL={
+  mt:{tot:2470,m:[500,750,360,330,0,100,430]},
+  tf:{tot:2470,m:[500,750,360,330,0,100,430]},
+  qui:{tot:2500,m:[500,810,360,330,0,100,400]},
+  fds:{tot:2020,m:[500,680,360,480]},
+};
+function getMealKcal(dk,idx){return((KCAL[dk]||{}).m||[])[idx]||0;}
+function getDayTotKcal(dk){return(KCAL[dk]||{}).tot||2200;}
+
 // ── Notifications ───────────────────────────────────────
 let notifsEnabled=!!localStorage.getItem('plano_notifs');
 let notifInterval=null;
@@ -1708,6 +1783,26 @@ function getProteinAlert(){
 }
 
 // ── Share day summary ───────────────────────────────────
+window.toggleShop=function(id,e){
+  e.stopPropagation();
+  shopState[id]=!shopState[id];
+  saveShopState();
+  const card=document.querySelector(`[data-sid="${id}"]`);
+  if(card){
+    card.classList.toggle('shop-done',!!shopState[id]);
+    const chkEl=card.querySelector('.shop-chk');
+    if(chkEl) chkEl.textContent=shopState[id]?'✓':'';
+  }
+};
+
+window.takEso=function(e){
+  e.stopPropagation();
+  esoData.last=todayStr();
+  saveEso();
+  updEsoBadge();
+  render();
+};
+
 window.shareDay=function(){
   const d=DAYS[day];let earned=0;
   d.meals.forEach((m,i)=>{
@@ -1823,15 +1918,141 @@ window.saveWeightEntry=function(e){
   if(sec==='hist') document.getElementById('main').innerHTML=renderHistorico();
 };
 
+// ── Weight SVG chart ────────────────────────────────────
+function buildWeightSVG(entries){
+  if(entries.length<2) return '';
+  const W=280,H=68,PX=6,PY=16;
+  const vals=entries.map(e=>e[1]);
+  const minV=Math.min(...vals),maxV=Math.max(...vals);
+  const range=(maxV-minV)||0.5;
+  const fx=(i)=>PX+i/(entries.length-1)*(W-PX*2);
+  const fy=(v)=>PY+(1-(v-minV)/range)*(H-PY*2);
+  const pts=entries.map((_,i)=>fx(i).toFixed(1)+','+fy(vals[i]).toFixed(1)).join(' ');
+  const area=entries.map((_,i)=>fx(i).toFixed(1)+','+fy(vals[i]).toFixed(1)).join(' ')
+    +' '+fx(entries.length-1).toFixed(1)+','+H+' '+fx(0).toFixed(1)+','+H;
+  const minIdx=vals.indexOf(minV),maxIdx=vals.indexOf(maxV);
+  const special=[...new Set([0,entries.length-1,minIdx,maxIdx])];
+  const dots=special.map(i=>{
+    const cx=fx(i).toFixed(1),cy=fy(vals[i]).toFixed(1);
+    const anch=i===0?'start':i===entries.length-1?'end':'middle';
+    const ty=(vals[i]===minV?parseFloat(cy)+12:parseFloat(cy)-5).toFixed(1);
+    return`<circle cx="${cx}" cy="${cy}" r="3.5" fill="var(--ember)"/>
+      <text x="${cx}" y="${ty}" text-anchor="${anch}" font-size="9" fill="var(--ember-s)" font-family="Anton,sans-serif">${vals[i]}</text>`;
+  }).join('');
+  return`<div style="padding:2px 0 6px;overflow:hidden"><svg width="100%" viewBox="0 0 ${W} ${H}" style="overflow:visible;display:block">
+    <defs><linearGradient id="wgrd" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--ember)" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="var(--ember)" stop-opacity="0"/>
+    </linearGradient></defs>
+    <polygon points="${area}" fill="url(#wgrd)"/>
+    <polyline points="${pts}" fill="none" stroke="var(--ember)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    ${dots}
+  </svg></div>`;
+}
+
+// ── Kcal bar ─────────────────────────────────────────────
+function updKcal(){
+  const d=DAYS[day];let earned=0;
+  d.meals.forEach((m,i)=>{
+    if(m.type==='train') return;
+    const isSkip=m.skipable&&skipped[`${day}-skip-${i}`];
+    if(isSkip){earned+=80;}
+    else if(chk[`${day}-${i}`]){
+      const sub=getSub(i);
+      earned+=sub?Math.round(sub.p*14):getMealKcal(day,i);
+    }
+  });
+  const tot=getDayTotKcal(day);
+  const pct=Math.min(100,Math.round(earned/tot*100));
+  const kEl=document.getElementById('kval');
+  const kfEl=document.getElementById('kfill');
+  if(kEl) kEl.innerHTML=earned+'kcal <small style="color:var(--faint)">/ <span id="ktot">'+tot+'</span></small>';
+  if(kfEl) kfEl.style.width=pct+'%';
+}
+
+// ── Eso badge ─────────────────────────────────────────────
+function updEsoBadge(){
+  const btn=document.querySelector('.nb[data-s="gastro"]');
+  if(!btn) return;
+  let badge=btn.querySelector('.eso-bdg');
+  if(isEsoDue()){
+    if(!badge){
+      badge=document.createElement('span');badge.className='eso-bdg';
+      badge.style.cssText='width:7px;height:7px;border-radius:50%;background:var(--ember);position:absolute;top:6px;right:8px;display:block';
+      btn.style.position='relative';btn.appendChild(badge);
+    }
+  } else {if(badge) badge.remove();}
+}
+
+// ── Esomeprazol timer render ─────────────────────────────
+function renderEsoTimer(){
+  const next=getNextEsoDate();
+  const today=todayStr();
+  let status,color,btnTxt='Tomei agora';
+  if(!esoData.last){status='Nenhum registro · toque Tomei para iniciar';color='var(--violet)';}
+  else if(today>=(next||'')&&today===next){status='Hoje é dia de tomar!';color='var(--ember)';}
+  else if(next&&today>next){
+    const days=Math.round((new Date(today+'T12:00:00')-new Date(next+'T12:00:00'))/86400000);
+    status=`⚠️ Atrasado ${days} dia${days>1?'s':''}`;color='var(--ember)';
+  } else {
+    const days=next?Math.round((new Date(next+'T12:00:00')-new Date(today+'T12:00:00'))/86400000):0;
+    status=days===0?'Hoje é dia de tomar!':`Próxima em ${days} dia${days>1?'s':''}`;
+    color=days===0?'var(--ember)':'var(--teal)';
+  }
+  const lastStr=esoData.last?`Última: ${getDOW(esoData.last)} ${fmtDate(esoData.last)}`:'Nenhuma registrada';
+  const nextStr=next?`Próxima: ${getDOW(next)} ${fmtDate(next)}`:'—';
+  const due=isEsoDue();
+  return`<div class="eso-timer ${due?'eso-due':''}">
+    <div class="eso-icon">💊</div>
+    <div class="eso-info">
+      <div class="eso-title">Esomeprazol 20mg · a cada 3 dias</div>
+      <div class="eso-status" style="color:${color}">${status}</div>
+      <div class="eso-dates">${lastStr}&nbsp;·&nbsp;${nextStr}</div>
+    </div>
+    <button class="eso-btn" onclick="takEso(event)">${btnTxt}</button>
+  </div>`;
+}
+
+// ── Achievements ─────────────────────────────────────────
+function getAchievements(){
+  const hist=loadHistory();
+  const totalDone=Object.values(hist).reduce((a,e)=>a+(e.done||0),0);
+  const streak=calcStreak();
+  const waterDays=Object.values(waterCups).filter(v=>v>=6).length;
+  return[
+    {icon:'⚖️',name:'1° peso',desc:'Registrou o peso',unlocked:Object.keys(weightData).length>=1},
+    {icon:'📝',name:'Diário',desc:'Adicionou uma nota',unlocked:Object.values(notesData).some(n=>n.text||n.mood)},
+    {icon:'🔥',name:'7 dias',desc:'7 dias consecutivos ≥85%',unlocked:streak>=7},
+    {icon:'🍽',name:'50 refs.',desc:'50+ refeições marcadas',unlocked:totalDone>=50},
+    {icon:'💧',name:'Hidratado',desc:'7 dias c/ 6+ copos',unlocked:waterDays>=7},
+    {icon:'💪',name:'30 dias',desc:'30 dias consecutivos ≥85%',unlocked:streak>=30},
+  ];
+}
+function renderAchievements(){
+  const achs=getAchievements();
+  const unlocked=achs.filter(a=>a.unlocked).length;
+  return`<div style="margin-bottom:14px">
+    <div style="font-size:9.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Conquistas · ${unlocked}/${achs.length}</div>
+    <div class="achievements">${achs.map(a=>`
+      <div class="ach ${a.unlocked?'unlocked':''}" title="${a.desc}">
+        <div class="ach-icon">${a.icon}</div>
+        <span class="ach-name">${a.name}</span>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
 function render(){
   const fns={meals:renderMeals,supps:renderSupps,prep:renderPrep,
              gastro:renderGastro,shop:renderShop,rules:renderRules,nutri:renderNutri,hist:renderHistorico};
   document.getElementById('main').innerHTML=fns[sec]();
   document.getElementById('main').scrollTop=0;
   updProt();
+  updKcal();
   updStreak();
   renderWater();
   renderWeekDots();
+  updEsoBadge();
 }
 
 // ── Events ─────────────────────────────────────────
