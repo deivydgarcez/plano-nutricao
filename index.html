@@ -1307,7 +1307,7 @@ function renderMeals(){
     if(isSkip)totalProt+=m.skipProt||0;
     else if(chk[`${day}-${i}`])totalProt+=prot;
   });
-  totalProt+=(loadSnacks()[todayStr()]||[]).reduce((s,x)=>s+(x.p||0),0);
+  totalProt+=(snackData[todayStr()]||[]).reduce((s,x)=>s+(x.p||0),0);
   const remaining=Math.max(0,goal-totalProt);
   const pct=Math.min(100,Math.round(totalProt/goal*100));
   let h=`<div class="day-summary">
