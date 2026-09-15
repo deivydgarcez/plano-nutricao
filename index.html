@@ -410,6 +410,74 @@ textarea.edit-input{min-height:70px}
 .edit-undo{margin-top:8px;font-size:11px;color:var(--faint);
   text-decoration:underline;cursor:pointer;display:block;text-align:center}
 
+/* STREAK */
+.streak-badge{font-size:11px;font-weight:600;color:var(--ember);background:var(--ember-d);
+  border:1px solid rgba(242,104,44,.3);border-radius:6px;padding:4px 9px;
+  letter-spacing:.02em;white-space:nowrap}
+.streak-badge b{color:var(--ember-s)}
+
+/* WATER TRACK */
+.water-track{margin-top:10px;background:var(--blue-d);border:1px solid rgba(74,140,247,.25);
+  border-radius:8px;padding:8px 12px}
+.wt-top{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.wt-lbl{font-size:11.5px;color:var(--blue);font-weight:600;flex:1}
+.wt-total{font-size:11px;color:var(--blue);opacity:.8}
+.wt-cups{display:flex;gap:5px;flex-wrap:wrap}
+.wt-cup{width:30px;height:30px;border-radius:50%;background:rgba(74,140,247,.12);
+  border:1.5px solid rgba(74,140,247,.25);cursor:pointer;display:flex;
+  align-items:center;justify-content:center;font-size:15px;transition:all .15s;
+  opacity:.35;user-select:none}
+.wt-cup.on{background:rgba(74,140,247,.3);border-color:var(--blue);opacity:1}
+.wt-hint{font-size:9.5px;color:var(--blue);opacity:.6;margin-top:5px;letter-spacing:.03em}
+
+/* DAY NOTE */
+.day-note-card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;
+  padding:13px 14px;margin-top:8px}
+.dn-title{font-family:'Anton',sans-serif;font-size:15px;text-transform:uppercase;
+  letter-spacing:.03em;margin-bottom:10px}
+.dn-moods{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.dn-mood{padding:6px 11px;border-radius:20px;font-size:11.5px;font-weight:500;
+  border:1.5px solid var(--bdr);background:var(--surf);color:var(--muted);
+  cursor:pointer;transition:all .15s;white-space:nowrap}
+.dn-mood.on{border-color:var(--teal);background:var(--teal-d);color:var(--teal)}
+.dn-mood.on.mood-ok{border-color:var(--blue);background:var(--blue-d);color:var(--blue)}
+.dn-mood.on.mood-tired{border-color:var(--gold);background:var(--gold-d);color:var(--gold)}
+.dn-mood.on.mood-stomach{border-color:var(--violet);background:var(--violet-d);color:var(--violet)}
+.dn-note-row{display:flex;gap:8px;align-items:flex-end}
+.dn-textarea{flex:1;background:var(--surf);border:1px solid var(--bdr);border-radius:8px;
+  padding:8px 10px;color:var(--txt);font-family:'DM Sans';font-size:12px;
+  resize:none;outline:none;min-height:52px;line-height:1.5;box-sizing:border-box}
+.dn-textarea:focus{border-color:var(--teal)}
+.dn-save{padding:8px 14px;background:var(--teal);border:none;border-radius:8px;
+  color:#fff;font-family:'DM Sans';font-size:12px;font-weight:600;cursor:pointer;
+  white-space:nowrap;flex-shrink:0}
+
+/* WEIGHT TAB */
+.wt-entry{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.wt-entry-input{flex:1;background:var(--surf);border:1px solid var(--bdr);border-radius:8px;
+  padding:10px 12px;color:var(--txt);font-family:'DM Sans';font-size:17px;
+  font-weight:600;outline:none;-webkit-appearance:none;text-align:center;box-sizing:border-box}
+.wt-entry-input:focus{border-color:var(--ember)}
+.wt-entry-btn{padding:10px 18px;background:var(--ember);border:none;border-radius:8px;
+  color:#fff;font-family:'DM Sans';font-size:13px;font-weight:600;cursor:pointer}
+.wt-list{display:flex;flex-direction:column;gap:6px}
+.wt-item{background:var(--card);border:1px solid var(--bdr);border-radius:10px;
+  padding:10px 13px;display:flex;align-items:center;gap:10px}
+.wt-item-date{font-size:12px;color:var(--muted);flex:1}
+.wt-item-val{font-family:'Anton',sans-serif;font-size:18px;color:var(--ember-s)}
+.wt-item-delta{font-size:11px;padding:2px 7px;border-radius:10px;font-weight:600;flex-shrink:0}
+.wt-item-delta.up{color:var(--ember);background:var(--ember-d)}
+.wt-item-delta.down{color:var(--teal);background:var(--teal-d)}
+.wt-item-delta.same{color:var(--muted);background:var(--surf)}
+.wt-empty{text-align:center;padding:28px 16px;color:var(--faint);font-size:12.5px;line-height:1.7}
+
+/* NOTIF */
+.notif-btn{width:100%;padding:11px;background:var(--surf);border:1.5px solid var(--bdr);
+  border-radius:10px;color:var(--muted);font-family:'DM Sans';font-size:13px;
+  font-weight:500;cursor:pointer;text-align:center;transition:all .18s;margin-bottom:10px;
+  display:block}
+.notif-btn.active{border-color:rgba(61,191,140,.4);color:var(--teal);background:var(--teal-d)}
+
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 </style>
 </head>
@@ -419,6 +487,7 @@ textarea.edit-input{min-height:70px}
 <div class="hdr">
   <div class="hdr-row">
     <span class="hdr-title">Plano Semanal</span>
+    <span class="streak-badge" id="streakBadge" style="display:none">🔥 <b id="streakNum">0</b></span>
     <span class="week-badge" id="wbadge">Semana <b id="wnum">—</b></span>
   </div>
   <div class="pills" id="pills">
@@ -434,7 +503,10 @@ textarea.edit-input{min-height:70px}
     </div>
     <div class="ptrack"><div class="pfill" id="pfill"></div></div>
   </div>
-  <div class="water">💧 <span><b>3–4 L de água/dia</b> · obrigatório com creatina e proteína alta</span></div>
+  <div class="water-track" id="waterTrack">
+    <div class="wt-top">💧 <span class="wt-lbl">Água hoje</span><span class="wt-total">—</span></div>
+    <div class="wt-cups"></div>
+  </div>
   <div class="reset-banner" id="resetBanner">
     <span>🔄 <b>Nova semana detectada.</b> Progresso resetado automaticamente.</span>
     <button class="reset-btn" id="dismissReset">Ok</button>
@@ -1010,6 +1082,19 @@ function renderMeals(){
     <span class="total-val">${d.tot} g</span></div>`;
   if(day!=='fds')
     h+=`<div class="ibox">🐟 Tilápia entra 2x por mês em qualquer jantar no lugar do atum, sardinha ou frango.</div>`;
+  const tn=getTodayNote();
+  const moodMap={great:'😊 Ótimo',ok:'😐 Ok',tired:'😓 Cansado',stomach:'🤢 Estômago'};
+  const moodCls={great:'',ok:'mood-ok',tired:'mood-tired',stomach:'mood-stomach'};
+  h+=`<div class="day-note-card">
+    <div class="dn-title">📝 Como foi hoje</div>
+    <div class="dn-moods">
+      ${Object.entries(moodMap).map(([k,v])=>`<button class="dn-mood ${moodCls[k]} ${tn.mood===k?'on':''}" onclick="setMood('${k}',event)">${v}</button>`).join('')}
+    </div>
+    <div class="dn-note-row">
+      <textarea class="dn-textarea" id="dn-text" placeholder="Nota opcional... (ex: estômago inflamou, treino pesado)">${tn.text||''}</textarea>
+      <button class="dn-save" onclick="saveDayNote(event)">Salvar</button>
+    </div>
+  </div>`;
   return h;
 }
 
@@ -1166,7 +1251,10 @@ function renderShop(){
 }
 
 function renderRules(){
-  let h='<p class="sec-title">Regras</p>';
+  let h=`<p class="sec-title">Regras</p>
+  <button class="notif-btn ${notifsEnabled?'active':''}" onclick="toggleNotifs()">
+    ${notifsEnabled?'🔔 Lembretes ativos · toque para desativar':'🔔 Ativar lembretes de refeição'}
+  </button>`;
   RULES.forEach(r=>{
     h+=`<div class="rule${r.hi?' hi':''}">
       <div class="rule-icon">${r.i}</div>
@@ -1258,6 +1346,9 @@ function renderHistDay(hist){
     const chips=(e.meals||[]).map(m=>
       `<span class="hmeal-chip ${m.done?'done':''} ${m.skip?'skip':''}">${m.name}</span>`
     ).join('');
+    const nd=notesData[date]||{};
+    const moodIco={great:'😊',ok:'😐',tired:'😓',stomach:'🤢'};
+    const wt=weightData[date];
     return `<div class="hcard">
       <div class="hcard-top">
         <div>
@@ -1274,6 +1365,11 @@ function renderHistDay(hist){
         <div class="hptrack"><div class="hpfill ${full?'full':''}" style="width:${pct}%"></div></div>
       </div>
       <div class="hmeals">${chips}</div>
+      ${wt||nd.mood||nd.text?`<div style="display:flex;gap:8px;align-items:center;margin-top:7px;font-size:11.5px;flex-wrap:wrap">
+        ${wt?`<span style="color:var(--ember-s);font-weight:600;font-family:'Anton'">⚖️ ${wt}kg</span>`:''}
+        ${nd.mood?`<span>${moodIco[nd.mood]||''}</span>`:''}
+        ${nd.text?`<span style="color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nd.text}</span>`:''}
+      </div>`:''}
     </div>`;
   }).join('');
 }
@@ -1407,9 +1503,36 @@ document.getElementById('fileInput').addEventListener('change',function(e){
   this.value='';
 });
 
+function renderWeightTab(){
+  const entries=Object.entries(weightData).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,30);
+  const today=todayStr();
+  const todayVal=weightData[today]||'';
+  let h=`<div class="wt-entry">
+    <input class="wt-entry-input" type="number" id="weight-input" value="${todayVal}" placeholder="ex: 78.5" step="0.1" min="30" max="300">
+    <button class="wt-entry-btn" onclick="saveWeightEntry(event)">Salvar</button>
+  </div>`;
+  if(!entries.length) return h+`<div class="wt-empty">📊 Nenhum peso registrado ainda.<br><small style="color:var(--faint)">Registre todo dia de manhã em jejum para ver a evolução.</small></div>`;
+  h+='<div class="wt-list">';
+  entries.forEach(([date,val],idx)=>{
+    const prev=entries[idx+1];
+    let delta='',deltaClass='same';
+    if(prev){const d=parseFloat((val-prev[1]).toFixed(1));
+      if(d>0){delta='+'+d+'kg';deltaClass='up';}
+      else if(d<0){delta=d+'kg';deltaClass='down';}
+      else{delta='=';deltaClass='same';}
+    }
+    h+=`<div class="wt-item">
+      <div class="wt-item-date">${getDOW(date)} ${fmtDate(date)}${date===today?' · Hoje':''}</div>
+      <span class="wt-item-val">${val} kg</span>
+      ${delta?`<span class="wt-item-delta ${deltaClass}">${delta}</span>`:''}
+    </div>`;
+  });
+  return h+'</div>';
+}
+
 function renderHistorico(){
   const hist=loadHistory();
-  const views={day:renderHistDay,week:renderHistWeek,month:renderHistMonth};
+  const views={day:renderHistDay,week:renderHistWeek,month:renderHistMonth,peso:renderWeightTab};
   return `<p class="sec-title">Histórico</p>
   <div class="backup-row">
     <button class="backup-btn export" onclick="exportHistory()">
@@ -1423,8 +1546,9 @@ function renderHistorico(){
     <button class="htab ${histView==='day'?'on':''}" onclick="setHistView('day')">Diário</button>
     <button class="htab ${histView==='week'?'on':''}" onclick="setHistView('week')">Semanal</button>
     <button class="htab ${histView==='month'?'on':''}" onclick="setHistView('month')">Mensal</button>
+    <button class="htab ${histView==='peso'?'on':''}" onclick="setHistView('peso')">⚖️ Peso</button>
   </div>
-  ${views[histView](hist)}`;
+  ${histView==='peso'?views.peso():views[histView](hist)}`;
 }
 
 window.setHistView=function(v){
@@ -1441,6 +1565,93 @@ function saveSubs(){localStorage.setItem(SUBS_KEY,JSON.stringify(subs));}
 function subKey(i){return todayStr()+'-'+day+'-'+i;}
 function getSub(i){return subs[subKey(i)];}
 let editingMeal=null;
+
+// ── Water ──────────────────────────────────────────────
+const WATER_KEY='plano_water_v1';
+let waterCups=(()=>{try{return JSON.parse(localStorage.getItem(WATER_KEY)||'{}')}catch(e){return{}}})();
+function saveWater(){localStorage.setItem(WATER_KEY,JSON.stringify(waterCups));}
+function getTodayWater(){return waterCups[todayStr()]||0;}
+function renderWater(){
+  const cups=getTodayWater();
+  const ml=cups*500;
+  const totalStr=ml>=1000?(ml/1000).toFixed(1).replace('.0','')+'L':ml+'ml';
+  let h=`<div class="wt-top">💧 <span class="wt-lbl">Água hoje</span><span class="wt-total">${cups?totalStr:'— meta: 3–4L'}</span></div><div class="wt-cups">`;
+  for(let i=0;i<8;i++) h+=`<span class="wt-cup ${i<cups?'on':''}" onclick="toggleCup(${i})">💧</span>`;
+  h+='</div>';
+  h+=`<div class="wt-hint">Cada 💧 = 500ml · 6 = 3L · 8 = 4L</div>`;
+  const el=document.getElementById('waterTrack');
+  if(el) el.innerHTML=h;
+}
+window.toggleCup=function(idx){
+  const cur=getTodayWater();
+  waterCups[todayStr()]=(idx+1===cur)?idx:idx+1;
+  saveWater();renderWater();
+};
+
+// ── Streak ─────────────────────────────────────────────
+function calcStreak(){
+  const hist=loadHistory();
+  let streak=0;
+  const d=new Date();
+  for(let i=0;i<365;i++){
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const e=hist[ds];
+    if(!e){if(i===0){d.setDate(d.getDate()-1);continue;}break;}
+    if(e.protein<e.goal*0.85) break;
+    streak++;
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
+function updStreak(){
+  const s=calcStreak();
+  const el=document.getElementById('streakBadge');
+  if(!el) return;
+  el.style.display=s>0?'':'none';
+  const n=document.getElementById('streakNum');
+  if(n) n.textContent=s;
+}
+
+// ── Notes / Mood ────────────────────────────────────────
+const NOTES_KEY='plano_notes_v1';
+let notesData=(()=>{try{return JSON.parse(localStorage.getItem(NOTES_KEY)||'{}')}catch(e){return{}}})();
+function saveNotes(){localStorage.setItem(NOTES_KEY,JSON.stringify(notesData));}
+function getTodayNote(){return notesData[todayStr()]||{mood:'',text:''};}
+
+// ── Weight ──────────────────────────────────────────────
+const WEIGHT_KEY='plano_weight_v1';
+let weightData=(()=>{try{return JSON.parse(localStorage.getItem(WEIGHT_KEY)||'{}')}catch(e){return{}}})();
+function saveWeight(){localStorage.setItem(WEIGHT_KEY,JSON.stringify(weightData));}
+
+// ── Notifications ───────────────────────────────────────
+let notifsEnabled=!!localStorage.getItem('plano_notifs');
+let notifInterval=null;
+function parseHour(t){const m=(t||'').replace(/^~/,'').match(/(\d+)h(\d+)?/);return m?parseInt(m[1])*60+parseInt(m[2]||0):-1;}
+function checkMealNotifs(){
+  const now=new Date();
+  const cur=now.getHours()*60+now.getMinutes();
+  ((DAYS[day]||{}).meals||[]).filter(m=>m.p&&m.t).forEach(m=>{
+    const mt=parseHour(m.t);
+    if(mt>=0&&cur>=mt&&cur<=mt+4){
+      try{new Notification('🍽 '+m.n,{body:m.t.replace('~','')+' · toque para abrir o app',icon:'/icon-192.png',tag:'meal-'+m.n,renotify:false});}catch(e){}
+    }
+  });
+}
+function toggleNotifs(){
+  if(!('Notification' in window)){showToast('❌ Notificações não suportadas neste navegador');return;}
+  if(notifsEnabled){
+    notifsEnabled=false;localStorage.removeItem('plano_notifs');
+    if(notifInterval){clearInterval(notifInterval);notifInterval=null;}
+    render();return;
+  }
+  Notification.requestPermission().then(p=>{
+    if(p==='granted'){
+      notifsEnabled=true;localStorage.setItem('plano_notifs','1');
+      notifInterval=setInterval(checkMealNotifs,60000);
+      showToast('✅ Lembretes ativados · funciona com o app aberto');render();
+    } else {showToast('❌ Permissão negada — habilite nas configurações do dispositivo');}
+  });
+}
 
 window.skipMeal=function(idx,e){
   e.stopPropagation();
@@ -1488,6 +1699,33 @@ window.clearSub=function(idx,e){
   saveSubs();saveToHistory();
   editingMeal=null;render();
 };
+window.setMood=function(mood,e){
+  e.stopPropagation();
+  const cur=getTodayNote();
+  cur.mood=cur.mood===mood?'':mood;
+  notesData[todayStr()]=cur;
+  saveNotes();render();
+};
+window.saveDayNote=function(e){
+  e.stopPropagation();
+  const el=document.getElementById('dn-text');
+  if(!el)return;
+  const cur=getTodayNote();
+  cur.text=el.value.trim();
+  notesData[todayStr()]=cur;
+  saveNotes();showToast('✅ Nota salva');
+};
+window.saveWeightEntry=function(e){
+  e.stopPropagation();
+  const el=document.getElementById('weight-input');
+  if(!el)return;
+  const val=parseFloat(el.value);
+  if(!val||val<30||val>300){showToast('❌ Peso inválido');return;}
+  weightData[todayStr()]=val;
+  saveWeight();
+  showToast('✅ Peso salvo: '+val+' kg');
+  if(sec==='hist') document.getElementById('main').innerHTML=renderHistorico();
+};
 
 function render(){
   const fns={meals:renderMeals,supps:renderSupps,prep:renderPrep,
@@ -1495,6 +1733,8 @@ function render(){
   document.getElementById('main').innerHTML=fns[sec]();
   document.getElementById('main').scrollTop=0;
   updProt();
+  updStreak();
+  renderWater();
 }
 
 // ── Events ─────────────────────────────────────────
@@ -1540,6 +1780,8 @@ document.getElementById('main').addEventListener('click',e=>{
 // ── Init ───────────────────────────────────────────
 setColor(DAYS[day].color);
 render();
+if(notifsEnabled && Notification.permission==='granted')
+  notifInterval=setInterval(checkMealNotifs,60000);
 </script>
 <div class="toast" id="toast"></div>
 <script>
