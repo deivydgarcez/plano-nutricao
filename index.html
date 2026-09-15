@@ -32,21 +32,21 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
   margin:0 auto;position:relative;overflow:hidden}
 
 /* HEADER */
-.hdr{padding:12px 20px 10px;flex-shrink:0;background:var(--bg);
+.hdr{padding:10px 20px 8px;flex-shrink:0;background:var(--bg);
   border-bottom:1px solid var(--bdr)}
-.hdr-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.hdr-day{font-family:'Anton',sans-serif;font-size:28px;letter-spacing:.01em;
+.hdr-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.hdr-day{font-family:'Anton',sans-serif;font-size:22px;letter-spacing:.01em;
   text-transform:uppercase;line-height:1;flex:1}
 .hdr-date{font-size:11px;color:var(--faint);margin-top:3px}
 .week-badge{font-size:11px;color:var(--faint);letter-spacing:.03em;white-space:nowrap}
 .week-badge b{color:var(--muted);font-weight:500}
 /* RING */
-.hdr-center{display:flex;flex-direction:column;align-items:center;padding:0 0 4px;gap:4px}
+.hdr-center{display:flex;flex-direction:column;align-items:center;padding:0;gap:3px}
 .ring-wrap{position:relative;display:flex;align-items:center;justify-content:center}
 .pring{display:block;filter:drop-shadow(0 0 22px rgba(168,85,247,.45)) drop-shadow(0 0 50px rgba(168,85,247,.12))}
 .ring-center{position:absolute;display:flex;flex-direction:column;align-items:center;
   justify-content:center;text-align:center}
-.ring-prot{font-family:'Anton',sans-serif;font-size:24px;line-height:1;color:var(--txt)}
+.ring-prot{font-family:'Anton',sans-serif;font-size:20px;line-height:1;color:var(--txt)}
 .ring-goal{font-size:11px;color:var(--muted);margin-top:3px}
 .ring-lbl{font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
 .kcal-chip{font-size:12px;font-weight:600;color:var(--muted);background:var(--surf);
@@ -54,26 +54,23 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
 .kcal-chip.surplus{color:var(--teal);background:var(--teal-d);border-color:rgba(34,211,238,.25)}
 .kcal-chip.deficit{color:var(--ember-s);background:var(--ember-d);border-color:rgba(168,85,247,.25)}
 /* HDR BOTTOM */
-.hdr-bottom{display:flex;align-items:center;gap:10px;margin-top:4px}
-.pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;
+.hdr-bottom{display:flex;align-items:center;gap:10px;margin-top:5px}
+.pills{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;
   flex-wrap:nowrap;justify-content:flex-start;
-  margin-top:6px;padding-bottom:2px;touch-action:pan-x}
+  margin-top:5px;padding-bottom:2px;touch-action:pan-x}
 .pills::-webkit-scrollbar{display:none}
-.pill{flex-shrink:0;padding:8px 18px;border-radius:100px;font-size:11px;
+.pill{flex-shrink:0;padding:6px 14px;border-radius:100px;font-size:10.5px;
   font-weight:600;letter-spacing:.06em;text-transform:uppercase;
   border:1.5px solid var(--bdr);background:none;color:var(--faint);
   cursor:pointer;transition:all .2s}
 .pill.on{background:var(--day);border-color:var(--day);color:#fff}
 
-/* WATER INLINE */
-.water-inline{display:flex;align-items:center;gap:4px;flex-shrink:0}
-.wi-cup{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--bdr2);
-  background:none;display:flex;align-items:center;justify-content:center;
-  font-size:12px;cursor:pointer;transition:all .18s;user-select:none;
-  opacity:.35;-webkit-tap-highlight-color:transparent}
-.wi-cup.on{opacity:1;background:rgba(168,85,247,.25);border-color:var(--ember)}
-.wi-cup:active{transform:scale(.88)}
-.wi-lbl{font-size:10px;color:var(--faint);margin-right:2px}
+/* WATER COMPACT */
+.water-compact{font-size:11.5px;font-weight:600;color:var(--muted);background:var(--surf);
+  border:1px solid var(--bdr);border-radius:100px;padding:4px 12px;
+  cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .2s;
+  -webkit-tap-highlight-color:transparent}
+.water-compact:active{background:var(--blue-d);border-color:var(--ember)}
 /* PROGRESS */
 .pbar-wrap{margin-top:10px;background:var(--surf);border-radius:12px;padding:10px 14px}
 .pbar-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
@@ -737,7 +734,7 @@ textarea.edit-input{min-height:70px}
   </div>
   <div class="hdr-center">
     <div class="ring-wrap">
-      <svg class="pring" viewBox="0 0 100 100" width="110" height="110">
+      <svg class="pring" viewBox="0 0 100 100" width="90" height="90">
         <circle cx="50" cy="50" r="40" fill="none" stroke="var(--bdr)" stroke-width="7"/>
         <circle id="ringArc" cx="50" cy="50" r="40" fill="none" stroke="var(--ember)"
           stroke-width="7" stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="251.3"
@@ -759,7 +756,7 @@ textarea.edit-input{min-height:70px}
   </div>
   <div class="hdr-bottom">
     <div id="weekDots" style="flex:1"></div>
-    <div id="waterInline" class="water-inline"></div>
+    <div class="water-compact" id="waterCompact" onclick="openWaterBSheet()">💧 0/8</div>
   </div>
   <div id="trainChipWrap" style="margin-top:4px"></div>
   <div class="reset-banner" id="resetBanner">
@@ -1899,13 +1896,29 @@ function saveWater(){localStorage.setItem(WATER_KEY,JSON.stringify(waterCups));}
 function getTodayWater(){return waterCups[todayStr()]||0;}
 function renderWater(){
   const cups=getTodayWater();
-  const wi=document.getElementById('waterInline');
-  if(wi){
-    let h='<span class="wi-lbl">💧</span>';
-    for(let i=0;i<8;i++) h+=`<span class="wi-cup ${i<cups?'on':''}" onclick="toggleCup(${i})"></span>`;
-    wi.innerHTML=h;
+  const wc=document.getElementById('waterCompact');
+  if(wc) wc.textContent='💧 '+cups+'/8'+(cups>=6?' ✓':'');
+  const wb=document.getElementById('waterBSheetCups');
+  if(wb){
+    let h='';
+    for(let i=0;i<8;i++) h+=`<span class="wt-cup ${i<cups?'on':''}" onclick="toggleCup(${i})">💧</span>`;
+    wb.innerHTML=h;
   }
 }
+window.openWaterBSheet=function(){
+  const cups=getTodayWater();
+  const ml=cups*500;
+  const totalStr=ml>=1000?(ml/1000).toFixed(1).replace('.0','')+'L':ml+'ml';
+  document.getElementById('bsheetTitle').textContent='Água de hoje';
+  let h=`<div style="margin-bottom:10px;font-size:13px;color:var(--muted)">Meta: 6–8 copos · cada 💧 = 500ml</div>`;
+  h+=`<div class="wt-cups" id="waterBSheetCups">`;
+  for(let i=0;i<8;i++) h+=`<span class="wt-cup ${i<cups?'on':''}" onclick="toggleCup(${i})">💧</span>`;
+  h+=`</div>`;
+  h+=`<div class="wt-hint" style="margin-top:8px">Total hoje: <b style="color:var(--txt)">${cups?totalStr:'0ml'}</b></div>`;
+  document.getElementById('bsheetBody').innerHTML=h;
+  document.getElementById('bsheetOverlay').classList.add('show');
+  document.getElementById('bsheet').classList.add('open');
+};
 window.toggleCup=function(idx){
   const cur=getTodayWater();
   waterCups[todayStr()]=(idx+1===cur)?idx:idx+1;
