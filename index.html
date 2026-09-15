@@ -26,7 +26,8 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
-  font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}
+  font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased;
+  overscroll-behavior:none}
 #app{display:flex;flex-direction:column;height:100%;max-width:500px;
   margin:0 auto;position:relative;overflow:hidden}
 
@@ -56,7 +57,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
 .hdr-bottom{display:flex;align-items:center;gap:10px;margin-top:4px}
 .pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;
   flex-wrap:nowrap;justify-content:flex-start;
-  margin:4px -20px 0;padding:0 20px 2px}
+  margin-top:6px;padding-bottom:2px;touch-action:pan-x}
 .pills::-webkit-scrollbar{display:none}
 .pill{flex-shrink:0;padding:8px 18px;border-radius:100px;font-size:11px;
   font-weight:600;letter-spacing:.06em;text-transform:uppercase;
@@ -96,7 +97,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
 
 /* MAIN */
 main{flex:1;overflow-y:auto;padding:18px 20px 90px;
-  scrollbar-width:thin;scrollbar-color:var(--bdr) transparent}
+  scrollbar-width:thin;scrollbar-color:var(--bdr) transparent;
+  -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;
+  touch-action:pan-y}
 main::-webkit-scrollbar{width:3px}
 main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 .sec{display:none}.sec.on{display:block}
