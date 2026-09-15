@@ -1,25 +1,64 @@
 {
-  "name": "Plano Semanal de Nutrição",
-  "short_name": "Plano",
-  "description": "Plano semanal de nutrição e treino com histórico",
-  "start_url": "./index.html",
+  "name": "Plano Nutricional — Muay Thai + Força",
+  "short_name": "Nutrição",
+  "description": "Tracking diário de proteína, calorias, peso e hidratação com plano de refeições para treino.",
+  "start_url": "./index.html?source=pwa",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0F0C0A",
-  "theme_color": "#F2682C",
+  "background_color": "#080810",
+  "theme_color": "#f26828",
+  "lang": "pt-BR",
+  "categories": ["health", "fitness"],
   "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Refeições de hoje",
+      "short_name": "Refeições",
+      "description": "Abrir plano de refeições do dia",
+      "url": "./index.html?sec=meals&source=shortcut",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Registrar peso",
+      "short_name": "Peso",
+      "description": "Registrar o peso de hoje",
+      "url": "./index.html?sec=hist&source=shortcut",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Histórico",
+      "short_name": "Histórico",
+      "description": "Ver histórico de proteína e peso",
+      "url": "./index.html?sec=hist&source=shortcut",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "label": "Plano de refeições do dia com tracking de proteína"
     }
   ]
 }

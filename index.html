@@ -591,6 +591,64 @@ textarea.edit-input{min-height:70px}
 
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes fabPop{from{transform:scale(0.6);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* SW UPDATE BANNER */
+.sw-update-banner{display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:500px;background:var(--teal);color:#000;z-index:300;
+  padding:12px 18px;font-size:12.5px;font-weight:600;text-align:center;cursor:pointer}
+.sw-update-banner.show{display:block}
+
+/* TRAINING TIMER */
+.timer-wrap{display:flex;align-items:center;gap:10px;margin-top:10px}
+.timer-btn{padding:8px 16px;background:var(--ember-d);border:1.5px solid var(--ember);
+  border-radius:20px;color:var(--ember-s);font-family:'DM Sans';font-size:12px;
+  font-weight:600;cursor:pointer;transition:all .18s}
+.timer-btn.running{background:var(--ember);color:#fff;animation:pulse 1.5s infinite}
+.timer-disp{font-family:'Anton',sans-serif;font-size:22px;color:var(--teal);
+  letter-spacing:.06em;display:none}
+.timer-disp.running{display:block}
+.timer-saved{font-size:11px;color:var(--teal);background:var(--teal-d);
+  border-radius:10px;padding:3px 10px;font-weight:600}
+
+/* MACRO DONUT */
+.macro-donut-wrap{display:flex;align-items:center;gap:14px;padding:10px 14px;
+  background:var(--surf);border-radius:14px;margin-top:8px;
+  border:1px solid var(--bdr)}
+.macro-legend{display:flex;flex-direction:column;gap:5px}
+.ml-item{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:500;color:var(--muted)}
+.ml-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+
+/* BODY METRICS */
+.bio-card{background:var(--card);border:1px solid var(--bdr);border-radius:16px;
+  padding:14px;margin-top:14px;
+  box-shadow:0 2px 16px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.03) inset}
+.bio-title{font-family:'Anton',sans-serif;font-size:14px;text-transform:uppercase;
+  letter-spacing:.04em;margin-bottom:12px;color:var(--muted)}
+.bio-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.bio-stat{background:var(--surf);border-radius:10px;padding:10px 12px}
+.bio-stat-v{font-family:'Anton',sans-serif;font-size:22px;line-height:1;margin-bottom:3px}
+.bio-stat-l{font-size:9.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em}
+.bio-inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bio-input-wrap{display:flex;flex-direction:column;gap:4px}
+.bio-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.bio-input{background:var(--surf);border:1px solid var(--bdr);border-radius:8px;
+  padding:8px 10px;color:var(--txt);font-family:'DM Sans';font-size:14px;
+  font-weight:600;text-align:center;outline:none;-webkit-appearance:none;
+  width:100%;box-sizing:border-box}
+.bio-input:focus{border-color:var(--teal)}
+.bio-save{margin-top:10px;width:100%;padding:10px;background:var(--teal);border:none;
+  border-radius:10px;color:#fff;font-family:'DM Sans';font-size:13px;
+  font-weight:600;cursor:pointer}
+.bmi-bar{height:6px;border-radius:4px;margin-top:6px;overflow:hidden;
+  background:linear-gradient(90deg,var(--blue),var(--teal),var(--gold),var(--ember))}
+.bmi-indicator{width:4px;height:12px;background:#fff;border-radius:2px;
+  margin-top:-9px;position:relative;transition:left .4s}
+
+/* PROTEIN HISTORY CHART */
+.prot-hist-wrap{margin-bottom:14px}
+.prot-hist-title{font-size:9.5px;font-weight:600;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.1em;margin-bottom:8px}
 
 /* TRAINING COUNTDOWN */
 .train-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
@@ -720,6 +778,9 @@ textarea.edit-input{min-height:70px}
   </div>
 </div>
 
+<div class="sw-update-banner" id="swUpdateBanner" onclick="applySwUpdate()">
+  🆕 Nova versão disponível · toque para atualizar
+</div>
 <div class="offline-banner" id="offlineBanner">📵 Sem internet · o app funciona normalmente</div>
 <main id="main"></main>
 
@@ -1214,11 +1275,18 @@ function renderMeals(){
   let h='<div class="tl">';
   d.meals.forEach((m,i)=>{
     if(m.type==='train'){
+      const hist=loadHistory();const tdHist=hist[todayStr()]||{};
+      const savedDur=tdHist.trainDur?`<span class="timer-saved">✓ ${Math.floor(tdHist.trainDur/60)}min registrado</span>`:'';
       h+=`<div class="tn" style="margin-left:-52px">
         <div class="tn-dot"></div>
         <div><div class="tn-time">${m.t}</div>
         <div class="tn-name">${m.n}</div>
-        <div class="tn-desc">${m.d}</div></div></div>`;
+        <div class="tn-desc">${m.d}</div>
+        <div class="timer-wrap">
+          <button class="timer-btn" id="timer-btn" onclick="toggleTimer()">▶ Iniciar treino</button>
+          <span class="timer-disp" id="timer-disp">00:00</span>
+          ${savedDur}
+        </div></div></div>`;
     } else {
       const done=chk[`${day}-${i}`]?'done':'';
       const isSkipped=m.skipable&&skipped[`${day}-skip-${i}`];
@@ -1299,8 +1367,9 @@ function renderMeals(){
   });
   h+='</div>';
   h+=`<div class="total">
-    <span class="total-lbl">Total do dia</span>
-    <span class="total-val">${d.tot} g</span></div>`;
+    <span class="total-lbl">Meta proteína · ${day==='fds'?'descanso':'treino'}</span>
+    <span class="total-val">${getGoal()} g</span></div>`;
+  h+=buildMacroDonut();
   if(day!=='fds')
     h+=`<div class="ibox">🐟 Tilápia entra 2x por mês em qualquer jantar no lugar do atum, sardinha ou frango.</div>`;
   // snack cards
@@ -1672,7 +1741,7 @@ function renderHistMonth(hist){
   const sorted=Object.entries(months).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,6);
   if(!sorted.length) return `<div class="hempty"><span class="hempty-icon">📈</span>Sem dados ainda.</div>`;
   const mNames=['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  return sorted.map(([m,days])=>{
+  return buildProtHistChart()+sorted.map(([m,days])=>{
     const[y,mo]=m.split('-');
     const prots=days.map(d=>d.e.protein);
     const avg=Math.round(prots.reduce((a,b)=>a+b,0)/prots.length);
@@ -1793,7 +1862,7 @@ function renderWeightTab(){
       ${delta?`<span class="wt-item-delta ${deltaClass}">${delta}</span>`:''}
     </div>`;
   });
-  return h+'</div>';
+  return h+'</div>'+renderBioCard();
 }
 
 function renderHistorico(){
@@ -1854,6 +1923,7 @@ function renderWater(){
 window.toggleCup=function(idx){
   const cur=getTodayWater();
   waterCups[todayStr()]=(idx+1===cur)?idx:idx+1;
+  vib(25);
   saveWater();renderWater();
 };
 
@@ -2146,6 +2216,164 @@ window.saveWeightEntry=function(e){
   saveWeight();
   showToast('✅ Peso salvo: '+val+' kg');
   if(sec==='hist') document.getElementById('main').innerHTML=renderHistorico();
+};
+
+// ── Haptic ──────────────────────────────────────────────
+function vib(p){try{if(navigator.vibrate)navigator.vibrate(p);}catch(e){}}
+
+// ── Body metrics ─────────────────────────────────────────
+const BIO_KEY='plano_bio_v1';
+let bioData=(()=>{try{return JSON.parse(localStorage.getItem(BIO_KEY)||'{}')}catch(e){return{}}})();
+function saveBio(){localStorage.setItem(BIO_KEY,JSON.stringify(bioData));}
+function getBMI(){
+  const w=weightData[todayStr()];const h=bioData.height;
+  if(!w||!h) return null;
+  return parseFloat((w/(h/100)**2).toFixed(1));
+}
+function getBMILabel(bmi){
+  if(bmi<18.5) return{lbl:'Abaixo do peso',color:'var(--blue)',pct:15};
+  if(bmi<25) return{lbl:'Peso normal',color:'var(--teal)',pct:38};
+  if(bmi<30) return{lbl:'Sobrepeso',color:'var(--gold)',pct:62};
+  return{lbl:'Obesidade',color:'var(--ember)',pct:85};
+}
+function getTDEE(){
+  const w=weightData[todayStr()];const h=bioData.height;const age=bioData.age||28;
+  if(!w||!h) return null;
+  const bmr=10*w+6.25*h-5*age+5; // Mifflin-St Jeor male
+  return Math.round(bmr*1.725); // muito ativo (MT + Força 5-6x/semana)
+}
+function renderBioCard(){
+  const bmi=getBMI();const tdee=getTDEE();
+  const bmiInfo=bmi?getBMILabel(bmi):null;
+  return`<div class="bio-card">
+    <div class="bio-title">📊 Métricas corporais</div>
+    ${bmi?`<div class="bio-grid">
+      <div class="bio-stat">
+        <div class="bio-stat-v" style="color:${bmiInfo.color}">${bmi}</div>
+        <div class="bio-stat-l">IMC · ${bmiInfo.lbl}</div>
+        <div class="bmi-bar"></div>
+        <div class="bmi-indicator" style="left:${bmiInfo.pct}%;margin-left:-2px"></div>
+      </div>
+      <div class="bio-stat">
+        <div class="bio-stat-v" style="color:var(--ember-s)">${tdee||'—'}</div>
+        <div class="bio-stat-l">TDEE estimado · kcal/dia</div>
+        ${tdee?`<div style="font-size:9.5px;color:var(--faint);margin-top:4px">Meta de corte: ${tdee-300}kcal</div>`:''}
+      </div>
+    </div>`:''}
+    <div class="bio-inputs">
+      <div class="bio-input-wrap">
+        <span class="bio-lbl">Altura (cm)</span>
+        <input class="bio-input" id="bio-h" type="number" value="${bioData.height||''}" placeholder="175" min="140" max="220">
+      </div>
+      <div class="bio-input-wrap">
+        <span class="bio-lbl">Idade</span>
+        <input class="bio-input" id="bio-a" type="number" value="${bioData.age||''}" placeholder="28" min="14" max="80">
+      </div>
+    </div>
+    <button class="bio-save" onclick="saveBioData()">Salvar métricas</button>
+  </div>`;
+}
+window.saveBioData=function(){
+  const h=parseInt(document.getElementById('bio-h').value);
+  const a=parseInt(document.getElementById('bio-a').value);
+  if(h&&h>=140&&h<=220) bioData.height=h;
+  if(a&&a>=14&&a<=80) bioData.age=a;
+  saveBio();vib(80);render();showToast('✅ Métricas salvas');
+};
+
+// ── Macro donut ──────────────────────────────────────────
+function buildMacroDonut(){
+  const tot=getDayTotKcal(day);
+  const p=getGoal();
+  const pK=p*4;
+  const gK=Math.round(tot*0.28);
+  const cK=Math.max(0,tot-pK-gK);
+  const r=32,cx=40,cy=40,circ=2*Math.PI*r;
+  const segments=[
+    {pct:pK/tot,color:'var(--teal)',label:`${p}g Prot`},
+    {pct:cK/tot,color:'var(--blue)',label:`~${Math.round(cK/4)}g Carbo`},
+    {pct:gK/tot,color:'var(--gold)',label:`~${Math.round(gK/9)}g Gord`},
+  ];
+  let offset=0;
+  const arcs=segments.map(s=>{
+    const dash=(s.pct*circ).toFixed(1);
+    const off=(-offset*circ).toFixed(1);
+    offset+=s.pct;
+    return`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}"
+      stroke-width="7" stroke-dasharray="${dash} ${circ.toFixed(1)}"
+      stroke-dashoffset="${off}" transform="rotate(-90 ${cx} ${cy})"/>`;
+  }).join('');
+  const legend=segments.map(s=>
+    `<span class="ml-item"><span class="ml-dot" style="background:${s.color}"></span>${s.label}</span>`
+  ).join('');
+  return`<div class="macro-donut-wrap">
+    <svg width="80" height="80" viewBox="0 0 80 80" style="flex-shrink:0">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--bdr)" stroke-width="7"/>
+      ${arcs}
+      <text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="8" fill="var(--muted)" font-family="DM Sans">${Math.round(tot/1000*10)/10}k kcal</text>
+    </svg>
+    <div class="macro-legend">${legend}</div>
+  </div>`;
+}
+
+// ── Protein history chart ─────────────────────────────────
+function buildProtHistChart(){
+  const hist=loadHistory();
+  const sorted=Object.entries(hist).sort((a,b)=>a[0].localeCompare(b[0])).slice(-28);
+  if(sorted.length<3) return '';
+  const vals=sorted.map(([,e])=>Math.min(100,Math.round(e.protein/e.goal*100)));
+  const W=280,H=52,barW=Math.max(4,Math.floor((W-8)/(vals.length+.5)));
+  const bars=vals.map((v,i)=>{
+    const x=(4+i*(barW+1.5)).toFixed(1);
+    const bh=Math.max(2,(v/100*(H-8))).toFixed(1);
+    const y=(H-4-parseFloat(bh)).toFixed(1);
+    const isToday=sorted[i][0]===todayStr();
+    const color=v>=85?'var(--teal)':v>=50?'var(--gold)':'rgba(242,104,44,.5)';
+    return`<rect x="${x}" y="${y}" width="${barW}" height="${bh}"
+      rx="2" fill="${color}" opacity="${isToday?1:.75}"/>
+    ${isToday?`<circle cx="${parseFloat(x)+barW/2}" cy="${parseFloat(y)-4}" r="2.5" fill="var(--day)"/>`:''}`;
+  }).join('');
+  return`<div class="prot-hist-wrap">
+    <div class="prot-hist-title">Proteína · últimos ${vals.length} dias</div>
+    <svg width="100%" viewBox="0 0 ${W} ${H}" style="display:block;overflow:visible">
+      ${bars}
+      <line x1="0" y1="${H-4}" x2="${W}" y2="${H-4}" stroke="var(--bdr)" stroke-width="1"/>
+      <line x1="0" y1="${(H-4-(85/100*(H-8))).toFixed(1)}" x2="${W}" y2="${(H-4-(85/100*(H-8))).toFixed(1)}"
+        stroke="var(--teal)" stroke-width="1" stroke-dasharray="3 3" opacity=".4"/>
+    </svg>
+    <div style="font-size:9px;color:var(--faint);text-align:right;margin-top:2px">linha tracejada = meta 85%</div>
+  </div>`;
+}
+
+// ── Training timer ────────────────────────────────────────
+let timerInterval=null,timerStart=null,timerSec=0,timerRunning=false;
+window.toggleTimer=function(){
+  timerRunning=!timerRunning;
+  const btn=document.getElementById('timer-btn');
+  const disp=document.getElementById('timer-disp');
+  if(timerRunning){
+    vib([30,20,30]);
+    timerStart=Date.now()-timerSec*1000;
+    timerInterval=setInterval(()=>{
+      timerSec=Math.floor((Date.now()-timerStart)/1000);
+      const m=Math.floor(timerSec/60),s=timerSec%60;
+      if(disp) disp.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    },500);
+    if(btn){btn.textContent='⏹ Parar treino';btn.classList.add('running');}
+    if(disp){disp.style.display='block';disp.classList.add('running');}
+  } else {
+    vib(100);
+    clearInterval(timerInterval);timerInterval=null;
+    if(btn){btn.textContent='▶ Iniciar treino';btn.classList.remove('running');}
+    if(disp) disp.classList.remove('running');
+    if(timerSec>60){
+      const m=Math.floor(timerSec/60);
+      const hist=loadHistory();const td=todayStr();
+      if(hist[td]){hist[td].trainDur=timerSec;saveHistory(hist);}
+      showToast(`💪 Treino de ${m} min registrado!`);
+    }
+    timerSec=0;timerRunning=false;
+  }
 };
 
 // ── Snack log ───────────────────────────────────────────
@@ -2554,9 +2782,11 @@ document.getElementById('main').addEventListener('click',e=>{
     chk[k]=!chk[k];
     mc.classList.toggle('done',!!chk[k]);
     chkBtn.textContent=chk[k]?'✓':'';
+    vib(chk[k]?[30,10,60]:40);
     saveState();
     saveToHistory();
     updProt();
+    updKcal();
     e.stopPropagation();
     return;
   }
@@ -2602,9 +2832,36 @@ setInterval(renderTrainChip, 60000);
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+    navigator.serviceWorker.register('service-worker.js').then(reg=>{
+      reg.addEventListener('updatefound',()=>{
+        const nw=reg.installing;
+        nw.addEventListener('statechange',()=>{
+          if(nw.state==='installed'&&navigator.serviceWorker.controller){
+            document.getElementById('swUpdateBanner').classList.add('show');
+            window._pendingSW=nw;
+          }
+        });
+      });
+    }).catch(()=>{});
+    navigator.serviceWorker.addEventListener('message',e=>{
+      if(e.data&&e.data.type==='SW_UPDATED'){
+        document.getElementById('swUpdateBanner').classList.add('show');
+      }
+    });
   });
 }
+window.applySwUpdate=function(){
+  if(window._pendingSW){window._pendingSW.postMessage({type:'SKIP_WAITING'});}
+  window.location.reload();
+};
+// Handle URL shortcuts
+(()=>{
+  const p=new URLSearchParams(location.search).get('sec');
+  if(p&&['meals','supps','prep','gastro','shop','rules','nutri','hist'].includes(p)){
+    sec=p;
+    document.querySelectorAll('.nb').forEach(x=>x.classList.toggle('on',x.dataset.s===p));
+  }
+})();
 </script>
 </body>
 </html>
