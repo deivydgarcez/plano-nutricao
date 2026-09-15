@@ -410,6 +410,30 @@ textarea.edit-input{min-height:70px}
 .edit-undo{margin-top:8px;font-size:11px;color:var(--faint);
   text-decoration:underline;cursor:pointer;display:block;text-align:center}
 
+/* WEEK DOTS */
+.wdots{display:flex;justify-content:space-between;padding:8px 2px 2px;gap:2px}
+.wdot-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;cursor:default}
+.wdot{width:10px;height:10px;border-radius:50%;background:var(--bdr);transition:background .2s}
+.wdot.green{background:var(--teal)}
+.wdot.orange{background:var(--gold)}
+.wdot.red{background:rgba(242,104,44,.4)}
+.wdot-wrap.today .wdot{outline:2px solid var(--day);outline-offset:2px}
+.wdot-wrap.today .wdot-lbl{color:var(--day);font-weight:700}
+.wdot-lbl{font-size:8.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.04em}
+
+/* PROTEIN ALERT */
+.prot-alert{background:var(--gold-d);border:1px solid rgba(212,146,42,.35);
+  border-radius:10px;padding:10px 13px;font-size:12px;color:var(--gold);
+  line-height:1.5;margin-top:8px}
+.prot-alert b{font-weight:600;color:var(--txt)}
+
+/* SHARE */
+.share-btn{width:100%;padding:10px;background:var(--surf);
+  border:1.5px solid var(--bdr);border-radius:10px;color:var(--muted);
+  font-family:'DM Sans';font-size:12.5px;font-weight:500;cursor:pointer;
+  text-align:center;transition:all .18s;margin-top:8px;display:block}
+.share-btn:hover{border-color:var(--day);color:var(--txt)}
+
 /* STREAK */
 .streak-badge{font-size:11px;font-weight:600;color:var(--ember);background:var(--ember-d);
   border:1px solid rgba(242,104,44,.3);border-radius:6px;padding:4px 9px;
@@ -511,6 +535,7 @@ textarea.edit-input{min-height:70px}
     <span>🔄 <b>Nova semana detectada.</b> Progresso resetado automaticamente.</span>
     <button class="reset-btn" id="dismissReset">Ok</button>
   </div>
+  <div id="weekDots"></div>
 </div>
 
 <main id="main"></main>
@@ -952,7 +977,8 @@ function renderNutri(){
 }
 
 // ── State ──────────────────────────────────────────
-let day='mt', sec='meals';
+const _dayMap={0:'fds',1:'mt',2:'tf',3:'mt',4:'qui',5:'tf',6:'fds'};
+let day=_dayMap[new Date().getDay()]||'mt', sec='meals';
 let chk=loadState();
 
 // ── Week badge ──────────────────────────────────────
@@ -1082,6 +1108,8 @@ function renderMeals(){
     <span class="total-val">${d.tot} g</span></div>`;
   if(day!=='fds')
     h+=`<div class="ibox">🐟 Tilápia entra 2x por mês em qualquer jantar no lugar do atum, sardinha ou frango.</div>`;
+  h+=getProteinAlert();
+  h+=`<button class="share-btn" onclick="shareDay()">📤 Compartilhar resumo do dia</button>`;
   const tn=getTodayNote();
   const moodMap={great:'😊 Ótimo',ok:'😐 Ok',tired:'😓 Cansado',stomach:'🤢 Estômago'};
   const moodCls={great:'',ok:'mood-ok',tired:'mood-tired',stomach:'mood-stomach'};
@@ -1436,6 +1464,11 @@ function renderHistMonth(hist){
     const trainDays=days.filter(d=>d.e.dayType!=='fds').length;
     const streak=days.filter(d=>d.e.protein>=130).length;
     const isCur=m===curMonth;
+    const wEntries=days.filter(d=>weightData[d.date]).sort((a,b)=>a.date.localeCompare(b.date));
+    const avgWt=wEntries.length?(wEntries.reduce((a,d)=>a+weightData[d.date],0)/wEntries.length).toFixed(1):null;
+    const wtFirst=wEntries.length?weightData[wEntries[0].date]:null;
+    const wtLast=wEntries.length>1?weightData[wEntries[wEntries.length-1].date]:null;
+    const wtDelta=wtFirst&&wtLast?parseFloat((wtLast-wtFirst).toFixed(1)):null;
     return `<div class="wcard" style="${isCur?'border-color:var(--ember)':''}">
       <div class="wcard-title" style="${isCur?'color:var(--ember-s)':''}">
         ${mNames[parseInt(mo)]} ${y} ${isCur?'· Atual':''}
@@ -1447,6 +1480,8 @@ function renderHistMonth(hist){
         <div class="mstat"><div class="mstat-v">${trainDays}</div><div class="mstat-l">Dias de treino</div></div>
         <div class="mstat"><div class="mstat-v">${streak}</div><div class="mstat-l">Dias acima de 130g</div></div>
         <div class="mstat"><div class="mstat-v">${Math.round(days.reduce((a,d)=>a+(d.e.done/d.e.total),0)/days.length*100)}%</div><div class="mstat-l">Taxa de conclusão</div></div>
+        ${avgWt?`<div class="mstat"><div class="mstat-v" style="color:var(--ember-s)">${avgWt}kg</div><div class="mstat-l">Peso médio</div></div>`:''}
+        ${wtDelta!==null?`<div class="mstat"><div class="mstat-v" style="color:${wtDelta<0?'var(--teal)':wtDelta>0?'var(--ember-s)':'var(--muted)'}">${wtDelta>0?'+':''}${wtDelta}kg</div><div class="mstat-l">Variação no mês</div></div>`:''}
       </div>
     </div>`;
   }).join('');
@@ -1637,6 +1672,67 @@ function checkMealNotifs(){
     }
   });
 }
+// ── Week dots ───────────────────────────────────────────
+function renderWeekDots(){
+  const hist=loadHistory();
+  const now=new Date();
+  const dow=(now.getDay()||7)-1;
+  const mon=new Date(now);mon.setDate(now.getDate()-dow);mon.setHours(0,0,0,0);
+  const labels=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  const dots=labels.map((_,i)=>{
+    const d=new Date(mon);d.setDate(mon.getDate()+i);
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const e=hist[ds];
+    const pct=e?e.protein/e.goal:0;
+    const cls=e?(pct>=0.85?'green':pct>=0.5?'orange':'red'):'';
+    const isToday=ds===todayStr();
+    return`<div class="wdot-wrap${isToday?' today':''}"><div class="wdot ${cls}"></div><span class="wdot-lbl">${labels[i]}</span></div>`;
+  }).join('');
+  const el=document.getElementById('weekDots');
+  if(el) el.innerHTML=`<div class="wdots">${dots}</div>`;
+}
+
+// ── Protein alert (after 20h) ───────────────────────────
+function getProteinAlert(){
+  if(new Date().getHours()<20) return '';
+  const d=DAYS[day];let earned=0;
+  d.meals.forEach((m,i)=>{
+    if(!m.p)return;
+    if(m.skipable&&skipped[`${day}-skip-${i}`]){earned+=m.skipProt;return;}
+    if(chk[`${day}-${i}`]) earned+=(getSub(i)||{p:m.p}).p;
+  });
+  const missing=d.tot-earned;
+  if(missing<=0) return '';
+  const scoops=(missing/20).toFixed(1);
+  return`<div class="prot-alert">⚠️ Fim do dia · faltam <b>${missing}g</b> de proteína · <b>${scoops} scoops</b> de Soldiers Elite fecha a meta.</div>`;
+}
+
+// ── Share day summary ───────────────────────────────────
+window.shareDay=function(){
+  const d=DAYS[day];let earned=0;
+  d.meals.forEach((m,i)=>{
+    if(!m.p)return;
+    if(m.skipable&&skipped[`${day}-skip-${i}`]){earned+=m.skipProt;return;}
+    if(chk[`${day}-${i}`]) earned+=(getSub(i)||{p:m.p}).p;
+  });
+  const pct=Math.round(earned/d.tot*100);
+  const tn=getTodayNote();
+  const moodTxt={great:'😊 Ótimo',ok:'😐 Ok',tired:'😓 Cansado',stomach:'🤢 Estômago'};
+  const wt=weightData[todayStr()];
+  const water=getTodayWater();
+  const now=new Date();
+  const lines=['📅 '+['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][now.getDay()]+' '+fmtDate(todayStr())+' · Plano Muay Thai + Força'];
+  lines.push('🥩 Proteína: '+earned+'g / '+d.tot+'g ('+pct+'%)');
+  if(water) lines.push('💧 Água: '+(water*500>=1000?(water*500/1000).toFixed(1)+'L':water*500+'ml'));
+  if(wt) lines.push('⚖️ Peso: '+wt+'kg');
+  if(tn.mood&&moodTxt[tn.mood]) lines.push(moodTxt[tn.mood]);
+  if(tn.text) lines.push('📝 '+tn.text);
+  const text=lines.join('\n');
+  if(navigator.share) navigator.share({text}).catch(()=>{});
+  else if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>showToast('✅ Copiado!'));
+  else showToast('❌ Compartilhamento não suportado');
+};
+
 function toggleNotifs(){
   if(!('Notification' in window)){showToast('❌ Notificações não suportadas neste navegador');return;}
   if(notifsEnabled){
@@ -1735,6 +1831,7 @@ function render(){
   updProt();
   updStreak();
   renderWater();
+  renderWeekDots();
 }
 
 // ── Events ─────────────────────────────────────────
@@ -1779,6 +1876,7 @@ document.getElementById('main').addEventListener('click',e=>{
 
 // ── Init ───────────────────────────────────────────
 setColor(DAYS[day].color);
+document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.dataset.d===day));
 render();
 if(notifsEnabled && Notification.permission==='granted')
   notifInterval=setInterval(checkMealNotifs,60000);
