@@ -13,15 +13,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0F0C0A;--surf:#181310;--card:#201A16;--bdr:#2C2420;
-  --ember:#F2682C;--ember-s:#FF8B5C;--ember-d:rgba(242,104,44,.13);
-  --teal:#3DBF8C;--teal-d:rgba(61,191,140,.13);
-  --gold:#D4922A;--gold-d:rgba(212,146,42,.13);
-  --blue:#4A8CF7;--blue-d:rgba(74,140,247,.13);
-  --green:#4DAA73;--green-d:rgba(77,170,115,.13);
-  --violet:#9B5ED4;--violet-d:rgba(155,94,212,.13);
-  --txt:#F0E8DF;--muted:#9A8F86;--faint:#4E4742;
-  --day:#F2682C;
+  --bg:#080810;--surf:#0e0e1c;--card:#141426;--card2:#1c1c32;
+  --bdr:#22223a;--bdr2:#2e2e4e;
+  --ember:#f26828;--ember-s:#ff8f50;--ember-d:rgba(242,104,44,.12);
+  --teal:#3dc8b4;--teal-s:#5ee8d2;--teal-d:rgba(61,200,180,.11);
+  --gold:#e8b84b;--gold-s:#ffd166;--gold-d:rgba(232,184,75,.11);
+  --blue:#4f8cf7;--blue-d:rgba(79,140,247,.11);
+  --green:#3ec97a;--green-d:rgba(62,201,122,.11);
+  --violet:#9b62e8;--violet-d:rgba(155,98,232,.11);
+  --txt:#eeeeff;--muted:#8888aa;--faint:#3e3e5e;
+  --day:#f26828;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
@@ -30,14 +31,34 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
   margin:0 auto;position:relative;overflow:hidden}
 
 /* HEADER */
-.hdr{padding:14px 18px 10px;flex-shrink:0;background:linear-gradient(var(--surf),transparent)}
-.hdr-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.hdr-title{font-family:'Anton',sans-serif;font-size:20px;letter-spacing:.02em;
-  text-transform:uppercase;flex:1}
+.hdr{padding:14px 18px 10px;flex-shrink:0;
+  background:linear-gradient(180deg,var(--surf) 0%,rgba(14,14,28,.6) 100%)}
+.hdr-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.hdr-day{font-family:'Anton',sans-serif;font-size:22px;letter-spacing:.02em;
+  text-transform:uppercase;line-height:1;flex:1}
+.hdr-date{font-size:11px;color:var(--muted);margin-top:2px}
 .week-badge{font-size:10px;color:var(--muted);background:var(--surf);
   border:1px solid var(--bdr);border-radius:6px;padding:4px 9px;
   letter-spacing:.04em;white-space:nowrap}
 .week-badge b{color:var(--teal);font-weight:600}
+/* RING */
+.hdr-ring-row{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.hdr-ring-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.ring-wrap{position:relative;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0}
+.pring{display:block;filter:drop-shadow(0 0 8px rgba(61,200,180,.2))}
+.ring-center{position:absolute;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center}
+.ring-prot{font-family:'Anton',sans-serif;font-size:22px;line-height:1;color:var(--txt)}
+.ring-goal{font-size:9.5px;color:var(--muted);margin-top:1px}
+.ring-lbl{font-size:8px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.kcal-chip{font-size:11px;font-weight:600;color:var(--gold);background:var(--gold-d);
+  border:1px solid rgba(232,184,75,.25);border-radius:20px;padding:5px 14px;
+  text-align:center;align-self:flex-start}
+.kcal-chip.surplus{color:var(--teal);background:var(--teal-d);border-color:rgba(61,200,180,.25)}
+.kcal-chip.deficit{color:var(--ember);background:var(--ember-d);border-color:rgba(242,104,44,.25)}
+/* HDR BOTTOM */
+.hdr-bottom{display:flex;align-items:center;gap:10px;margin-top:4px}
 .pills{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
 .pills::-webkit-scrollbar{display:none}
 .pill{flex-shrink:0;padding:7px 13px;border-radius:20px;font-size:11px;
@@ -46,15 +67,20 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
   cursor:pointer;transition:all .18s}
 .pill.on{background:var(--day);border-color:var(--day);color:#fff}
 
+/* WATER COMPACT */
+.water-compact{font-size:12px;font-weight:600;color:var(--blue);background:var(--blue-d);
+  border:1px solid rgba(79,140,247,.25);border-radius:20px;padding:5px 13px;
+  cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .15s}
+.water-compact:active{background:rgba(79,140,247,.2)}
 /* PROGRESS */
-.pbar-wrap{margin-top:10px;background:var(--surf);border-radius:10px;padding:10px 14px}
+.pbar-wrap{margin-top:10px;background:var(--surf);border-radius:12px;padding:10px 14px}
 .pbar-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .pbar-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 .pbar-val{font-family:'Anton',sans-serif;font-size:15px}
 .pbar-val small{font-family:'DM Sans';font-size:10px;color:var(--muted);margin-left:2px}
-.ptrack{height:4px;background:var(--bdr);border-radius:3px;overflow:hidden}
-.pfill{height:100%;background:var(--teal);border-radius:3px;
-  transition:width .35s cubic-bezier(.4,0,.2,1);width:0}
+.ptrack{height:6px;background:var(--bdr);border-radius:4px;overflow:hidden}
+.pfill{height:100%;background:linear-gradient(90deg,var(--teal),var(--teal-s));border-radius:4px;
+  transition:width .4s cubic-bezier(.4,0,.2,1);width:0}
 .water{margin-top:8px;background:var(--blue-d);border:1px solid rgba(74,140,247,.25);
   border-radius:8px;padding:7px 12px;font-size:11.5px;color:var(--blue);
   display:flex;gap:8px;align-items:center}
@@ -84,8 +110,7 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 .tl{position:relative;padding-left:52px}
 .tl::before{content:'';position:absolute;left:17px;top:10px;bottom:10px;
   width:1.5px;background:linear-gradient(var(--day),var(--faint))}
-.tl-row{position:relative;margin-bottom:9px;
-  animation:rise .35s ease both}
+.tl-row{position:relative;margin-bottom:10px;animation:rise .35s ease both}
 .tl-row:nth-child(1){animation-delay:.03s}.tl-row:nth-child(2){animation-delay:.08s}
 .tl-row:nth-child(3){animation-delay:.13s}.tl-row:nth-child(4){animation-delay:.18s}
 .tl-row:nth-child(5){animation-delay:.23s}.tl-row:nth-child(6){animation-delay:.28s}
@@ -93,15 +118,17 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 .tl-row::before{content:'';position:absolute;left:-38px;top:17px;
   width:11px;height:11px;border-radius:50%;background:var(--bg);
   border:2px solid var(--day);box-shadow:0 0 0 3px var(--bg)}
-.mc{background:var(--card);border:1px solid var(--bdr);border-radius:12px;
-  overflow:hidden;transition:border-color .18s;cursor:pointer}
-.mc:hover{border-color:var(--day)}
-.mc.done{opacity:.5;border-color:var(--teal)}
-.mc-head{display:flex;align-items:center;gap:8px;padding:11px 13px}
+.mc{background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:16px;
+  overflow:hidden;transition:border-color .18s,box-shadow .18s;cursor:pointer;
+  box-shadow:0 2px 16px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.03) inset}
+.mc:hover{border-color:rgba(242,104,44,.3);box-shadow:0 4px 20px rgba(0,0,0,.5),0 1px 0 rgba(255,255,255,.03) inset}
+.mc.done{opacity:.55;border-color:rgba(61,200,180,.2);
+  box-shadow:0 2px 16px rgba(61,200,180,.08),0 1px 0 rgba(255,255,255,.03) inset}
+.mc-head{display:flex;align-items:center;gap:8px;padding:12px 14px}
 .mc-time{font-size:9.5px;font-weight:600;letter-spacing:.06em;color:var(--day);
-  background:var(--ember-d);padding:3px 8px;border-radius:5px;
+  background:var(--ember-d);padding:3px 9px;border-radius:6px;
   white-space:nowrap;flex-shrink:0}
-.mc-name{font-size:13.5px;font-weight:500;flex:1;line-height:1.2}
+.mc-name{font-size:15px;font-weight:500;flex:1;line-height:1.3}
 .mc-prot{font-size:10px;font-weight:600;color:var(--teal);background:var(--teal-d);
   padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0}
 .mc-chk{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--bdr);
@@ -114,7 +141,7 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 .mc-body{display:none;padding:0 13px 11px;border-top:1px solid var(--bdr);padding-top:10px}
 .mc.open .mc-body{display:block}
 .mc.open .mc-sum{display:none}
-.mc-food{font-size:12.5px;color:var(--muted);line-height:1.55;font-weight:300}
+.mc-food{font-size:13.5px;color:var(--muted);line-height:1.6;font-weight:300}
 .mc-supp{margin-top:8px;font-size:11.5px;color:var(--faint);font-style:italic;
   padding-top:8px;border-top:1px solid var(--bdr)}
 .mc-supp::before{content:'+ ';color:var(--teal)}
@@ -139,21 +166,23 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
   padding:10px 13px;font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:8px}
 
 /* SUPPS */
-.supp-card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;
+.supp-card{background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:16px;
+  box-shadow:0 2px 16px rgba(0,0,0,.4),0 1px 0 rgba(255,255,255,.03) inset;
   padding:12px 14px;margin-bottom:8px;display:grid;
   grid-template-columns:1fr auto;gap:3px 12px}
 .supp-when{font-size:9.5px;font-weight:600;color:var(--ember);
   letter-spacing:.06em;text-transform:uppercase}
 .supp-dose{font-family:'Anton',sans-serif;font-size:17px;color:var(--ember-s);
   grid-row:1/3;grid-column:2;align-self:center;text-align:right;line-height:1.2}
-.supp-name{font-size:13.5px;font-weight:500}
+.supp-name{font-size:14px;font-weight:500}
 .supp-note{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:3px;grid-column:1}
 .supp-card.gc{background:var(--violet-d);border-color:rgba(155,94,212,.3)}
 .supp-card.gc .supp-when{color:var(--violet)}
 .supp-card.gc .supp-dose{color:var(--violet)}
 
 /* PREP */
-.prep-card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;
+.prep-card{background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:16px;
+  box-shadow:0 2px 16px rgba(0,0,0,.4),0 1px 0 rgba(255,255,255,.03) inset;
   padding:15px;margin-bottom:10px}
 .prep-hed{font-family:'Anton',sans-serif;font-size:16px;text-transform:uppercase;
   letter-spacing:.03em;margin-bottom:10px}
@@ -167,21 +196,23 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 .prep-tip.gold{background:var(--gold-d);color:var(--gold)}
 
 /* GASTRITE */
-.gbox{background:var(--violet-d);border:1px solid rgba(155,94,212,.3);
-  border-radius:12px;padding:12px 14px;margin-bottom:8px;
+.gbox{background:var(--violet-d);border:1px solid rgba(155,98,232,.25);
+  border-radius:16px;padding:12px 14px;margin-bottom:8px;
+  box-shadow:0 2px 16px rgba(0,0,0,.3),0 1px 0 rgba(255,255,255,.02) inset;
   display:flex;gap:10px;align-items:flex-start}
 .gbox-icon{font-size:18px;flex-shrink:0;margin-top:1px}
 .gbox-title{font-size:13px;font-weight:600;color:var(--violet);margin-bottom:3px}
 .gbox-body{font-size:11.5px;color:var(--muted);line-height:1.45}
 
 /* MONTHLY SHOPPING */
-.mcard{background:var(--card);border:1px solid var(--bdr);border-radius:12px;
+.mcard{background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:16px;
+  box-shadow:0 2px 14px rgba(0,0,0,.4),0 1px 0 rgba(255,255,255,.03) inset;
   padding:11px 13px;margin-bottom:7px;cursor:pointer;transition:border-color .18s}
 .mcard:hover{border-color:var(--day)}
 .mcard-top{display:flex;align-items:center;gap:10px}
 .mcard-e{font-size:20px;flex-shrink:0}
 .mcard-info{flex:1;min-width:0}
-.mcard-name{font-size:13px;font-weight:500;margin-bottom:1px}
+.mcard-name{font-size:14px;font-weight:500;margin-bottom:1px}
 .mcard-tip{font-size:10.5px;color:var(--faint);font-style:italic}
 .mcard-qty{font-family:'Anton',sans-serif;font-size:13px;color:var(--teal);
   white-space:nowrap;flex-shrink:0;text-align:right;line-height:1.2}
@@ -220,20 +251,22 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 .shop-total-val{font-family:'Anton',sans-serif;font-size:18px;color:var(--ember-s)}
 
 /* RULES */
-.rule{background:var(--card);border:1px solid var(--bdr);border-radius:12px;
+.rule{background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:16px;
+  box-shadow:0 2px 14px rgba(0,0,0,.4),0 1px 0 rgba(255,255,255,.03) inset;
   padding:13px 14px;margin-bottom:8px}
 .rule.hi{background:var(--ember);border-color:var(--ember)}
 .rule.hi .rule-title,.rule.hi .rule-body{color:#fff}
 .rule-icon{font-size:20px;margin-bottom:6px}
 .rule-title{font-family:'Anton',sans-serif;font-size:15px;text-transform:uppercase;
   letter-spacing:.03em;margin-bottom:5px}
-.rule-body{font-size:12.5px;color:var(--muted);line-height:1.55}
+.rule-body{font-size:13.5px;color:var(--muted);line-height:1.6}
 .rule-body b{color:var(--txt);font-weight:500}
 .rule.hi .rule-body b{color:#fff}
 
 /* NAV */
 .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);
-  width:100%;max-width:500px;background:var(--surf);
+  width:100%;max-width:500px;
+  background:rgba(14,14,28,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   border-top:1px solid var(--bdr);display:flex;z-index:100;
   padding-bottom:env(safe-area-inset-bottom,0);
   overflow-x:auto;scrollbar-width:none}
@@ -241,18 +274,23 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 .nb{flex:0 0 auto;min-width:60px;padding:9px 6px;display:flex;
   flex-direction:column;align-items:center;gap:3px;cursor:pointer;
   background:none;border:none;color:var(--faint);font-family:'DM Sans';
-  font-size:9.5px;letter-spacing:.03em;transition:color .15s}
+  font-size:9.5px;letter-spacing:.03em;transition:color .2s;
+  position:relative;border-radius:12px}
 .nb.on{color:var(--day)}
-.nb-ic{font-size:19px;line-height:1}
+.nb.on::before{content:'';position:absolute;inset:4px 3px;border-radius:9px;
+  background:var(--ember-d);z-index:-1}
+.nb-ic{font-size:20px;line-height:1;transition:transform .2s}
+.nb.on .nb-ic{transform:scale(1.08)}
 
 /* NUTRI */
-.ncard{background:var(--card);border:1px solid var(--bdr);border-radius:12px;
+.ncard{background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:16px;
+  box-shadow:0 2px 14px rgba(0,0,0,.4);
   padding:12px 13px;margin-bottom:8px;cursor:pointer;transition:border-color .18s}
 .ncard:hover{border-color:var(--day)}
 .ncard-top{display:flex;align-items:center;gap:10px}
 .ncard-e{font-size:22px;flex-shrink:0}
 .ncard-main{flex:1}
-.ncard-name{font-size:13.5px;font-weight:500;line-height:1.2}
+.ncard-name{font-size:14.5px;font-weight:500;line-height:1.2}
 .ncard-por{font-size:10px;color:var(--faint);margin-top:2px;font-style:italic}
 .ncard-badge{font-size:10px;font-weight:600;color:var(--teal);background:var(--teal-d);
   padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0}
@@ -284,14 +322,9 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 
 /* EXPORT/IMPORT */
 .backup-row{display:flex;gap:8px;margin-bottom:14px}
-.backup-btn{flex:1;padding:10px 8px;border-radius:10px;border:1.5px solid var(--bdr);
-  background:var(--surf);color:var(--muted);font-family:'DM Sans';font-size:11.5px;
-  font-weight:500;cursor:pointer;text-align:center;transition:all .18s;line-height:1.3}
-.backup-btn:hover{border-color:var(--day);color:var(--txt)}
-.backup-btn.export{border-color:rgba(61,191,140,.4);color:var(--teal);
-  background:var(--teal-d)}
-.backup-btn.import{border-color:rgba(74,140,247,.4);color:var(--blue);
-  background:var(--blue-d)}
+/* .backup-btn overridden by NOTIF section below */
+.backup-btn.export{border-color:rgba(61,200,180,.4);color:var(--teal);background:var(--teal-d)}
+.backup-btn.import{border-color:rgba(79,140,247,.4);color:var(--blue);background:var(--blue-d)}
 .backup-btn .bb-ic{font-size:18px;display:block;margin-bottom:3px}
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
   background:var(--card);border:1px solid var(--teal);color:var(--teal);
@@ -303,12 +336,13 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 
 /* HISTORY */
 .htabs{display:flex;gap:6px;margin-bottom:14px}
-.htab{flex:1;padding:8px 4px;text-align:center;font-size:11px;font-weight:600;
-  letter-spacing:.06em;text-transform:uppercase;border-radius:8px;
+.htab{flex:1;padding:9px 4px;text-align:center;font-size:11px;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;border-radius:10px;
   border:1.5px solid var(--bdr);background:var(--surf);color:var(--muted);
   cursor:pointer;transition:all .18s}
 .htab.on{background:var(--day);border-color:var(--day);color:#fff}
-.hcard{background:var(--card);border:1px solid var(--bdr);border-radius:12px;
+.hcard{background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:16px;
+  box-shadow:0 2px 14px rgba(0,0,0,.4);
   padding:12px 14px;margin-bottom:8px}
 .hcard-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .hcard-date{font-family:'Anton',sans-serif;font-size:16px;letter-spacing:.02em}
@@ -324,8 +358,8 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
   color:var(--muted);margin-bottom:4px}
 .hpbar-earned{font-weight:600;color:var(--txt)}
 .hptrack{height:5px;background:var(--bdr);border-radius:3px;overflow:hidden}
-.hpfill{height:100%;border-radius:3px;background:var(--teal)}
-.hpfill.full{background:var(--ember)}
+.hpfill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--teal),var(--teal-s));transition:width .3s}
+.hpfill.full{background:linear-gradient(90deg,var(--ember),var(--ember-s))}
 .hmeals{display:flex;flex-wrap:wrap;gap:5px}
 .hmeal-chip{font-size:10px;padding:3px 8px;border-radius:20px;
   background:var(--surf);color:var(--faint);border:1px solid var(--bdr)}
@@ -333,7 +367,8 @@ main::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
 .hmeal-chip.skip{background:var(--gold-d);color:var(--gold);border-color:rgba(212,146,42,.3)}
 .hempty{text-align:center;padding:32px 16px;color:var(--faint);font-size:13px;line-height:1.6}
 .hempty-icon{font-size:32px;display:block;margin-bottom:10px}
-.wcard{background:var(--card);border:1px solid var(--bdr);border-radius:12px;
+.wcard{background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:16px;
+  box-shadow:0 2px 14px rgba(0,0,0,.4);
   padding:14px;margin-bottom:10px}
 .wcard-title{font-family:'Anton',sans-serif;font-size:15px;text-transform:uppercase;
   letter-spacing:.04em;margin-bottom:10px}
@@ -462,12 +497,7 @@ textarea.edit-input{min-height:70px}
   line-height:1.5;margin-top:8px}
 .prot-alert b{font-weight:600;color:var(--txt)}
 
-/* SHARE */
-.share-btn{width:100%;padding:10px;background:var(--surf);
-  border:1.5px solid var(--bdr);border-radius:10px;color:var(--muted);
-  font-family:'DM Sans';font-size:12.5px;font-weight:500;cursor:pointer;
-  text-align:center;transition:all .18s;margin-top:8px;display:block}
-.share-btn:hover{border-color:var(--day);color:var(--txt)}
+/* SHARE — overridden by later definition */
 
 /* STREAK */
 .streak-badge{font-size:11px;font-weight:600;color:var(--ember);background:var(--ember-d);
@@ -531,11 +561,33 @@ textarea.edit-input{min-height:70px}
 .wt-empty{text-align:center;padding:28px 16px;color:var(--faint);font-size:12.5px;line-height:1.7}
 
 /* NOTIF */
-.notif-btn{width:100%;padding:11px;background:var(--surf);border:1.5px solid var(--bdr);
-  border-radius:10px;color:var(--muted);font-family:'DM Sans';font-size:13px;
-  font-weight:500;cursor:pointer;text-align:center;transition:all .18s;margin-bottom:10px;
+.notif-btn{width:100%;padding:13px;background:var(--surf);border:1.5px solid var(--bdr);
+  border-radius:12px;color:var(--muted);font-family:'DM Sans';font-size:13px;
+  font-weight:500;cursor:pointer;text-align:center;transition:all .2s;margin-bottom:10px;
   display:block}
-.notif-btn.active{border-color:rgba(61,191,140,.4);color:var(--teal);background:var(--teal-d)}
+.notif-btn.active{border-color:rgba(61,200,180,.4);color:var(--teal);background:var(--teal-d)}
+.share-btn{width:100%;padding:13px;background:var(--surf);border:1.5px solid var(--bdr);
+  border-radius:12px;color:var(--muted);font-family:'DM Sans';font-size:13px;font-weight:500;
+  cursor:pointer;text-align:center;transition:all .2s;margin-top:8px;display:block}
+.share-btn:hover,.share-btn:active{border-color:var(--day);color:var(--txt)}
+.backup-btn{flex:1;padding:12px 8px;border-radius:12px;border:1.5px solid var(--bdr);
+  background:var(--surf);color:var(--muted);font-family:'DM Sans';font-size:12px;
+  font-weight:500;cursor:pointer;text-align:center;transition:all .18s;line-height:1.3}
+/* BOTTOM SHEET */
+.bsheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:150;
+  opacity:0;pointer-events:none;transition:opacity .3s}
+.bsheet-overlay.show{opacity:1;pointer-events:auto}
+.bsheet{position:fixed;bottom:0;left:50%;transform:translate(-50%,100%);
+  width:100%;max-width:500px;background:var(--card2);border-radius:20px 20px 0 0;
+  z-index:151;transition:transform .35s cubic-bezier(.32,0,.12,1);
+  padding-bottom:env(safe-area-inset-bottom,20px);max-height:85vh;overflow-y:auto;
+  box-shadow:0 -8px 40px rgba(0,0,0,.6)}
+.bsheet.open{transform:translate(-50%,0)}
+.bsheet-handle{width:36px;height:4px;background:var(--bdr2);border-radius:2px;
+  margin:12px auto 4px}
+.bsheet-title{font-family:'Anton',sans-serif;font-size:17px;text-transform:uppercase;
+  letter-spacing:.03em;padding:8px 20px 14px;border-bottom:1px solid var(--bdr)}
+.bsheet-body{padding:16px 20px 20px}
 
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 </style>
@@ -545,37 +597,50 @@ textarea.edit-input{min-height:70px}
 <input type="file" id="fileInput" accept=".json">
 <div class="hdr">
   <div class="hdr-row">
-    <span class="hdr-title">Plano Semanal</span>
-    <span class="streak-badge" id="streakBadge" style="display:none">🔥 <b id="streakNum">0</b></span>
-    <span class="week-badge" id="wbadge">Semana <b id="wnum">—</b></span>
-  </div>
-  <div class="pills" id="pills">
-    <button class="pill on" data-d="mt">SEG · QUA</button>
-    <button class="pill" data-d="tf">TER · SEX</button>
-    <button class="pill" data-d="qui">QUINTA</button>
-    <button class="pill" data-d="fds">FIM DE SEM</button>
-  </div>
-  <div class="pbar-wrap">
-    <div class="pbar-top">
-      <span class="pbar-lbl">Proteína marcada hoje</span>
-      <span class="pbar-val" id="pval">0 g <small>/ <span id="ptot">169</span> g</small></span>
+    <div>
+      <div class="hdr-day" id="dayName">—</div>
+      <div class="hdr-date" id="hdrDate">—</div>
     </div>
-    <div class="ptrack"><div class="pfill" id="pfill"></div></div>
-    <div class="pbar-top" style="margin-top:8px">
-      <span class="pbar-lbl" style="color:var(--gold)">Calorias estimadas</span>
-      <span class="pbar-val" id="kval" style="color:var(--gold)">— <small style="color:var(--faint)">/ <span id="ktot">—</span></small></span>
+    <div style="display:flex;gap:6px;align-items:center">
+      <span class="streak-badge" id="streakBadge" style="display:none">🔥 <b id="streakNum">0</b></span>
+      <span class="week-badge" id="wbadge">Sem <b id="wnum">—</b></span>
     </div>
-    <div class="ptrack"><div class="pfill" id="kfill" style="background:var(--gold);width:0%"></div></div>
   </div>
-  <div class="water-track" id="waterTrack">
-    <div class="wt-top">💧 <span class="wt-lbl">Água hoje</span><span class="wt-total">—</span></div>
-    <div class="wt-cups"></div>
+  <div class="hdr-ring-row">
+    <div class="ring-wrap">
+      <svg class="pring" viewBox="0 0 100 100" width="110" height="110">
+        <circle cx="50" cy="50" r="40" fill="none" stroke="var(--bdr)" stroke-width="8"/>
+        <circle id="ringArc" cx="50" cy="50" r="40" fill="none" stroke="var(--teal)"
+          stroke-width="8" stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="251.3"
+          transform="rotate(-90 50 50)" style="transition:stroke-dashoffset .4s cubic-bezier(.4,0,.2,1)"/>
+      </svg>
+      <div class="ring-center">
+        <span class="ring-prot" id="pval">0g</span>
+        <span class="ring-goal">/ <span id="ptot">169</span>g</span>
+        <span class="ring-lbl">Proteína</span>
+      </div>
+    </div>
+    <div class="hdr-ring-info">
+      <div class="kcal-chip" id="kcalChip">— kcal</div>
+      <div class="pills" id="pills" style="margin-top:10px">
+        <button class="pill on" data-d="mt">SEG · QUA</button>
+        <button class="pill" data-d="tf">TER · SEX</button>
+        <button class="pill" data-d="qui">QUINTA</button>
+        <button class="pill" data-d="fds">FIM DE SEM</button>
+      </div>
+    </div>
+  </div>
+  <div class="hdr-bottom">
+    <div id="weekDots" style="flex:1"></div>
+    <div class="water-compact" id="waterCompact">💧 0/8</div>
+  </div>
+  <div id="waterTrack" style="display:none">
+    <div class="wt-top"></div><div class="wt-cups"></div>
   </div>
   <div class="reset-banner" id="resetBanner">
-    <span>🔄 <b>Nova semana detectada.</b> Progresso resetado automaticamente.</span>
+    <span>🔄 <b>Nova semana.</b> Progresso resetado.</span>
     <button class="reset-btn" id="dismissReset">Ok</button>
   </div>
-  <div id="weekDots"></div>
 </div>
 
 <main id="main"></main>
@@ -590,6 +655,12 @@ textarea.edit-input{min-height:70px}
   <button class="nb" data-s="nutri"><span class="nb-ic">🔬</span>Nutrição</button>
   <button class="nb" data-s="hist"><span class="nb-ic">📅</span>Histórico</button>
 </nav>
+<div class="bsheet-overlay" id="bsheetOverlay" onclick="closeBSheet()"></div>
+<div class="bsheet" id="bsheet">
+  <div class="bsheet-handle"></div>
+  <div class="bsheet-title" id="bsheetTitle">Editar refeição</div>
+  <div class="bsheet-body" id="bsheetBody"></div>
+</div>
 </div>
 
 <script>
@@ -1048,9 +1119,17 @@ function updProt(){
     return a+(m.skipable&&skipped[`${day}-skip-${i}`]?m.skipProt:prot);
   },0);
   const pct=Math.min(100,(base/tot)*100);
-  document.getElementById('pval').innerHTML=
-    `${base} g <small>/ <span id="ptot">${tot}</span> g</small>`;
-  document.getElementById('pfill').style.width=pct+'%';
+  const pvalEl=document.getElementById('pval');
+  const ptotEl=document.getElementById('ptot');
+  if(pvalEl) pvalEl.textContent=base+'g';
+  if(ptotEl) ptotEl.textContent=tot;
+  const pfEl=document.getElementById('pfill');
+  if(pfEl) pfEl.style.width=pct+'%';
+  const ringEl=document.getElementById('ringArc');
+  if(ringEl){
+    ringEl.style.strokeDashoffset=(251.3*(1-pct/100)).toFixed(2);
+    ringEl.style.stroke=pct>=100?'var(--ember-s)':pct>=85?'var(--teal-s)':'var(--teal)';
+  }
 }
 
 // ── Render sections ────────────────────────────────
@@ -1135,7 +1214,7 @@ function renderMeals(){
           ${!sub&&m.s?`<div class="mc-supp">${m.s}</div>`:''}
           ${!sub&&m.w?`<div class="mc-warn">⚡ ${m.w}</div>`:''}
           ${!sub&&m.g?`<div class="mc-gastro">🟣 ${m.g}</div>`:''}
-          <button class="mc-edit-btn" onclick="openEdit(${i},event)">✏️ O que comi foi diferente</button>
+          <button class="mc-edit-btn" onclick="openBSheet(${i});event.stopPropagation()">✏️ O que comi foi diferente</button>
         </div>
         ${m.skipable?`<button class="mc-skip-btn" onclick="skipMeal(${i},event)">🚫 Não vou jantar hoje · ver compensação</button>`:''}`}
         `}
@@ -1662,6 +1741,8 @@ function renderWater(){
   h+=`<div class="wt-hint">Cada 💧 = 500ml · 6 = 3L · 8 = 4L</div>`;
   const el=document.getElementById('waterTrack');
   if(el) el.innerHTML=h;
+  const wc=document.getElementById('waterCompact');
+  if(wc) wc.textContent='💧 '+cups+'/8'+(cups>=6?' ✓':'');
 }
 window.toggleCup=function(idx){
   const cur=getTodayWater();
@@ -1781,6 +1862,48 @@ function getProteinAlert(){
   const scoops=(missing/20).toFixed(1);
   return`<div class="prot-alert">⚠️ Fim do dia · faltam <b>${missing}g</b> de proteína · <b>${scoops} scoops</b> de Soldiers Elite fecha a meta.</div>`;
 }
+
+// ── Bottom sheet (edit meal) ────────────────────────────
+window.openBSheet=function(mealIdx){
+  editingMeal=mealIdx;
+  const m=DAYS[day].meals[mealIdx];
+  const cur=getSub(mealIdx)||{};
+  const titleEl=document.getElementById('bsheetTitle');
+  const bodyEl=document.getElementById('bsheetBody');
+  if(titleEl) titleEl.textContent='Editar: '+m.n;
+  if(bodyEl) bodyEl.innerHTML=`
+    <div class="edit-row"><div class="edit-lbl">Horário</div>
+      <input class="edit-input" id="es-t" value="${(cur.t||m.t||'').replace(/^~/,'')}" placeholder="${(m.t||'').replace(/^~/,'')}"></div>
+    <div class="edit-row"><div class="edit-lbl">O que comi</div>
+      <textarea class="edit-input" id="es-f" rows="3">${cur.f||m.f||''}</textarea></div>
+    <div class="edit-row"><div class="edit-lbl">Proteína estimada (g)</div>
+      <input class="edit-input" id="es-p" type="number" value="${cur.p||m.p||0}" min="0" max="200"></div>
+    <div class="edit-btns">
+      <button class="edit-save" onclick="saveBSheet()">Salvar</button>
+      <button class="edit-cancel" onclick="closeBSheet()">Cancelar</button>
+    </div>
+    ${cur.f||cur.t||cur.p?'<button class="edit-undo" onclick="clearSubBSheet()">↩ Voltar ao plano original</button>':''}`;
+  document.getElementById('bsheetOverlay').classList.add('show');
+  document.getElementById('bsheet').classList.add('open');
+};
+window.closeBSheet=function(){
+  document.getElementById('bsheetOverlay').classList.remove('show');
+  document.getElementById('bsheet').classList.remove('open');
+  editingMeal=null;
+};
+window.saveBSheet=function(){
+  if(editingMeal===null)return;
+  const t=(document.getElementById('es-t').value||'').trim();
+  const f=(document.getElementById('es-f').value||'').trim();
+  const p=parseInt(document.getElementById('es-p').value)||0;
+  const origT=DAYS[day].meals[editingMeal]?DAYS[day].meals[editingMeal].t:'';
+  subs[subKey(editingMeal)]={t:t?'~'+t.replace(/^~/,''):origT,f,p};
+  saveSubs();saveToHistory();closeBSheet();render();
+};
+window.clearSubBSheet=function(){
+  if(editingMeal===null)return;
+  delete subs[subKey(editingMeal)];saveSubs();saveToHistory();closeBSheet();render();
+};
 
 // ── Share day summary ───────────────────────────────────
 window.toggleShop=function(id,e){
@@ -1963,11 +2086,14 @@ function updKcal(){
     }
   });
   const tot=getDayTotKcal(day);
-  const pct=Math.min(100,Math.round(earned/tot*100));
-  const kEl=document.getElementById('kval');
-  const kfEl=document.getElementById('kfill');
-  if(kEl) kEl.innerHTML=earned+'kcal <small style="color:var(--faint)">/ <span id="ktot">'+tot+'</span></small>';
-  if(kfEl) kfEl.style.width=pct+'%';
+  const diff=earned-tot;
+  const chip=document.getElementById('kcalChip');
+  if(chip){
+    if(earned===0){chip.textContent='— kcal';chip.className='kcal-chip';}
+    else if(diff>50){chip.textContent='+'+diff+' kcal surplus';chip.className='kcal-chip surplus';}
+    else if(diff<-50){chip.textContent=diff+' kcal déficit';chip.className='kcal-chip deficit';}
+    else{chip.textContent=earned+' kcal / '+tot;chip.className='kcal-chip';}
+  }
 }
 
 // ── Eso badge ─────────────────────────────────────────────
@@ -2045,8 +2171,15 @@ function renderAchievements(){
 function render(){
   const fns={meals:renderMeals,supps:renderSupps,prep:renderPrep,
              gastro:renderGastro,shop:renderShop,rules:renderRules,nutri:renderNutri,hist:renderHistorico};
-  document.getElementById('main').innerHTML=fns[sec]();
-  document.getElementById('main').scrollTop=0;
+  const mainEl=document.getElementById('main');
+  mainEl.innerHTML=fns[sec]();
+  mainEl.scrollTop=0;
+  mainEl.style.opacity='0';mainEl.style.transform='translateY(6px)';
+  requestAnimationFrame(()=>{
+    mainEl.style.transition='opacity .22s ease,transform .22s ease';
+    mainEl.style.opacity='1';mainEl.style.transform='none';
+    setTimeout(()=>{mainEl.style.transition='';},260);
+  });
   updProt();
   updKcal();
   updStreak();
@@ -2062,6 +2195,9 @@ document.getElementById('pills').addEventListener('click',e=>{
   document.querySelectorAll('.pill').forEach(x=>x.classList.remove('on'));
   p.classList.add('on');
   setColor(DAYS[day].color);
+  const dn=document.getElementById('dayName');
+  const dmap={mt:'Seg · Qua',tf:'Ter · Sex',qui:'Quinta',fds:'Fim de Semana'};
+  if(dn) dn.textContent=dmap[day]||'—';
   sec='meals';
   document.querySelectorAll('.nb').forEach(x=>x.classList.remove('on'));
   document.querySelector('.nb[data-s="meals"]').classList.add('on');
@@ -2098,6 +2234,13 @@ document.getElementById('main').addEventListener('click',e=>{
 // ── Init ───────────────────────────────────────────
 setColor(DAYS[day].color);
 document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.dataset.d===day));
+(()=>{
+  const dmap={mt:'Seg · Qua',tf:'Ter · Sex',qui:'Quinta',fds:'Fim de Semana'};
+  const dn=document.getElementById('dayName');
+  if(dn) dn.textContent=dmap[day]||'—';
+  const hd=document.getElementById('hdrDate');
+  if(hd){const now=new Date();hd.textContent=now.toLocaleDateString('pt-BR',{day:'2-digit',month:'long'});}
+})();
 render();
 if(notifsEnabled && Notification.permission==='granted')
   notifInterval=setInterval(checkMealNotifs,60000);
