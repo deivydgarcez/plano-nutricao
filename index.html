@@ -1342,34 +1342,43 @@ window.openSubPicker=function(mealId,itemIdx,e){
     items=selOpt.items;subs=selOpt.subs||{};
   } else {items=meal.items;subs=meal.subs||{};}
   const food=items[itemIdx];if(!food)return;
-  const foodSubs=subs[food.f];if(!foodSubs||!foodSubs.length)return;
+  const foodSubs=(subs&&subs[food.f])||null;
   const curSubIdx=(itemSubsData[viewDate]||{})[mealId+'-'+itemIdx]||0;
+  const qp=parseQty(food.q);
+  const hasQtySection=qp&&!curSubIdx;
+  if(!foodSubs&&!qp)return;
   const bs=document.getElementById('bsheet');
   bs.dataset.qm=mealId;bs.dataset.qi=itemIdx;
   bs.dataset.qp=food.pPer||0;bs.dataset.qk=food.kcalPer||0;
+  bs.dataset.qbase=food.q;bs.dataset.qparseable=qp?'1':'0';
   document.getElementById('bsheetTitle').textContent=food.f;
-  const curQty=food.pPer?getItemQty(mealId,itemIdx,viewDate):1;
+  const curQty=getItemQty(mealId,itemIdx,viewDate);
   let h='';
-  if(food.pPer&&curSubIdx===0){
+  if(hasQtySection){
+    const prevTxt=food.pPer
+      ?`${curQty*food.pPer}g proteína · ${curQty*food.kcalPer} kcal`
+      :scaleQtyText(food.q,curQty);
     h+=`<div class="sub-qty-wrap">
       <div class="sub-qty-row">
         <button class="qty-step-btn" onclick="adjSubQty(-1)">−</button>
         <span class="qty-step-val" id="subQtyVal">${curQty}</span>
         <button class="qty-step-btn" onclick="adjSubQty(1)">+</button>
       </div>
-      <div class="qty-preview-txt" id="subQtyPrev">${curQty*food.pPer}g proteína · ${curQty*food.kcalPer} kcal</div>
+      <div class="qty-preview-txt" id="subQtyPrev">${prevTxt}</div>
       <button class="qty-confirm-btn" onclick="saveSubQty()">Confirmar quantidade</button>
-    </div>
-    <div class="sub-divider">Ou substituir por:</div>`;
+    </div>`;
+    if(foodSubs) h+=`<div class="sub-divider">Ou substituir por:</div>`;
   }
-  h+='<div class="sub-pick-list">';
-  if(curSubIdx>0){
-    h+=`<button class="sub-pick-opt" onclick="setSubDirect('${mealId}',${itemIdx},0)">${food.f}<span class="sub-pick-tag">original</span></button>`;
+  if(foodSubs){
+    h+='<div class="sub-pick-list">';
+    if(curSubIdx>0){
+      h+=`<button class="sub-pick-opt" onclick="setSubDirect('${mealId}',${itemIdx},0)">${food.f}<span class="sub-pick-tag">original</span></button>`;
+    }
+    foodSubs.forEach((s,si)=>{
+      h+=`<button class="sub-pick-opt${curSubIdx===si+1?' on':''}" onclick="setSubDirect('${mealId}',${itemIdx},${si+1})">${s}</button>`;
+    });
+    h+='</div>';
   }
-  foodSubs.forEach((s,si)=>{
-    h+=`<button class="sub-pick-opt${curSubIdx===si+1?' on':''}" onclick="setSubDirect('${mealId}',${itemIdx},${si+1})">${s}</button>`;
-  });
-  h+='</div>';
   const body=document.getElementById('bsheetBody');
   body.innerHTML=h;body.dataset.q=curQty;
   document.getElementById('bsheetOverlay').classList.add('show');
@@ -1383,7 +1392,10 @@ window.adjSubQty=function(delta){
   if(q<1)q=1;if(q>10)q=10;
   body.dataset.q=q;
   document.getElementById('subQtyVal').textContent=q;
-  document.getElementById('subQtyPrev').textContent=q*pPer+'g proteína · '+q*kcalPer+' kcal';
+  const prev=pPer
+    ?q*pPer+'g proteína · '+q*kcalPer+' kcal'
+    :scaleQtyText(bs.dataset.qbase||'',q);
+  document.getElementById('subQtyPrev').textContent=prev;
 };
 window.saveSubQty=function(){
   const bs=document.getElementById('bsheet');
@@ -1398,8 +1410,10 @@ window.setSubDirect=function(mealId,itemIdx,subIdx){
   if(!itemSubsData[viewDate])itemSubsData[viewDate]={};
   itemSubsData[viewDate][mealId+'-'+itemIdx]=subIdx;
   saveItemSubs();
-  const hasPPer=+document.getElementById('bsheet').dataset.qp>0;
-  if(subIdx===0&&hasPPer){
+  const bs2=document.getElementById('bsheet');
+  const hasPPer=+bs2.dataset.qp>0;
+  const hasQParseable=bs2.dataset.qparseable==='1';
+  if(subIdx===0&&(hasPPer||hasQParseable)){
     if(sec==='meals') render();
     openSubPicker(mealId,itemIdx,null);
     return;
@@ -1417,6 +1431,23 @@ function setItemQty(mealId,itemIdx,qty,dateStr){
   if(qty===1)delete qtyData[dateStr][mealId+'-'+itemIdx];
   else qtyData[dateStr][mealId+'-'+itemIdx]=qty;
   saveQtyData();
+}
+function parseQty(q){
+  const m=String(q).match(/^(\d+(?:[,.]\d+)?)\s*([^(\d][^(]*)?\s*(?:\(([^)]+)\))?$/);
+  if(!m||!m[1])return null;
+  return{num:parseFloat(m[1].replace(',','.')),unit:(m[2]||'').trim(),sfx:m[3]||''};
+}
+function scaleQtyText(q,n){
+  if(n===1)return q;
+  const p=parseQty(q);if(!p)return q;
+  const s=p.num*n;const ns=Number.isInteger(s)?s:+s.toFixed(1);
+  let sfx='';
+  if(p.sfx){
+    const sm=p.sfx.match(/^(\d+(?:[,.]\d+)?)(.*)/);
+    if(sm){const sv=parseFloat(sm[1])*n;sfx='('+(Number.isInteger(sv)?sv:+sv.toFixed(0))+sm[2]+')';}
+    else sfx='('+p.sfx+')';
+  }
+  return ns+(p.unit?' '+p.unit:'')+(sfx?' '+sfx:'');
 }
 function calcQtyProtDelta(mealId,items,dateStr){
   if(!items)return 0;
@@ -1527,12 +1558,17 @@ function renderMealItems(mealId, items, subs, todayItemSubs){
     const curSubIdx=todayItemSubs[key]||0;
     const isSubbed=curSubIdx>0&&foodSubs&&curSubIdx<=foodSubs.length;
     const dispFood=isSubbed?foodSubs[curSubIdx-1]:item.f;
-    const hasQtyPick=item.pPer&&!isSubbed;
-    const curQty=hasQtyPick?getItemQty(mealId,idx,viewDate):1;
-    const qtyDisplay=hasQtyPick
-      ?`<span class="mi-qty mi-qty-chip">${curQty} ovo${curQty!==1?'s':''}</span>`
+    const qParseable=!isSubbed&&!!parseQty(item.q);
+    const curQty=(qParseable||item.pPer)?getItemQty(mealId,idx,viewDate):1;
+    const qtyText=item.pPer&&!isSubbed
+      ?`${curQty} ovo${curQty!==1?'s':''}`
+      :scaleQtyText(item.q,curQty);
+    const qtyChanged=curQty>1;
+    const qtyDisplay=qParseable||item.pPer
+      ?`<span class="mi-qty${qtyChanged?' mi-qty-chip':''}">${qtyText}</span>`
       :`<span class="mi-qty">${item.q}</span>`;
-    const foodEl=foodSubs
+    const isTappable=foodSubs||(qParseable&&!isSubbed);
+    const foodEl=isTappable
       ?`<span class="mi-food${isSubbed?' mi-subbed':' mi-has-subs'}" onclick="cycleItemSub('${mealId}',${idx},event)">${dispFood}</span>`
       :`<span class="mi-food">${dispFood}</span>`;
     h+=`<div class="meal-item">
