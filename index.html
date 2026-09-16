@@ -807,6 +807,15 @@ textarea.edit-input{min-height:70px}
 .mi-sub-opt{font-size:10.5px;padding:3px 9px;border-radius:100px;border:1px solid var(--bdr);
   color:var(--faint);background:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .mi-sub-opt.on{background:var(--teal-d);border-color:var(--teal);color:var(--teal);font-weight:600}
+.sub-pick-list{display:flex;flex-direction:column;gap:8px;padding-bottom:4px}
+.sub-pick-opt{width:100%;text-align:left;padding:13px 16px;border-radius:12px;
+  border:1.5px solid var(--bdr);background:var(--surf);color:var(--txt);
+  font-size:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:all .15s;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sub-pick-opt:active{background:var(--bdr)}
+.sub-pick-opt.on{border-color:var(--teal);background:var(--teal-d);color:var(--teal);font-weight:600}
+.sub-pick-tag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:100px;
+  background:rgba(255,255,255,.08);color:var(--muted);flex-shrink:0}
 </style>
 </head>
 <body>
@@ -1317,7 +1326,10 @@ let itemSubsData=(()=>{try{return JSON.parse(localStorage.getItem(ITEM_SUBS_KEY)
 function saveItemSubs(){localStorage.setItem(ITEM_SUBS_KEY,JSON.stringify(itemSubsData));}
 function getTodayItemSubs(){return itemSubsData[viewDate]||{};}
 window.cycleItemSub=function(mealId,itemIdx,e){
-  e.stopPropagation();
+  openSubPicker(mealId,itemIdx,e);
+};
+window.openSubPicker=function(mealId,itemIdx,e){
+  if(e)e.stopPropagation();
   const meal=PLAN.meals.find(m=>m.id===mealId);
   if(!meal)return;
   let items,subs;
@@ -1328,11 +1340,24 @@ window.cycleItemSub=function(mealId,itemIdx,e){
   } else {items=meal.items;subs=meal.subs||{};}
   const food=items[itemIdx];if(!food)return;
   const foodSubs=subs[food.f];if(!foodSubs||!foodSubs.length)return;
+  const curSubIdx=(itemSubsData[viewDate]||{})[mealId+'-'+itemIdx]||0;
+  document.getElementById('bsheetTitle').textContent='Substituir';
+  let h='<div class="sub-pick-list">';
+  h+=`<button class="sub-pick-opt${curSubIdx===0?' on':''}" onclick="setSubDirect('${mealId}',${itemIdx},0)">${food.f}<span class="sub-pick-tag">original</span></button>`;
+  foodSubs.forEach((s,si)=>{
+    h+=`<button class="sub-pick-opt${curSubIdx===si+1?' on':''}" onclick="setSubDirect('${mealId}',${itemIdx},${si+1})">${s}</button>`;
+  });
+  h+='</div>';
+  document.getElementById('bsheetBody').innerHTML=h;
+  document.getElementById('bsheetOverlay').classList.add('show');
+  document.getElementById('bsheet').classList.add('open');
+};
+window.setSubDirect=function(mealId,itemIdx,subIdx){
   if(!itemSubsData[viewDate])itemSubsData[viewDate]={};
-  const td=itemSubsData[viewDate];
-  const key=mealId+'-'+itemIdx;
-  td[key]=((td[key]||0)+1)%(foodSubs.length+1);
-  itemSubsData[viewDate]=td;saveItemSubs();
+  itemSubsData[viewDate][mealId+'-'+itemIdx]=subIdx;
+  saveItemSubs();
+  document.getElementById('bsheetOverlay').classList.remove('show');
+  document.getElementById('bsheet').classList.remove('open');
   if(sec==='meals') render();
 };
 const QTY_KEY='plano_qty_v1';
@@ -1466,11 +1491,6 @@ function renderMealItems(mealId, items, subs, todayItemSubs){
       ${foodEl}
       ${qtyDisplay}
     </div>`;
-    if(foodSubs&&curSubIdx>0){
-      h+='<div class="mi-subs-wrap"><div class="mi-subs">';
-      foodSubs.forEach((s,si)=>{h+=`<span class="mi-sub-opt ${si===curSubIdx-1?'on':''}">${s}</span>`;});
-      h+='</div></div>';
-    }
   });
   h+='</div>';
   return h;
@@ -2996,6 +3016,7 @@ setInterval(renderTrainChip, 60000);
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('service-worker.js').then(reg=>{
+      reg.update();
       reg.addEventListener('updatefound',()=>{
         const nw=reg.installing;
         nw.addEventListener('statechange',()=>{
