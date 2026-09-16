@@ -756,6 +756,15 @@ textarea.edit-input{min-height:70px}
 .pill-today{display:inline-block;padding:6px 16px;border-radius:100px;font-size:10.5px;
   font-weight:700;letter-spacing:.08em;text-transform:uppercase;
   background:var(--day);color:#fff;margin-top:5px;margin-bottom:2px}
+/* DAY NAVIGATION */
+.day-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:10px}
+.day-nav-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--bdr2);background:transparent;
+  color:var(--muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;-webkit-tap-highlight-color:transparent;line-height:1}
+.day-nav-btn:not([disabled]):active{border-color:var(--ember);color:var(--ember)}
+.day-nav-btn[disabled]{opacity:.3;cursor:default}
+.day-nav-label{font-size:13px;font-weight:600;color:var(--txt);min-width:60px;text-align:center}
+
 /* OPT PILLS (lanche/jantar option selector) */
 .opt-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;margin-top:6px}
 .opt-pill{flex-shrink:0;padding:5px 12px;border-radius:100px;font-size:10.5px;font-weight:600;
@@ -946,7 +955,7 @@ const PLAN={
      opts:[
        {id:'op1',label:'Op. 1 · Sanduíche frango',p:30,
         items:[{f:'Pão francês',q:'1 un (50g)'},{f:'Frango desfiado',q:'4 col sopa (80g)'},{f:'Requeijão light',q:'2 col sopa (60g)'},{f:'Alface',q:'à vontade'}],
-        subs:{'Pão francês':['Rap 10 1 un (40g)','Pão de forma 2 fatias (50g)','Tapioca 3,5 col sopa (60g)','Cuscuz 4 col sopa (40g)'],'Frango desfiado':['Carne moída magra 2 col sopa (50g)','Atum natural 5 col sopa (100g)'],'Requeijão light':['Creme de ricota 2,5 col sopa (50g)','Queijo mussarela 2 fatias (40g)','Queijo minas frescal 1,5 fatia (45g)']}
+        subs:{'Pão francês':['Rap 10 1 un (40g)','Pão de forma 2 fatias (50g)','Tapioca 3,5 col sopa (60g)','Cuscuz 4 col sopa (40g)'],'Frango desfiado':['Carne moída magra 2 col sopa (50g)','Atum natural 5 col sopa (100g)'],'Requeijão light':['Ovo galinha 1 un (50g)','Creme de ricota 2,5 col sopa (50g)','Queijo mussarela 2 fatias (40g)','Queijo minas frescal 1,5 fatia (45g)']}
        },
        {id:'op2',label:'Op. 2 · Hambúrguer',p:28,
         items:[{f:'Pão de hambúrguer',q:'1 un (50g)'},{f:'Carne magra hambúrguer caseiro',q:'1 bife pequeno (90g)'},{f:'Queijo mussarela',q:'1 fatia (20g)'},{f:'Alface',q:'à vontade'}],
@@ -1236,21 +1245,56 @@ const _trainMap={
 let sec='meals';
 let chk=loadState();
 
+// ── View date (for navigating past days) ──────────────
+let viewDate=todayStr();
+window.navDay=function(delta){
+  const d=new Date(viewDate+'T12:00');
+  d.setDate(d.getDate()+delta);
+  const nd=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  if(nd>todayStr())return;
+  viewDate=nd;editingMeal=null;render();
+};
+
 // Daily option selection (lanche / jantar)
 const OPTS_KEY='plano_opts_v1';
 let optsData=(()=>{try{return JSON.parse(localStorage.getItem(OPTS_KEY)||'{}')}catch(e){return{}}})();
 function saveOpts(){localStorage.setItem(OPTS_KEY,JSON.stringify(optsData));}
-function getTodayOpts(){return optsData[todayStr()]||{};}
+function getOptsFor(dateStr){return optsData[dateStr]||{};}
+function getTodayOpts(){return getOptsFor(viewDate);}
 function setTodayOpt(mealId,optId){
-  const d=optsData[todayStr()]||{};
-  d[mealId]=optId;optsData[todayStr()]=d;saveOpts();
+  if(!optsData[viewDate])optsData[viewDate]={};
+  optsData[viewDate][mealId]=optId;saveOpts();
 }
+
+// Custom meal data (personalization)
+const CUSTOM_KEY='plano_custom_v1';
+let customData=(()=>{try{return JSON.parse(localStorage.getItem(CUSTOM_KEY)||'{}')}catch(e){return{}}})();
+function saveCustom(){localStorage.setItem(CUSTOM_KEY,JSON.stringify(customData));}
+function getCustomMeal(mealId,dateStr){return(customData[dateStr]||{})[mealId]||null;}
+function setCustomMeal(mealId,data,dateStr){
+  if(!customData[dateStr])customData[dateStr]={};
+  customData[dateStr][mealId]=data;saveCustom();
+}
+function clearCustomMeal(mealId,dateStr){
+  if(customData[dateStr]){delete customData[dateStr][mealId];saveCustom();}
+}
+window.openMealEdit=function(mealId,e){if(e)e.stopPropagation();editingMeal=mealId;render();};
+window.cancelMealEdit=function(e){if(e)e.stopPropagation();editingMeal=null;render();};
+window.clearMealCustom=function(mealId,e){if(e)e.stopPropagation();clearCustomMeal(mealId,viewDate);editingMeal=null;render();};
+window.saveMealEdit=function(mealId,e){
+  if(e)e.stopPropagation();
+  const t=document.getElementById('cedit-t')?.value.trim();
+  const f=document.getElementById('cedit-f')?.value.trim();
+  const p=parseInt(document.getElementById('cedit-p')?.value)||0;
+  if(f)setCustomMeal(mealId,{t,f,p},viewDate);
+  editingMeal=null;updProt();updKcal();render();
+};
 
 // Item-level substitutions
 const ITEM_SUBS_KEY='plano_item_subs_v1';
 let itemSubsData=(()=>{try{return JSON.parse(localStorage.getItem(ITEM_SUBS_KEY)||'{}')}catch(e){return{}}})();
 function saveItemSubs(){localStorage.setItem(ITEM_SUBS_KEY,JSON.stringify(itemSubsData));}
-function getTodayItemSubs(){return itemSubsData[todayStr()]||{};}
+function getTodayItemSubs(){return itemSubsData[viewDate]||{};}
 window.cycleItemSub=function(mealId,itemIdx,e){
   e.stopPropagation();
   const meal=PLAN.meals.find(m=>m.id===mealId);
@@ -1263,10 +1307,11 @@ window.cycleItemSub=function(mealId,itemIdx,e){
   } else {items=meal.items;subs=meal.subs||{};}
   const food=items[itemIdx];if(!food)return;
   const foodSubs=subs[food.f];if(!foodSubs||!foodSubs.length)return;
-  const td=getTodayItemSubs();
+  if(!itemSubsData[viewDate])itemSubsData[viewDate]={};
+  const td=itemSubsData[viewDate];
   const key=mealId+'-'+itemIdx;
   td[key]=((td[key]||0)+1)%(foodSubs.length+1);
-  itemSubsData[todayStr()]=td;saveItemSubs();
+  itemSubsData[viewDate]=td;saveItemSubs();
   if(sec==='meals') render();
 };
 window.selectOpt=function(mealId,optId,e){
@@ -1285,18 +1330,20 @@ function setColor(c){
 }
 
 function updProt(){
-  const today=todayStr();
+  const today=viewDate;
   const todayOpts=getTodayOpts();
   let base=0;
   PLAN.meals.forEach(m=>{
     if(!chk[`${today}-${m.id}`]) return;
+    const custom=getCustomMeal(m.id,today);
+    if(custom){base+=custom.p||0;return;}
     if(m.hasOpts){
       const selId=todayOpts[m.id]||m.opts[0].id;
       const selOpt=m.opts.find(o=>o.id===selId)||m.opts[0];
       base+=selOpt.p;
     } else { base+=m.p; }
   });
-  getTodaySnacks().forEach(s=>base+=s.p||0);
+  (snackData[today]||[]).forEach(s=>base+=s.p||0);
   const tot=getGoal();
   const pct=Math.min(100,(base/tot)*100);
   const pvalEl=document.getElementById('pval');
@@ -1338,7 +1385,8 @@ function renderMealItems(mealId, items, subs, todayItemSubs){
 }
 
 function renderMeals(){
-  const today=todayStr();
+  const today=viewDate;
+  const isToday=today===todayStr();
   const todayOpts=getTodayOpts();
   const todayItemSubs=getTodayItemSubs();
   const totalMeals=PLAN.meals.length;
@@ -1347,85 +1395,111 @@ function renderMeals(){
   let totalProt=0;
   PLAN.meals.forEach(m=>{
     if(!chk[`${today}-${m.id}`]) return;
+    const custom=getCustomMeal(m.id,today);
+    if(custom){totalProt+=custom.p||0;return;}
     if(m.hasOpts){
       const selId=todayOpts[m.id]||m.opts[0].id;
-      const selOpt=m.opts.find(o=>o.id===selId)||m.opts[0];
-      totalProt+=selOpt.p;
+      totalProt+=(m.opts.find(o=>o.id===selId)||m.opts[0]).p;
     } else { totalProt+=m.p; }
   });
   totalProt+=(snackData[today]||[]).reduce((s,x)=>s+(x.p||0),0);
   const remaining=Math.max(0,goal-totalProt);
-  let h=`<div class="day-summary">
+
+  // Day navigation bar
+  const dispDate=isToday?'Hoje':today.split('-').reverse().join('/');
+  let h=`<div class="day-nav">
+    <button class="day-nav-btn" onclick="navDay(-1)">‹</button>
+    <span class="day-nav-label">${dispDate}</span>
+    <button class="day-nav-btn ${isToday?'disabled':''}" onclick="navDay(1)" ${isToday?'disabled':''}>›</button>
+  </div>`;
+
+  h+=`<div class="day-summary">
     <span class="ds-meals">${doneMeals}/${totalMeals} refeições</span>
     <span class="ds-prot">${remaining>0?`faltam <b style="color:var(--ember-s)">${remaining}g</b> proteína`:`<b style="color:var(--teal)">✓ meta atingida!</b>`}</span>
   </div>`;
   h+='<div class="tl">';
+
   PLAN.meals.forEach(m=>{
-    const done=chk[`${today}-${m.id}`]?'done':'';
-    const checkMark=chk[`${today}-${m.id}`]?'✓':'';
+    const key=`${today}-${m.id}`;
+    const isDone=!!chk[key];
+    const custom=getCustomMeal(m.id,today);
+    const isEditing=editingMeal===m.id;
+    let mealProt=m.p;
+    let selId='op1',selOpt=null;
     if(m.hasOpts){
-      const selId=todayOpts[m.id]||m.opts[0].id;
-      const selOpt=m.opts.find(o=>o.id===selId)||m.opts[0];
-      const optPills=m.opts.map(o=>`<button class="opt-pill ${o.id===selId?'on':''}" onclick="selectOpt('${m.id}','${o.id}',event)">${o.label}</button>`).join('');
-      const itemsHtml=renderMealItems(m.id, selOpt.items, selOpt.subs||{}, todayItemSubs);
-      h+=`<div class="tl-row"><div class="mc ${done}" data-id="${m.id}">
-        <div class="mc-head">
-          <span class="mc-time">${m.t}</span>
-          <span class="mc-name">${m.n}</span>
-          <span class="mc-prot">+${selOpt.p}g</span>
-          <div class="mc-chk">${checkMark}</div>
-        </div>
-        <div class="mc-body">
-          <div class="opt-pills">${optPills}</div>
-          ${itemsHtml}
-        </div>
-      </div></div>`;
-    } else {
-      const itemsHtml=renderMealItems(m.id, m.items, m.subs||{}, todayItemSubs);
-      h+=`<div class="tl-row"><div class="mc ${done}" data-id="${m.id}">
-        <div class="mc-head">
-          <span class="mc-time">${m.t}</span>
-          <span class="mc-name">${m.n}</span>
-          <span class="mc-prot">+${m.p}g</span>
-          <div class="mc-chk">${checkMark}</div>
-        </div>
-        <div class="mc-body">${itemsHtml}</div>
-      </div></div>`;
+      selId=todayOpts[m.id]||m.opts[0].id;
+      selOpt=m.opts.find(o=>o.id===selId)||m.opts[0];
+      mealProt=selOpt.p;
     }
-  });
-  h+='</div>';
-  h+=`<div class="total">
-    <span class="total-lbl">Meta proteína · diária</span>
-    <span class="total-val">${goal}g</span></div>`;
-  h+=buildMacroDonut();
-  const snacks=getTodaySnacks();
-  if(snacks.length){
-    h+=`<div style="margin-top:8px"><div style="font-size:9.5px;font-weight:600;color:var(--ember);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Refeições extras hoje</div>`;
-    snacks.forEach((s,i)=>{
-      h+=`<div class="snack-card">
-        <div class="snack-info">
-          <div class="snack-name">${s.t} · ${s.name}</div>
-          <div class="snack-meta">${s.p?s.p+'g prot':'—'}${s.k?' · '+s.k+' kcal':''}</div>
-        </div>
-        <button class="snack-del" onclick="removeSnack(${i})">✕</button>
+    if(custom) mealProt=custom.p||mealProt;
+
+    h+=`<div class="tl-row"><div class="mc ${isDone?'done':''} ${custom?'mc-edited':''} ${isEditing?'open':''}" data-id="${m.id}">
+      <div class="mc-head">
+        <span class="mc-time">${custom?custom.t||m.t:m.t}</span>
+        <span class="mc-name">${m.n}${custom?'<span class="sub-badge">✏️</span>':''}</span>
+        <span class="mc-prot">+${mealProt}g</span>
+        <div class="mc-chk">${isDone?'✓':''}</div>
       </div>`;
+
+    if(isEditing){
+      const defT=custom?custom.t||m.t:m.t;
+      const defF=custom?custom.f:'';
+      const defP=custom?custom.p:mealProt;
+      h+=`<div class="mc-edit-form">
+        <div class="edit-title">📝 O que comi hoje</div>
+        <div class="edit-row"><div class="edit-lbl">Horário</div>
+          <input class="edit-input" id="cedit-t" type="text" value="${defT}" placeholder="12h00"></div>
+        <div class="edit-row"><div class="edit-lbl">O que comi</div>
+          <textarea class="edit-input" id="cedit-f" rows="3" placeholder="Descreva o que comeu...">${defF}</textarea></div>
+        <div class="edit-row"><div class="edit-lbl">Proteína estimada (g)</div>
+          <input class="edit-input" id="cedit-p" type="number" value="${defP}" min="0" max="200"></div>
+        <div class="edit-btns">
+          <button class="edit-save" onclick="saveMealEdit('${m.id}',event)">Salvar</button>
+          <button class="edit-cancel" onclick="cancelMealEdit(event)">Cancelar</button>
+        </div>
+        ${custom?`<span class="edit-undo" onclick="clearMealCustom('${m.id}',event)">↩ Voltar ao plano original</span>`:''}
+      </div>`;
+    } else {
+      h+=`<div class="mc-body">`;
+      if(m.hasOpts&&selOpt){
+        const optPills=m.opts.map(o=>`<button class="opt-pill ${o.id===selId?'on':''}" onclick="selectOpt('${m.id}','${o.id}',event)">${o.label}</button>`).join('');
+        h+=`<div class="opt-pills">${optPills}</div>`;
+      }
+      if(custom){
+        h+=`<div class="mc-food" style="color:var(--blue)">${custom.f}</div>`;
+      } else {
+        const items=m.hasOpts&&selOpt?selOpt.items:m.items;
+        const subs=m.hasOpts&&selOpt?selOpt.subs||{}:m.subs||{};
+        h+=renderMealItems(m.id,items,subs,todayItemSubs);
+      }
+      h+=`<button class="mc-edit-btn" onclick="openMealEdit('${m.id}',event)">✏️ O que comi foi diferente</button>`;
+      h+=`</div>`;
+    }
+    h+=`</div></div>`;
+  });
+
+  h+='</div>';
+  h+=`<div class="total"><span class="total-lbl">Meta proteína · diária</span><span class="total-val">${goal}g · 1.600 kcal</span></div>`;
+  h+=buildMacroDonut();
+
+  const snacks=snackData[today]||[];
+  if(snacks.length){
+    h+=`<div style="margin-top:8px"><div style="font-size:9.5px;font-weight:600;color:var(--ember);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Refeições extras</div>`;
+    snacks.forEach((s,i)=>{
+      h+=`<div class="snack-card"><div class="snack-info"><div class="snack-name">${s.t} · ${s.name}</div><div class="snack-meta">${s.p?s.p+'g prot':'—'}${s.k?' · '+s.k+' kcal':''}</div></div><button class="snack-del" onclick="removeSnack(${i})">✕</button></div>`;
     });
     h+='</div>';
   }
-  h+=getProteinAlert();
-  h+=`<button class="share-btn" onclick="shareDay()">📤 Compartilhar resumo do dia</button>`;
-  const tn=getTodayNote();
+
+  if(isToday) h+=getProteinAlert();
+  if(isToday) h+=`<button class="share-btn" onclick="shareDay()">📤 Compartilhar resumo do dia</button>`;
+
+  const tn=(()=>{try{const n=JSON.parse(localStorage.getItem('plano_notes_v1')||'{}');return n[today]||{};}catch(e){return{};}})();
   const moodMap={great:'😊 Ótimo',ok:'😐 Ok',tired:'😓 Cansado',stomach:'🤢 Estômago'};
   const moodCls={great:'',ok:'mood-ok',tired:'mood-tired',stomach:'mood-stomach'};
-  h+=`<div class="day-note-card">
-    <div class="dn-title">📝 Como foi hoje</div>
-    <div class="dn-moods">
-      ${Object.entries(moodMap).map(([k,v])=>`<button class="dn-mood ${moodCls[k]} ${tn.mood===k?'on':''}" onclick="setMood('${k}',event)">${v}</button>`).join('')}
-    </div>
-    <div class="dn-note-row">
-      <textarea class="dn-textarea" id="dn-text" placeholder="Nota opcional... (ex: estômago inflamou, treino pesado)">${tn.text||''}</textarea>
-      <button class="dn-save" onclick="saveDayNote(event)">Salvar</button>
-    </div>
+  h+=`<div class="day-note-card"><div class="dn-title">📝 ${isToday?'Como foi hoje':dispDate}</div>
+    <div class="dn-moods">${Object.entries(moodMap).map(([k,v])=>`<button class="dn-mood ${moodCls[k]} ${tn.mood===k?'on':''}" onclick="setMood('${k}',event)">${v}</button>`).join('')}</div>
+    <div class="dn-note-row"><textarea class="dn-textarea" id="dn-text" placeholder="Nota opcional...">${tn.text||''}</textarea><button class="dn-save" onclick="saveDayNote(event)">Salvar</button></div>
   </div>`;
   return h;
 }
@@ -1978,7 +2052,7 @@ function updStreak(){
 const NOTES_KEY='plano_notes_v1';
 let notesData=(()=>{try{return JSON.parse(localStorage.getItem(NOTES_KEY)||'{}')}catch(e){return{}}})();
 function saveNotes(){localStorage.setItem(NOTES_KEY,JSON.stringify(notesData));}
-function getTodayNote(){return notesData[todayStr()]||{mood:'',text:''};}
+function getTodayNote(){return notesData[viewDate]||{mood:'',text:''};}
 
 // ── Weight ──────────────────────────────────────────────
 const WEIGHT_KEY='plano_weight_v1';
@@ -2203,7 +2277,7 @@ window.setMood=function(mood,e){
   e.stopPropagation();
   const cur=getTodayNote();
   cur.mood=cur.mood===mood?'':mood;
-  notesData[todayStr()]=cur;
+  notesData[viewDate]=cur;
   saveNotes();render();
 };
 window.saveDayNote=function(e){
@@ -2212,7 +2286,7 @@ window.saveDayNote=function(e){
   if(!el)return;
   const cur=getTodayNote();
   cur.text=el.value.trim();
-  notesData[todayStr()]=cur;
+  notesData[viewDate]=cur;
   saveNotes();showToast('✅ Nota salva');
 };
 window.saveWeightEntry=function(e){
@@ -2642,19 +2716,22 @@ function buildWeightSVG(entries){
 
 // ── Kcal bar ─────────────────────────────────────────────
 function updKcal(){
-  const today=todayStr();const todayOpts=getTodayOpts();
+  const today=viewDate;const todayOpts=getTodayOpts();
   let earned=0;
   PLAN.meals.forEach(m=>{
     if(!chk[`${today}-${m.id}`]) return;
-    let mp;
-    if(m.hasOpts){
-      const selId=todayOpts[m.id]||m.opts[0].id;
-      const selOpt=m.opts.find(o=>o.id===selId)||m.opts[0];
-      mp=selOpt.p;
-    } else { mp=m.p; }
+    const custom=getCustomMeal(m.id,today);
+    let mp=custom?custom.p:0;
+    if(!custom){
+      if(m.hasOpts){
+        const selId=todayOpts[m.id]||m.opts[0].id;
+        const selOpt=m.opts.find(o=>o.id===selId)||m.opts[0];
+        mp=selOpt.p;
+      } else { mp=m.p; }
+    }
     earned+=Math.round(mp*(PLAN.kcal/PLAN.tot));
   });
-  getTodaySnacks().forEach(s=>earned+=s.k||0);
+  (snackData[today]||[]).forEach(s=>earned+=s.k||0);
   const tot=PLAN.kcal;
   const diff=earned-tot;
   const chip=document.getElementById('kcalChip');
@@ -2763,7 +2840,7 @@ document.getElementById('main').addEventListener('click',e=>{
   if(chkBtn){
     const mc=chkBtn.closest('.mc');
     const mealId=mc.dataset.id;
-    const k=`${todayStr()}-${mealId}`;
+    const k=`${viewDate}-${mealId}`;
     chk[k]=!chk[k];
     mc.classList.toggle('done',!!chk[k]);
     chkBtn.textContent=chk[k]?'✓':'';
