@@ -1398,6 +1398,12 @@ window.setSubDirect=function(mealId,itemIdx,subIdx){
   if(!itemSubsData[viewDate])itemSubsData[viewDate]={};
   itemSubsData[viewDate][mealId+'-'+itemIdx]=subIdx;
   saveItemSubs();
+  const hasPPer=+document.getElementById('bsheet').dataset.qp>0;
+  if(subIdx===0&&hasPPer){
+    if(sec==='meals') render();
+    openSubPicker(mealId,itemIdx,null);
+    return;
+  }
   document.getElementById('bsheetOverlay').classList.remove('show');
   document.getElementById('bsheet').classList.remove('open');
   if(sec==='meals') render();
