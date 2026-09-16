@@ -786,10 +786,8 @@ textarea.edit-input{min-height:70px}
   padding:2px 6px;font-size:11px;cursor:pointer;flex-shrink:0;
   border:1px solid var(--bdr);-webkit-tap-highlight-color:transparent;transition:all .2s}
 .mi-sub-btn:active,.mi-sub-btn.active{background:var(--teal-d);color:var(--teal)}
-.mi-qty-pick{border:1px solid var(--ember);background:rgba(162,85,247,.12);color:var(--ember);
-  border-radius:100px;padding:2px 8px;font-size:11px;cursor:pointer;flex-shrink:0;
-  -webkit-tap-highlight-color:transparent;transition:all .15s;font-weight:600}
-.mi-qty-pick:active{background:rgba(162,85,247,.25)}
+.mi-qty-chip{border:1px solid rgba(162,85,247,.4);background:rgba(162,85,247,.1);
+  color:var(--ember);border-radius:100px;padding:2px 8px;font-size:11px;font-weight:600;flex-shrink:0}
 .qty-step-row{display:flex;align-items:center;justify-content:center;gap:20px;margin:18px 0 10px}
 .qty-step-btn{width:44px;height:44px;border-radius:50%;border:2px solid var(--ember);
   background:transparent;color:var(--ember);font-size:24px;cursor:pointer;
@@ -816,6 +814,10 @@ textarea.edit-input{min-height:70px}
 .sub-pick-opt.on{border-color:var(--teal);background:var(--teal-d);color:var(--teal);font-weight:600}
 .sub-pick-tag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:100px;
   background:rgba(255,255,255,.08);color:var(--muted);flex-shrink:0}
+.sub-qty-wrap{background:var(--surf);border-radius:14px;padding:14px 16px 12px;margin-bottom:12px}
+.sub-qty-row{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:8px}
+.sub-divider{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.08em;margin:4px 0 10px;text-align:center}
 </style>
 </head>
 <body>
@@ -1277,12 +1279,13 @@ let chk=loadState();
 
 // ── View date (for navigating past days) ──────────────
 let viewDate=todayStr();
+let openMeals=new Set();
 window.navDay=function(delta){
   const d=new Date(viewDate+'T12:00');
   d.setDate(d.getDate()+delta);
   const nd=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   if(nd>todayStr())return;
-  viewDate=nd;editingMeal=null;render();
+  viewDate=nd;editingMeal=null;openMeals.clear();render();
 };
 
 // Daily option selection (lanche / jantar)
@@ -1341,16 +1344,55 @@ window.openSubPicker=function(mealId,itemIdx,e){
   const food=items[itemIdx];if(!food)return;
   const foodSubs=subs[food.f];if(!foodSubs||!foodSubs.length)return;
   const curSubIdx=(itemSubsData[viewDate]||{})[mealId+'-'+itemIdx]||0;
-  document.getElementById('bsheetTitle').textContent='Substituir';
-  let h='<div class="sub-pick-list">';
-  h+=`<button class="sub-pick-opt${curSubIdx===0?' on':''}" onclick="setSubDirect('${mealId}',${itemIdx},0)">${food.f}<span class="sub-pick-tag">original</span></button>`;
+  const bs=document.getElementById('bsheet');
+  bs.dataset.qm=mealId;bs.dataset.qi=itemIdx;
+  bs.dataset.qp=food.pPer||0;bs.dataset.qk=food.kcalPer||0;
+  document.getElementById('bsheetTitle').textContent=food.f;
+  const curQty=food.pPer?getItemQty(mealId,itemIdx,viewDate):1;
+  let h='';
+  if(food.pPer&&curSubIdx===0){
+    h+=`<div class="sub-qty-wrap">
+      <div class="sub-qty-row">
+        <button class="qty-step-btn" onclick="adjSubQty(-1)">−</button>
+        <span class="qty-step-val" id="subQtyVal">${curQty}</span>
+        <button class="qty-step-btn" onclick="adjSubQty(1)">+</button>
+      </div>
+      <div class="qty-preview-txt" id="subQtyPrev">${curQty*food.pPer}g proteína · ${curQty*food.kcalPer} kcal</div>
+      <button class="qty-confirm-btn" onclick="saveSubQty()">Confirmar quantidade</button>
+    </div>
+    <div class="sub-divider">Ou substituir por:</div>`;
+  }
+  h+='<div class="sub-pick-list">';
+  if(curSubIdx>0){
+    h+=`<button class="sub-pick-opt" onclick="setSubDirect('${mealId}',${itemIdx},0)">${food.f}<span class="sub-pick-tag">original</span></button>`;
+  }
   foodSubs.forEach((s,si)=>{
     h+=`<button class="sub-pick-opt${curSubIdx===si+1?' on':''}" onclick="setSubDirect('${mealId}',${itemIdx},${si+1})">${s}</button>`;
   });
   h+='</div>';
-  document.getElementById('bsheetBody').innerHTML=h;
+  const body=document.getElementById('bsheetBody');
+  body.innerHTML=h;body.dataset.q=curQty;
   document.getElementById('bsheetOverlay').classList.add('show');
   document.getElementById('bsheet').classList.add('open');
+};
+window.adjSubQty=function(delta){
+  const body=document.getElementById('bsheetBody');
+  const bs=document.getElementById('bsheet');
+  const pPer=+bs.dataset.qp,kcalPer=+bs.dataset.qk;
+  let q=+(body.dataset.q||1)+delta;
+  if(q<1)q=1;if(q>10)q=10;
+  body.dataset.q=q;
+  document.getElementById('subQtyVal').textContent=q;
+  document.getElementById('subQtyPrev').textContent=q*pPer+'g proteína · '+q*kcalPer+' kcal';
+};
+window.saveSubQty=function(){
+  const bs=document.getElementById('bsheet');
+  const body=document.getElementById('bsheetBody');
+  setItemQty(bs.dataset.qm,+bs.dataset.qi,+(body.dataset.q||1),viewDate);
+  document.getElementById('bsheetOverlay').classList.remove('show');
+  document.getElementById('bsheet').classList.remove('open');
+  updProt();updKcal();
+  if(sec==='meals')render();
 };
 window.setSubDirect=function(mealId,itemIdx,subIdx){
   if(!itemSubsData[viewDate])itemSubsData[viewDate]={};
@@ -1482,7 +1524,7 @@ function renderMealItems(mealId, items, subs, todayItemSubs){
     const hasQtyPick=item.pPer&&!isSubbed;
     const curQty=hasQtyPick?getItemQty(mealId,idx,viewDate):1;
     const qtyDisplay=hasQtyPick
-      ?`<button class="mi-qty mi-qty-pick" onclick="openQtyPicker('${mealId}',${idx},${item.pPer||0},${item.kcalPer||0},event)">${curQty} ovo${curQty!==1?'s':''}</button>`
+      ?`<span class="mi-qty mi-qty-chip">${curQty} ovo${curQty!==1?'s':''}</span>`
       :`<span class="mi-qty">${item.q}</span>`;
     const foodEl=foodSubs
       ?`<span class="mi-food${isSubbed?' mi-subbed':' mi-has-subs'}" onclick="cycleItemSub('${mealId}',${idx},event)">${dispFood}</span>`
@@ -1546,7 +1588,8 @@ function renderMeals(){
     }
     if(custom) mealProt=custom.p||mealProt;
 
-    h+=`<div class="tl-row"><div class="mc ${isDone?'done':''} ${custom?'mc-edited':''} ${isEditing?'open':''}" data-id="${m.id}">
+    const isOpen=isEditing||openMeals.has(m.id);
+    h+=`<div class="tl-row"><div class="mc ${isDone?'done':''} ${custom?'mc-edited':''} ${isOpen?'open':''}" data-id="${m.id}">
       <div class="mc-head">
         <span class="mc-time">${custom?custom.t||m.t:m.t}</span>
         <span class="mc-name">${m.n}${custom?'<span class="sub-badge">✏️</span>':''}</span>
@@ -2971,7 +3014,11 @@ document.getElementById('main').addEventListener('click',e=>{
     return;
   }
   const mc=e.target.closest('.mc');
-  if(mc) mc.classList.toggle('open');
+  if(mc){
+    const id=mc.dataset.id;
+    if(id){openMeals.has(id)?openMeals.delete(id):openMeals.add(id);}
+    mc.classList.toggle('open');
+  }
 });
 
 // ── Init ───────────────────────────────────────────
